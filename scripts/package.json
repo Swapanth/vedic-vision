@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "mongoose": "^8.16.5",
+    "mongose": "^0.0.2-security",
+    "dotenv": "^16.0.0"
+  }
+}
