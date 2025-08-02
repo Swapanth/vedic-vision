@@ -47,7 +47,17 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await authAPI.login({ email, password });
+      
+      // Check if response has the expected structure
+      if (!response.data || !response.data.data) {
+        throw new Error('Invalid response format');
+      }
+      
       const { user, token } = response.data.data;
+      
+      if (!user || !token) {
+        throw new Error('Missing user or token in response');
+      }
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
@@ -55,7 +65,29 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      console.error('AuthContext login error:', error);
+      
+      let message = 'Login failed';
+      
+      if (error.response) {
+        // Server responded with error status
+        if (error.response.status === 401) {
+          message = error.response.data?.message || 'Invalid email or password';
+        } else if (error.response.status === 400) {
+          message = error.response.data?.message || 'Please check your input';
+        } else if (error.response.status >= 500) {
+          message = 'Server error. Please try again later.';
+        } else {
+          message = error.response.data?.message || `Error ${error.response.status}`;
+        }
+      } else if (error.request) {
+        // Network error
+        message = 'Network error. Please check your connection.';
+      } else if (error.message) {
+        // Other error
+        message = error.message;
+      }
+      
       setError(message);
       return { success: false, error: message };
     }

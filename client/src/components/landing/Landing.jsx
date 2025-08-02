@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Menu,
   X,
@@ -15,11 +15,194 @@ import {
   Rocket,
   ChevronDown,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import "./Landing.css";
 
+// Import track images
+import track1 from "../../assets/1.png";
+import track2 from "../../assets/2.png";
+import track3 from "../../assets/3.png";
+import track4 from "../../assets/4.png";
+import track5 from "../../assets/5.png";
+import track6 from "../../assets/6.png";
+import track7 from "../../assets/7.png";
+import track8 from "../../assets/8.png";
+import track9 from "../../assets/9.png";
+import track10 from "../../assets/10.png";
+import track11 from "../../assets/11.png";
+import track12 from "../../assets/12.png";
+import track13 from "../../assets/13.png";
+import track14 from "../../assets/14.png";
+import track15 from "../../assets/15.png";
+
+// Holi Color Drop Effect
+function RainbowCursorTrail() {
+  const [colorDrops, setColorDrops] = useState([]);
+  const dropIdRef = useRef(0);
+  const lastMoveTimeRef = useRef(0);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const now = Date.now();
+      lastMoveTimeRef.current = now;
+
+      // Create gentle holi-like color drops
+      if (Math.random() < 0.4) { // 40% chance to create a drop
+        // Holi festival colors - vibrant but natural
+        const holiColors = [
+          { hue: 340, saturation: 85, lightness: 65 }, // Pink
+          { hue: 45, saturation: 90, lightness: 60 },  // Orange
+          { hue: 60, saturation: 85, lightness: 65 },  // Yellow
+          { hue: 120, saturation: 70, lightness: 55 }, // Green
+          { hue: 240, saturation: 80, lightness: 60 }, // Blue
+          { hue: 280, saturation: 75, lightness: 65 }, // Purple
+          { hue: 15, saturation: 85, lightness: 60 },  // Red-Orange
+        ];
+
+        const randomColor = holiColors[Math.floor(Math.random() * holiColors.length)];
+
+        const newDrop = {
+          id: dropIdRef.current++,
+          x: e.clientX + (Math.random() - 0.5) * 20,
+          y: e.clientY + (Math.random() - 0.5) * 20,
+          timestamp: now,
+          color: randomColor,
+          size: 6 + Math.random() * 8,
+          velocityX: (Math.random() - 0.5) * 2,
+          velocityY: Math.random() * 3 + 1, // Slight downward drift
+        };
+
+        setColorDrops(prev => [...prev, newDrop]);
+
+        // Clean up drops after 3 seconds
+        setTimeout(() => {
+          setColorDrops(prev => prev.filter(drop => drop.id !== newDrop.id));
+        }, 3000);
+      }
+    };
+
+    // Clean up drops when mouse stops moving
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      if (now - lastMoveTimeRef.current > 150) {
+        setColorDrops(prev => prev.filter(drop => now - drop.timestamp < 3000));
+      }
+    }, 150);
+
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      clearInterval(cleanupInterval);
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50">
+      {colorDrops.map((drop) => {
+        const age = Date.now() - drop.timestamp;
+        const opacity = Math.max(0, 0.8 - age / 3000); // Start with lower opacity
+        const scale = Math.max(0.3, 1 - age / 4000); // Slower scale down
+
+        // Gentle movement
+        const driftX = drop.velocityX * (age / 100);
+        const driftY = drop.velocityY * (age / 100);
+
+        return (
+          <div
+            key={drop.id}
+            className="absolute rounded-full"
+            style={{
+              left: drop.x + driftX - drop.size / 2,
+              top: drop.y + driftY - drop.size / 2,
+              width: drop.size,
+              height: drop.size,
+              background: `hsl(${drop.color.hue}, ${drop.color.saturation}%, ${drop.color.lightness}%)`,
+              opacity: opacity,
+              transform: `scale(${scale})`,
+              transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
+              boxShadow: `0 0 ${drop.size * 0.5}px hsla(${drop.color.hue}, ${drop.color.saturation}%, ${drop.color.lightness}%, 0.3)`,
+              filter: 'blur(0.3px)',
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+// Theme detection hook
+const useThemeDetection = () => {
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+  useEffect(() => {
+    const detectTheme = () => {
+      if (typeof window !== 'undefined') {
+        // Check for dark mode preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Check background color of the page
+        const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+        const htmlBg = window.getComputedStyle(document.documentElement).backgroundColor;
+
+        // Parse RGB values to determine if background is dark
+        const parseRgb = (rgb) => {
+          const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+          if (match) {
+            const [, r, g, b] = match.map(Number);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance < 0.5;
+          }
+          return prefersDark;
+        };
+
+        const bodyIsDark = bodyBg !== 'rgba(0, 0, 0, 0)' ? parseRgb(bodyBg) : null;
+        const htmlIsDark = htmlBg !== 'rgba(0, 0, 0, 0)' ? parseRgb(htmlBg) : null;
+
+        const isDark = bodyIsDark !== null ? bodyIsDark :
+          htmlIsDark !== null ? htmlIsDark :
+            prefersDark;
+
+        setIsDarkTheme(isDark);
+      }
+    };
+
+    detectTheme();
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => detectTheme();
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    const observer = new MutationObserver(detectTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  return isDarkTheme;
+};
+
+// Theme-aware color utility
+const getThemeColors = (isDark) => ({
+  background: isDark ? '#000000' : '#ffffff',
+  text: isDark ? '#e0e0e0' : '#1a1a1a',
+  textSecondary: isDark ? '#b0b0b0' : '#4a4a4a',
+  border: isDark ? '#404040' : '#000000',
+  cardBg: isDark ? '#000000' : '#ffffff',
+  cardBgSecondary: isDark ? '#2a2a2a' : '#ffffff',
+  navBg: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+  accent: '#3b82f6',
+});
 
 // Countdown Timer Component
-function CountdownTimer({ targetDate }) {
+function CountdownTimer({ targetDate, themeColors }) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -35,9 +218,7 @@ function CountdownTimer({ targetDate }) {
       if (distance > 0) {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          hours: Math.floor(
-            (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          ),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
           minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
           seconds: Math.floor((distance % (1000 * 60)) / 1000),
         });
@@ -48,33 +229,47 @@ function CountdownTimer({ targetDate }) {
   }, [targetDate]);
 
   return (
-                <div className="rounded-2xl border-2 border-gray-500 p-6 shadow-lg">
-        <div className="text-center mb-4">
-          <h3 className="text-2xl font-bold mb-2" style={{ color: '#e0e0e0' }}>
-            Hackathon starts in
-          </h3>
-        </div>
-        <div className="grid grid-cols-4 gap-4">
-          {Object.entries(timeLeft).map(([unit, value]) => (
-            <div key={unit} className="text-center">
-              <div className="bg-[#272757] text-white rounded-xl p-3 border border-gray-300">
-                <div className="text-3xl font-bold" style={{ color: '#e0e0e0' }}>
-                  {value.toString().padStart(2, "0")}
-                </div>
-                <div className="text-xs uppercase font-semibold" style={{ color: '#e0e0e0' }}>{unit}</div>
+    <div
+      className="rounded-2xl border-2 p-3 shadow-lg"
+      style={{
+        borderColor: themeColors.border,
+        backgroundColor: themeColors.cardBg,
+        borderRadius: 50,
+
+      }}
+    >
+      <div className="text-center">
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {Object.entries(timeLeft).map(([unit, value]) => (
+          <div key={unit} className="text-center">
+            <div
+
+            >
+              <div className="text-4xl font-bold" style={{ color: themeColors.text }}>
+                {value.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs uppercase font-semibold" style={{ color: themeColors.textSecondary }}>
+                {unit}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
+    </div>
   );
 }
 
 // Custom Badge Component
-function Badge({ children, className = "" }) {
+function Badge({ children, className = "", themeColors }) {
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${className}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border-2 ${className}`}
+      style={{
+        backgroundColor: themeColors.cardBgSecondary,
+        color: themeColors.text,
+        borderColor: themeColors.border
+      }}
     >
       {children}
     </span>
@@ -88,16 +283,28 @@ function Button({
   variant = "default",
   size = "default",
   onClick,
+  themeColors,
   ...props
 }) {
-  const baseClasses =
-    "inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const baseClasses = "inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
 
-  const variants = {
-    default:
-      "bg-red-600 hover:bg-blue-700 text-white border-2 border-gray-500 shadow-lg hover:shadow-md focus:ring-blue-500",
-    outline:
-      "bg-transparent border-2 text-current hover:bg-current hover:text-white focus:ring-blue-500",
+  const getVariantStyles = () => {
+    switch (variant) {
+      case "outline":
+        return {
+          backgroundColor: "transparent",
+          color: themeColors.text,
+          borderColor: themeColors.border,
+          border: "2px solid"
+        };
+      default:
+        return {
+          color: "#ffffff",
+          borderColor: themeColors.border,
+          border: "2px solid",
+          borderRadius: 50
+        };
+    }
   };
 
   const sizes = {
@@ -108,7 +315,8 @@ function Button({
 
   return (
     <button
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseClasses} ${sizes[size]} ${className}`}
+      style={getVariantStyles()}
       onClick={onClick}
       {...props}
     >
@@ -117,7 +325,1362 @@ function Button({
   );
 }
 
-// Custom Accordion Component
+const tracks = [
+  { icon: "🌐", title: "Game Development", description: "Blockchain and decentralized applications", image: track1 },
+  { icon: "🧠", title: "AI/ML", description: "Artificial Intelligence and Machine Learning solutions", image: track4 },
+  { icon: "📱", title: "Mobile Apps", description: "iOS and Android application development", image: track5 },
+  { icon: "💻", title: "Web Dev", description: "Full-stack web applications and platforms", image: track3 },
+  { icon: "⚡", title: "IoT", description: "Internet of Things and embedded systems", image: track6 },
+  { icon: "❤️", title: "HealthTech", description: "Healthcare and medical technology innovations", image: track2 },
+
+];
+
+const bootcampJourney = [
+  {
+    day: 1,
+    title: "Java Foundations",
+    topics: "Java setup & IDE, Data types, Variables, Operators, Loops & Conditionals, Functions & Arrays",
+    icon: "☕",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
+    color: "#ED8B00",
+    bgGradient: "from-orange-500 to-red-500"
+  },
+  {
+    day: 2,
+    title: "Object-Oriented Programming",
+    topics: "Classes & Objects, Constructors, Inheritance, Polymorphism, Encapsulation & Abstraction",
+    icon: "🏗️",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
+    color: "#4ECDC4",
+    bgGradient: "from-teal-500 to-cyan-500"
+  },
+  {
+    day: 3,
+    title: "Web Fundamentals",
+    topics: "HTML structure (headings, forms, tables), CSS selectors, Colors, Fonts, Box model, Flexbox",
+    icon: "🌐",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
+    color: "#E34F26",
+    bgGradient: "from-orange-500 to-red-500"
+  },
+  {
+    day: 4,
+    title: "Bootstrap & Responsive Design",
+    topics: "Bootstrap grid system, Navbar, Cards, Buttons, Forms, Responsive design basics",
+    icon: "📱",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-original.svg",
+    color: "#7952B3",
+    bgGradient: "from-purple-500 to-indigo-500"
+  },
+  {
+    day: 5,
+    title: "JavaScript Essentials",
+    topics: "JavaScript Variables (var/let/const), Functions & Events, DOM manipulation, Arrays & Objects",
+    icon: "⚡",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
+    color: "#F7DF1E",
+    bgGradient: "from-yellow-400 to-orange-500"
+  },
+  {
+    day: 6,
+    title: "Database Management",
+    topics: "MySQL installation, CREATE, SELECT, INSERT, UPDATE, DELETE, Joins & Relationships",
+    icon: "🗄️",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg",
+    color: "#4479A1",
+    bgGradient: "from-blue-500 to-indigo-600"
+  },
+  {
+    day: 7,
+    title: "Spring Boot Backend",
+    topics: "Spring Boot Intro, REST API basics, @RestController, @GetMapping, @PostMapping, Connect to MySQL with JPA",
+    icon: "🍃",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg",
+    color: "#6DB33F",
+    bgGradient: "from-green-500 to-emerald-600"
+  },
+  {
+    day: 8,
+    title: "Advanced Backend",
+    topics: "JPA & Hibernate basics, Repository pattern, CRUD operations (Create, Read, Update, Delete)",
+    icon: "⚙️",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg",
+    color: "#F7DC6F",
+    bgGradient: "from-amber-500 to-yellow-500"
+  },
+  {
+    day: 9,
+    title: "React Frontend",
+    topics: "React setup (CRA or Vite), Components & Props, State & Hooks (useState), Fetching data from Spring Boot API",
+    icon: "⚛️",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
+    color: "#61DAFB",
+    bgGradient: "from-cyan-400 to-blue-500"
+  },
+  {
+    day: 10,
+    title: "Deployment & Git",
+    topics: "Git basics (clone, add, commit, push), GitHub repo setup, Deploy React frontend to Vercel, (Optional) Deploy Spring Boot backend to Render/Heroku",
+    icon: "🚀",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
+    color: "#F05032",
+    bgGradient: "from-orange-500 to-red-500"
+  }
+];
+
+// Swag Carousel Component
+function SwagCarousel() {
+  const swagItems = [
+    {
+      image: "https://wow.vizag.dev/swags/tshirt.png",
+    },
+    {
+      image: "https://wow.vizag.dev/swags/bottle.png",
+    }
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % swagItems.length);
+    }, 3000); // Change every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [swagItems.length]);
+
+  return (
+    <div className="relative h-full flex flex-col justify-center">
+      <div className="relative overflow-hidden rounded-xl">
+        <motion.div
+          className="flex"
+          animate={{
+            x: `-${currentIndex * 100}%`
+          }}
+          transition={{
+            duration: 0.5,
+            ease: "easeInOut"
+          }}
+        >
+          {swagItems.map((item, index) => (
+            <div
+              key={index}
+              className="w-full flex-shrink-0 flex flex-col items-center justify-center p-4"
+            >
+              <div className="w-50 h-50 mb-3 rounded-xl overflow-hidden  flex items-center justify-center">
+                <img
+                  src={item.image}
+                  className="w-50 h-50"
+
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerHTML = `<div style="width: 80px; height: 80px; background: rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🎁</div>`;
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+
+    </div>
+  );
+}
+
+// Rewards Carousel Component
+function RewardsCarousel({ themeColors }) {
+  const rewardData = [
+    { image: track8, title: "Networking", subtitle: "Connect & Grow" },
+    { image: track9, title: "Swag & Goodies", subtitle: "T-shirts & Stickers" },
+    { image: track10, title: "Mentorship", subtitle: "Industry Guidance" },
+    { image: track11, title: "Cash Prizes", subtitle: "₹30,000 Prize Pool" },
+    { image: track7, title: "Certificates", subtitle: "Digital Recognition" },
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % (rewardData.length - 2)); // Show 3 at a time
+    }, 4000); // Change every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [rewardData.length]);
+
+  return (
+    <div className="w-full max-w-5xl mx-auto mb-16">
+      <div className="relative overflow-hidden" style={{ height: '350px' }}>
+        <motion.div
+          className="flex gap-8 px-4"
+          animate={{
+            x: `-${currentIndex * 33.33}%`
+          }}
+          transition={{
+            duration: 0.8,
+            ease: "easeInOut"
+          }}
+        >
+          {rewardData.map((reward, index) => (
+            <div
+              key={index}
+              className="flex-shrink-0 text-center"
+              style={{ width: 'calc(33.33% - 32px)' }}
+            >
+              {/* Image Container */}
+              <div
+                className="w-full rounded-xl overflow-hidden  mb-4"
+                style={{ height: '240px' }}
+              >
+                <img
+                  src={reward.image}
+                  alt={reward.title}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; font-size: 36px; color: white; border-radius: 12px;">🏆</div>`;
+                  }}
+                />
+              </div>
+
+              {/* Title and Subtitle */}
+              <div className="space-y-1">
+                <h3
+                  className="text-lg font-bold"
+                  style={{ color: themeColors.text }}
+                >
+                  {reward.title}
+                </h3>
+                <p
+                  className="text-sm"
+                  style={{ color: themeColors.textSecondary }}
+                >
+                  {reward.subtitle}
+                </p>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Simple Navigation Dots */}
+      <div className="flex justify-center mt-8 space-x-2">
+        {Array.from({ length: rewardData.length - 2 }).map((_, index) => (
+          <button
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
+              ? 'bg-blue-500 w-6'
+              : 'bg-gray-400 hover:bg-gray-500'
+              }`}
+            onClick={() => setCurrentIndex(index)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Tech Marquee Component
+function TechMarquee() {
+  const hackathonTechs = [
+    {
+      name: "React",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
+      color: "#61DAFB"
+    },
+    {
+      name: "Node.js",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
+      color: "#339933"
+    },
+    {
+      name: "Python",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
+      color: "#3776AB"
+    },
+    {
+      name: "JavaScript",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
+      color: "#F7DF1E"
+    },
+    {
+      name: "Docker",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+      color: "#2496ED"
+    },
+    {
+      name: "MongoDB",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg",
+      color: "#47A248"
+    },
+    {
+      name: "Firebase",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firebase/firebase-plain.svg",
+      color: "#FFCA28"
+    },
+    {
+      name: "TensorFlow",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tensorflow/tensorflow-original.svg",
+      color: "#FF6F00"
+    },
+    {
+      name: "AWS",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original.svg",
+      color: "#FF9900"
+    },
+    {
+      name: "Flutter",
+      icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flutter/flutter-original.svg",
+      color: "#02569B"
+    }
+  ];
+
+  // Duplicate the array for seamless loop
+  const duplicatedTechs = [...hackathonTechs, ...hackathonTechs];
+
+  return (
+    <div className="h-full flex flex-col justify-center">
+      <div className="relative h-full overflow-hidden">
+        <motion.div
+          className="flex flex-col gap-3"
+          animate={{
+            y: [0, -50 * hackathonTechs.length]
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+
+        >
+          {duplicatedTechs.map((tech, index) => (
+            <motion.div
+              key={`${tech.name}-${index}`}
+              className="flex items-center justify-center"
+              style={{
+                height: "60px",
+                minHeight: "60px"
+              }}
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+
+              >
+                <img
+                  src={tech.icon}
+                  alt={tech.name}
+                  className="w-30 h-30"
+                  style={{
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerHTML = `<div style="width: 24px; height: 24px; background: ${tech.color}; border-radius: 4px;"></div>`;
+                  }}
+                />
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// Scroll-Triggered Timeline Component
+function ScrollTriggeredTimeline({ bootcampJourney, themeColors }) {
+  const containerRef = useRef(null);
+  const [viewportWidth, setViewportWidth] = useState(1200);
+
+  useEffect(() => {
+    const updateViewportWidth = () => {
+      if (typeof window !== 'undefined') {
+        setViewportWidth(window.innerWidth);
+      }
+    };
+
+    updateViewportWidth();
+    window.addEventListener('resize', updateViewportWidth);
+    return () => window.removeEventListener('resize', updateViewportWidth);
+  }, []);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start 0.2", "end 0.8"]
+  });
+
+  // Calculate smooth horizontal movement
+  const cardWidth = 400; // Increased width for better timeline look
+  const gap = 24;
+  const totalWidth = bootcampJourney.length * cardWidth + (bootcampJourney.length - 1) * gap;
+  const containerPadding = 100;
+  const visibleWidth = Math.min(viewportWidth - containerPadding, 1200);
+  const maxScroll = Math.max(0, totalWidth - visibleWidth);
+
+  // Smooth horizontal movement with better easing
+  const x = useTransform(scrollYProgress, [0, 1], [50, -maxScroll + 50]);
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  return (
+    <div ref={containerRef} className="relative h-screen" style={{ marginTop: '-200px' }}>
+      {/* Progress Line */}
+      <div
+        className="absolute top-1/2 left-0 right-0 h-1 z-0 mx-8"
+        style={{ backgroundColor: themeColors.border }}
+      >
+        <motion.div
+          className="h-full"
+          style={{
+            backgroundColor: themeColors.accent,
+            width: progressWidth
+          }}
+        />
+      </div>
+
+      {/* Fixed Container for Horizontal Movement */}
+      <div className=" absolute inset-0 flex items-center overflow-hidden">
+        <motion.div
+          className="flex gap-6 w-max px-8"
+          style={{ x }}
+        >
+          {bootcampJourney.map((day, index) => (
+            <motion.div
+              key={day.day}
+              className="relative flex-shrink-0"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+                type: "spring",
+                stiffness: 120
+              }}
+              viewport={{ once: true }}
+            >
+              {/* Timeline Card - Clean Design */}
+              <motion.div
+                className="w-96 bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6 relative"
+                style={{
+                  backgroundColor: themeColors.cardBgSecondary,
+                  borderColor: themeColors.themeColors
+                }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.1)"
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Left Side - Tech Logo */}
+                <div className="flex items-start gap-4">
+                  <div
+                    className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${day.color}15` }}
+                  >
+                    <img
+                      src={day.logo}
+                      alt={day.title}
+                      className="w-10 h-10"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentNode.innerHTML = `<span style="font-size: 24px;">${day.icon}</span>`;
+                      }}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3
+                        className="text-xl font-bold"
+                        style={{ color: themeColors.text }}
+                      >
+                        {day.title}
+                      </h3>
+                      <div className="text-right">
+                        <div
+                          className="text-2xl font-black"
+                          style={{ color: themeColors.textSecondary }}
+                        >
+                          {day.day}
+                        </div>
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: themeColors.textSecondary }}
+                        >
+                          Day
+                        </div>
+                      </div>
+                    </div>
+
+                    <p
+                      className="text-sm font-medium mb-3"
+                      style={{ color: themeColors.textSecondary }}
+                    >
+                      Learning Path
+                    </p>
+
+                    <div className="space-y-2">
+                      {day.topics.split(', ').slice(0, 3).map((topic, topicIndex) => (
+                        <div
+                          key={topicIndex}
+                          className="flex items-start gap-2"
+                        >
+                          <div
+                            className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                            style={{ backgroundColor: day.color }}
+                          />
+                          <span
+                            className="text-sm leading-relaxed"
+                            style={{ color: themeColors.text }}
+                          >
+                            {topic}
+                          </span>
+                        </div>
+                      ))}
+                      {day.topics.split(', ').length > 3 && (
+                        <div
+                          className="text-xs font-medium"
+                          style={{ color: day.color }}
+                        >
+                          +{day.topics.split(', ').length - 3} more topics
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Indicator */}
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                  <div
+                    className="w-8 h-8 rounded-full border-4 flex items-center justify-center text-xs font-black"
+                    style={{
+                      backgroundColor: day.color,
+                      borderColor: themeColors.background,
+                      color: '#ffffff'
+                    }}
+                  >
+                    {day.day}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+      >
+        <div
+          className="flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-sm"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border,
+            color: themeColors.textSecondary
+          }}
+        >
+          <span className="text-sm font-medium">Scroll to explore journey</span>
+          <motion.div
+            animate={{ y: [0, 3, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            ↓
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+export default function Landing() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const isDarkTheme = useThemeDetection();
+  const themeColors = getThemeColors(isDarkTheme);
+
+  const hackathonDate = new Date("2025-08-14T10:00:00");
+
+  return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: themeColors.background,
+        cursor: 'url("data:image/svg+xml;charset=UTF-8,%3csvg width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' xmlns=\'http://www.w3.org/2000/svg\'%3e%3ctext x=\'0\' y=\'20\' font-size=\'20\'%3e🖌️%3c/text%3e%3c/svg%3e") 12 12, auto'
+      }}
+    >
+      {/* Rainbow Cursor Trail */}
+      <RainbowCursorTrail />
+
+      {/* Navigation */}
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <nav
+          className="backdrop-blur-xl rounded-2xl border-2 sticky top-4 z-50"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+        >
+          <div className="px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <div className="text-2xl font-black" style={{ color: themeColors.text }}>
+                  VEDIC VISION<span style={{ color: themeColors.accent }}>&nbsp;2K25</span>
+                </div>
+              </div>
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-8">
+                {["About", "Tracks", "Timeline", "Rewards"].map((item) => (
+                  <a
+                    key={item}
+                    href={`#${item.toLowerCase()}`}
+                    className="font-semibold transition-colors hover:opacity-80"
+                    style={{ color: themeColors.text }}
+                  >
+                    {item}
+                  </a>
+                ))}
+                <a
+                  href="/photo-booth"
+                  className="font-semibold transition-colors hover:opacity-80"
+                  style={{ color: themeColors.text }}
+                >
+                  Photo Booth
+                </a>
+
+
+              </div>
+
+              {/* Mobile menu button */}
+              <div className="md:hidden">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-2 rounded-md border-2"
+                  style={{
+                    backgroundColor: themeColors.cardBg,
+                    borderColor: themeColors.border
+                  }}
+                >
+                  {isMenuOpen ? (
+                    <X className="h-6 w-6" style={{ color: themeColors.text }} />
+                  ) : (
+                    <Menu className="h-6 w-6" style={{ color: themeColors.text }} />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      {/* Mobile Navigation */}
+      {isMenuOpen && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+          <div
+            className="backdrop-blur-xl rounded-2xl border-2"
+            style={{
+              backgroundColor: themeColors.navBg,
+              borderColor: themeColors.border
+            }}
+          >
+            <div className="px-8 py-6 space-y-2">
+              {["About", "Tracks", "Timeline", "Rewards", "Photo Booth"].map((item) => (
+                <a
+                  key={item}
+                  href={item === "Photo Booth" ? "/photo-booth" : `#${item.toLowerCase()}`}
+                  className="block px-3 py-2 font-semibold"
+                  style={{ color: themeColors.text }}
+                >
+                  {item}
+                </a>
+              ))}
+              <div className="px-3 py-2">
+                <Button
+                  className="w-full font-bold"
+                  themeColors={themeColors}
+                >
+                  Register Now 🎯
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <section className="py-8 px-4 sm:px-6 lg:px-10" >
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-12 gap-6">
+            {/* Main Hero Card */}
+            <div className="lg:col-span-8">
+              <div
+                className="rounded-2xl border-2 p-8 shadow-lg h-full"
+                style={{
+                  borderColor: themeColors.border,
+                  backgroundColor: themeColors.cardBg,
+                  padding: '90px',
+                  borderRadius: 50,
+                  maxHeight: '600px'
+                }}
+              >
+
+                <p
+                  style={{
+                    fontSize: 30,
+                    color: themeColors.text,
+
+                    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  }}
+                >
+                  <span style={{ fontWeight: '400' }}>Join us for</span>
+                  <br />
+                  <span style={{ fontWeight: '650', fontSize: 50 }}>Innovate, Elevate,<br /> Energize</span>
+                  <br />
+                  <span
+                    style={{ fontWeight: '400' }}
+                  >
+                    of learning
+                  </span>
+                </p>
+                <div className="mb-8">
+                  <div
+                    className="w-160 h-0.5 mb-6"
+                    style={{ backgroundColor: themeColors.textSecondary }}
+                  />
+                  <div
+                    className="mb-6"
+                    style={{
+                      color: themeColors.textSecondary,
+                      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                      fontSize: '1.125rem',
+                      fontWeight: '400'
+                    }}
+                  >
+                    August 04-15, 2025
+                  </div>
+                  <p
+                    className="text-lg max-w-2xl leading-relaxed"
+                    style={{
+                      color: themeColors.textSecondary,
+                      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                      fontWeight: '400'
+                    }}
+                  >
+                    Code with purpose — create innovative solutions for yoga sessions, meditation spaces, physical fitness, and holistic well-being.
+
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    className="px-8 py-4 text-lg font-medium transition-all duration-200 hover:scale-105"
+                    style={{
+                      backgroundColor: '#000000',
+                      color: '#ffffff',
+                      borderRadius: '50px',
+                      border: 'none',
+                      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                      fontWeight: '400'
+                    }}
+                    onClick={() => window.open("/register", "_blank")}
+                  >
+                    get tickets
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side Cards */}
+            <div className="lg:col-span-4 space-y-6">
+              <CountdownTimer targetDate={hackathonDate} themeColors={themeColors} />
+
+              {/* Swag and Prize Pool Cards */}
+              <div style={{ display: 'flex', gap: '16px', height: 290 }}>
+                <div
+                  style={{
+                    backgroundColor: '#19afc3',
+                    borderColor: themeColors.border,
+                    border: '2px solid',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    width: '72%',
+                    minWidth: '0'
+
+                  }}
+                >
+                  <p className="text-2xl" style={{ color: themeColors.text, fontFamily: 'sans-serif', fontWeight: '600' }}>
+                    Bag your<br /> swags
+                  </p>
+                  <div className="flex-1">
+                    <SwagCarousel />
+                  </div>
+
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: '#D1EED8',
+                    borderColor: themeColors.border,
+                    border: '2px solid',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    width: '28%',
+                    minWidth: '0',
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}
+                >
+                  <TechMarquee />
+                </div>
+              </div>
+
+              <div >
+                <div
+                  style={{
+                    backgroundColor: '#F8BB15',
+                    borderColor: themeColors.border,
+                    border: '2px solid',
+                    borderRadius: 40,
+                    padding: '24px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    minWidth: '0',
+                    fontFamily: 'sans-serif'
+                  }}
+                ><p className="text-2xl" style={{ color: themeColors.border }}>
+                    PRIZE POOL
+                  </p>
+                  <h1 className="text-5xl  mb-4" style={{ color: themeColors.border, fontWeight: '700' }}>
+                    ₹30,000
+                  </h1>
+
+
+                </div>
+
+
+              </div>
+            </div>
+
+
+
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Cards */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {/* Mission Card */}
+            <div
+              className="rounded-2xl p-5 shadow-lg flex flex-col justify-between"
+              style={{
+                minHeight: "309px",
+                backgroundColor: '#5C8C3D',
+
+                borderColor: themeColors.border
+              }}
+            >
+              <div
+                className=" text-sm mb-2 rounded-2xl border-2 inline-block px-4 py-1"
+                style={{
+                  borderColor: themeColors.border,
+                  color: themeColors.text,
+                  width: "fit-content"
+                }}
+              >
+                MISSION
+              </div>
+              <div
+                className="font-black"
+                style={{
+                  fontSize: "3.5rem",
+                  lineHeight: "1.1",
+                  color: themeColors.text
+                }}
+              >
+                <span>Learn</span><br />
+                <span>Connect</span><br />
+                <span>Grow</span>.
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="col-span-1 sm:col-span-1 md:col-span-1 grid grid-cols-2 gap-3 h-[309px]">
+              {[
+                { number: "20+", label: "Mentors" },
+                { number: "250+", label: "Participants" },
+                { number: "10+2", label: "Days" },
+                { number: "Full Stack", label: "Bootcamp" }
+              ].map((stat, index) => {
+                const backgroundColor = (index === 0 || index === 3) ? '#FF6B39' : '#F7931E';
+
+                return (
+                  <div
+                    key={index}
+                    className="p-6 shadow-lg text-center flex flex-col justify-center rounded-3xl"
+                    style={{
+                      background: backgroundColor,
+                      borderColor: themeColors.border,
+                      width: "180px",  // Half of 380 because 2 cards per row
+                      maxWidth: "100%"
+                    }}
+                  >
+                    <div className="text-3xl font-black mb-1 text-white">
+                      {stat.number}
+                    </div>
+                    <div className="font-bold text-xs text-white">
+                      {stat.label}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Image placeholder */}
+            <div
+              className="rounded-3xl border-2 p-5 shadow-lg "
+              style={{
+                minHeight: "309px",
+                minWidth: "600px",
+                borderRadius: 50,
+                backgroundColor: themeColors.cardBg,
+                borderColor: themeColors.border
+              }}
+            >
+              <div
+                className="w-full h-full rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: themeColors.cardBgSecondary }}
+              >
+                <span style={{ color: themeColors.textSecondary }}>Event Image Placeholder</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Tracks Section */}
+      <section
+        className="py-20 px-4 sm:px-6 lg:px-12"
+        style={{ backgroundColor: themeColors.cardBg }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <h2
+            className="text-5xl font-black mb-12 text-center"
+            style={{ color: themeColors.text }}
+          >
+            Choose Your Track
+          </h2>
+
+          <div
+            className={`flex flex-row transition-all duration-300 ${selectedIndex !== null ? "items-start gap-10" : "justify-center"
+              }`}
+          >
+            {/* Track Cards */}
+            <div
+              className={`grid ${selectedIndex !== null ? "grid-cols-3 grid-rows-2 gap-4" : "grid-cols-6 gap-6"
+                } transition-all duration-300`}
+            >
+              {tracks.map((track, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedIndex(index)}
+                  className={`border-2 rounded-xl p-4 text-center cursor-pointer transition-all duration-300 
+                  ${selectedIndex !== null
+                      ? "w-24 h-24 text-xs"
+                      : "w-40 h-40 text-base"
+                    } flex flex-col items-center justify-center hover:opacity-80 ${selectedIndex === index ? "ring-2 ring-red-500" : ""
+                    }`}
+                  style={{
+                    backgroundColor: themeColors.cardBgSecondary,
+                    borderColor: themeColors.border,
+                    color: themeColors.text
+                  }}
+                >
+                  <div className="text-xl mb-1">{track.icon}</div>
+                  <div className="font-bold">{track.title}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Description Panel */}
+            {selectedIndex !== null && (
+              <div
+                className="border-2 flex-1 p-8 rounded-xl shadow-md max-w-lg h-[180px] transition-opacity duration-300 flex items-center gap-6"
+                style={{
+                  backgroundColor: themeColors.cardBgSecondary,
+                  borderColor: themeColors.border,
+                  width: '100%',
+                  maxWidth: 'none'
+                }}
+              >
+                {/* Text Content */}
+                <div className="flex-1">
+                  <h3
+                    className="text-2xl font-bold mb-4"
+                    style={{ color: themeColors.text }}
+                  >
+                    {tracks[selectedIndex].title}
+                  </h3>
+                  <p
+                    className="text-lg leading-relaxed"
+                    style={{ color: themeColors.textSecondary }}
+                  >
+                    {tracks[selectedIndex].description}
+                  </p>
+                </div>
+
+                {/* Image */}
+                <div className="flex-shrink-0">
+                  <img
+                    src={tracks[selectedIndex].image}
+                    alt={tracks[selectedIndex].title}
+                    className="w-75 h-75 object-cover "
+                    style={{
+                      filter: isDarkTheme ? 'brightness(0.9)' : 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Box Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div
+            className="w-full px-8 border-2 py-12 rounded-2xl"
+            style={{
+              backgroundColor: themeColors.cardBg,
+              borderColor: themeColors.border
+            }}
+          >
+            <h4
+              className="px-8 py-2 border-2 w-max rounded-full mb-3 text-sm font-semibold"
+              style={{
+                color: themeColors.text,
+                borderColor: themeColors.border,
+                backgroundColor: themeColors.cardBgSecondary
+              }}
+            >
+              benefits
+            </h4>
+            <div className="ml-3">
+              <h1 className="text-2xl font-bold mb-4" style={{ color: themeColors.text }}>
+                What's in it for me?
+              </h1>
+              <p className="text-base mb-6 max-w-[48ch]" style={{ color: themeColors.textSecondary }}>
+                Build real-world tech solutions for yoga, health, and wellness — and win prizes, recognition, and<br />
+                swags while elevating your mind and skills.
+              </p>
+              <h2 className="text-xl font-semibold mt-8 mb-4" style={{ color: themeColors.text }}>
+                I want to
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+                {[
+                  {
+                    title: "learn tech from the experts",
+                    image: "https://www.gitam.edu/sites/default/files/banners/know-gitam_0.jpg",
+                    color: "rgb(23, 78, 166)",
+                    benefits: [
+                      "Exposure to Industry Experts & Technologies, Discover new career opportunities, new skills, professional contacts",
+                      "Hands-on Hackathon Experience to Boost Practical Skills, Learn how to work in a team.",
+                      "Networking Opportunities with Peers and Professionals"
+                    ]
+                  },
+                  {
+                    title: "build a startup",
+                    image: "https://storage.googleapis.com/gweb-uniblog-publish-prod/images/220304_GGstartups_interior_4350.width-1300.jpg",
+                    color: "rgb(13, 101, 45)",
+                    benefits: [
+                      "Connect with Potential Collaborators and Mentors",
+                      "Gain Insights from Industry Leaders through Panel Discussions, Learn business tips from successful people.",
+                      "Showcase Startup Ideas and Explore Partnership Avenues"
+                    ]
+                  },
+                  {
+                    title: "build a career in Tech",
+                    image: "https://heinzegers.com/wp-content/uploads/2017/08/Visiting-Google-1024x576.jpg",
+                    color: "rgb(176, 96, 0)",
+                    benefits: [
+                      "Brand Visibility through Sponsorships and Talks",
+                      "Engage with Young Tech Talent, Connect with other companies and startups, business connections, collaborations",
+                      "Opportunities to Collaborate on Innovative Projects & Hackathon Solutions, Support student innovation through sponsorship."
+                    ]
+                  },
+                  {
+                    title: "be a freelancer",
+                    image: "https://images.businessnewsdaily.com/app/uploads/2022/04/04072326/freelancer_Prostock-Studio_getty.jpg",
+                    color: "rgb(179, 20, 18)",
+                    benefits: [
+                      "Explore the talks and workshops to understand where and when to make your next step.",
+                      "Build a network of like minded people that can help you reach the next level.",
+                      "Ask and get the best practices from the amazing line-up of speakers to reach the correct clients and companies."
+                    ]
+                  }
+                ].map((item, index) => (
+                  <div key={index} className="h-full rounded-xl overflow-hidden shadow group cursor-pointer">
+                    <div className="relative h-48">
+                      <img
+                        alt={item.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover rounded-xl"
+                        src={item.image}
+                      />
+                      <div
+                        className="absolute top-[-1px] right-[-1px] p-3 rounded-bl-2xl"
+                        style={{ backgroundColor: themeColors.background }}
+                      >
+                        <div
+                          className="text-white text-center px-6 py-2 rounded-lg text-[12px]"
+                          style={{ backgroundColor: item.color, width: "140px" }}
+                        >
+                          <p>{item.title}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          className="absolute bottom-0 left-0 right-0 p-4 rounded-bl-xl hidden group-hover:block"
+                          style={{ backgroundColor: item.color, opacity: 0.92 }}
+                        >
+                          {item.benefits.map((benefit, benefitIndex) => (
+                            <p key={benefitIndex} className="text-white mb-2 text-sm">
+                              • {benefit}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* Bootcamp Journey Section with Scroll-Triggered Horizontal Movement */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: themeColors.background }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2
+              className="text-4xl md:text-6xl font-black mb-4"
+              style={{ color: themeColors.text }}
+            >
+              Your 10-Day Bootcamp Journey
+            </h2>
+            <p
+              className="text-xl max-w-3xl mx-auto"
+              style={{ color: themeColors.textSecondary }}
+            >
+              From Java fundamentals to full-stack deployment - master the complete development cycle in just 10 days
+            </p>
+          </div>
+
+          <ScrollTriggeredTimeline bootcampJourney={bootcampJourney} themeColors={themeColors} />
+
+        </div>
+      </section>
+
+      {/* Rewards Section */}
+      <section id="rewards" className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h2
+            className="text-4xl md:text-5xl font-black text-center mb-12"
+            style={{ color: themeColors.text }}
+          >
+            What You'll Win
+          </h2>
+
+          {/* Rewards Carousel */}
+          <RewardsCarousel themeColors={themeColors} />
+
+
+        </div>
+      </section>
+
+
+      {/* Our Sponsors Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{ marginTop: '-150px' }}>
+        <div className="max-w-4xl mx-auto">
+          {/* Main Title */}
+          <div className="mb-12">
+            <h2
+              className="text-4xl font-bold mb-4"
+              style={{ color: themeColors.text }}
+            >
+              Our Partners
+            </h2>
+            <p
+              className="text-lg"
+              style={{ color: themeColors.textSecondary }}
+            >
+              Sponsors dedicated to building remarkable experience!
+            </p>
+          </div>
+
+          {/* Sponsors Section */}
+          <div className="mb-16">
+            <div className="flex justify-start">
+              <div
+                className="border-1 rounded-lg "
+                style={{
+                  borderColor: themeColors.border,
+                  backgroundColor: 'white',
+                  padding: '-120px'
+                }}
+              >
+
+                <img
+                  src={track14}
+                  alt="Physical department"
+                  className="h-22  w-45 object-contain fit-content"
+                />
+
+              </div>
+
+              <div
+                className="border-1 rounded-lg  ml-2"
+                style={{
+                  backgroundColor: 'white',
+                }}
+              >
+                <img
+                  src={track12}
+                  alt="CSD & CSIT"
+                  className="h-22  w-45 object-contain fit-content"
+                />
+
+
+              </div>
+            </div>
+          </div>
+
+          {/* Partners Section */}
+          <div>
+            <h3
+              className="text-2xl font-bold mb-8"
+              style={{ color: themeColors.text }}
+            >
+              Organizers
+            </h3>
+            <div className="flex justify-start">
+              <div
+                className="border-1 rounded-lg "
+                style={{
+                  backgroundColor: 'white',
+                  padding: '-120px'
+                }}
+              >
+                <img
+                  src={track13}
+                  alt="CSD & CSIT"
+                  className="h-22  w-45 object-contain fit-content"
+                />
+
+
+              </div>
+
+              <div
+                className="border-1 rounded-lg  ml-2"
+                style={{
+                  backgroundColor: 'white',
+                }}
+              >
+                <img
+                  src={track15}
+                  alt="Physical department"
+                  className="h-22  w-45 object-contain fit-content"
+                />
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto ">
+          <h2
+            className="text-4xl md:text-5xl font-black text-center mb-12"
+            style={{ color: themeColors.text }}
+          >
+            Frequently Asked Questions
+          </h2>
+          <Accordion>
+            {faqData.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger themeColors={themeColors}>
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent themeColors={themeColors}>
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+
+
+      {/* Footer - Super Simple */}
+      <footer
+        className="py-8 px-4 border-t"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+      >
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Brand */}
+            <div className="text-lg font-bold" style={{ color: themeColors.text }}>
+              VEDIC VISION<span style={{ color: themeColors.accent }}> 2K25</span>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex space-x-3">
+              {[
+                { icon: Instagram, href: "#" },
+                { icon: Linkedin, href: "#" },
+                { icon: Mail, href: "mailto:contact@vedicvision.com" }
+              ].map((social, index) => (
+                <a
+                  key={index}
+                  href={social.href}
+                  className="p-2 rounded-full hover:opacity-70 transition-opacity"
+                  style={{ color: themeColors.textSecondary }}
+                >
+                  <social.icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
+
+            {/* Copyright */}
+            <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+              © 2025 All rights reserved
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+// Custom Accordion Components for FAQ
 function Accordion({ children }) {
   return <div className="space-y-4">{children}</div>;
 }
@@ -126,7 +1689,7 @@ function AccordionItem({ children, value }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div data-value={value}>
+    <div data-value={value} >
       {React.Children.map(children, (child) =>
         React.cloneElement(child, { isOpen, setIsOpen })
       )}
@@ -134,64 +1697,81 @@ function AccordionItem({ children, value }) {
   );
 }
 
-function AccordionTrigger({ children, className = "", isOpen, setIsOpen }) {
+function AccordionTrigger({ children, className = "", isOpen, setIsOpen, themeColors }) {
   return (
     <button
-      className={`w-full text-left font-black text-lg px-8 py-6 text-gray-900 flex items-center justify-between hover:bg-gray-50 transition-colors ${className}`}
+      className={`w-full text-left font-black text-lg px-8 py-6 flex items-center justify-between hover:opacity-80 transition-colors ${className}`}
+      style={{
+        color: themeColors.text,
+        backgroundColor: themeColors.cardBgSecondary,
+        borderRadius: 50
+      }}
       onClick={() => setIsOpen(!isOpen)}
     >
       <span>{children}</span>
       <ChevronDown
-        className={`w-5 h-5 transition-transform duration-200 ${
-          isOpen ? "rotate-180" : ""
-        }`}
+        className={`w-5 h-5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+          }`}
+        style={{ color: themeColors.text }}
       />
     </button>
   );
 }
 
-function AccordionContent({ children, className = "", isOpen }) {
+function AccordionContent({ children, className = "", isOpen, themeColors }) {
   return (
     <div
-      className={`overflow-hidden transition-all duration-200 ${
-        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-      }`}
+      className={`overflow-hidden transition-all duration-200 ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
     >
-      <div className={`px-8 pb-6 text-gray-600 font-semibold ${className}`}>
+      <div
+        className={`px-8 pb-6 font-semibold ${className}`}
+        style={{ color: themeColors.textSecondary }}
+      >
         {children}
       </div>
     </div>
   );
 }
 
-const tracks = [
-  { icon: "🧠", title: "AI/ML", description: "Artificial Intelligence and Machine Learning solutions" },
-  { icon: "🌐", title: "Web3", description: "Blockchain and decentralized applications" },
-  { icon: "❤️", title: "HealthTech", description: "Healthcare and medical technology innovations" },
-  { icon: "📱", title: "Mobile Apps", description: "iOS and Android application development" },
-  { icon: "💻", title: "Web Dev", description: "Full-stack web applications and platforms" },
-  { icon: "⚡", title: "IoT", description: "Internet of Things and embedded systems" },
+// FAQ data
+const faqData = [
+  {
+    question: "What is Vedic Vision 2K25?",
+    answer: "Vedic Vision 2K25 is a comprehensive 10-day coding bootcamp followed by a 2-day hackathon. It's designed to transform beginners into skilled developers through hands-on learning, expert mentorship, and real-world project building."
+  },
+
+  {
+    question: "What technologies will be covered?",
+    answer: "We'll cover frontend basics, React, backend development, API building, database integration, authentication & security, and full-stack development. You'll also work on AI/ML, Web3, HealthTech, Mobile Apps, Web Dev, and IoT tracks."
+  },
+  {
+    question: "Do I need to bring my own laptop?",
+    answer: "Yes, participants are required to bring their own laptops with basic development tools installed. We'll provide a setup guide before the event starts."
+  },
+  {
+    question: "What's included in the registration fee?",
+    answer: "Registration includes access to all workshops, mentorship sessions, meals during the event, swags, certificates, and eligibility for prizes worth ₹30,000+."
+  },
+  {
+    question: "How are teams formed for the hackathon?",
+    answer: "Team formation happens on Day 10 of the bootcamp. You can form teams of 5-6 members. If you don't have a team, we'll help you find teammates based on your interests and skills."
+  },
+  {
+    question: "What are the judging criteria?",
+    answer: "Projects will be judged based on innovation, technical implementation, user experience, presentation, and potential impact. Our panel includes industry experts and experienced developers."
+  },
+  {
+    question: "Are there any prerequisites?",
+    answer: "No specific prerequisites are required. Basic computer literacy and enthusiasm to learn are all you need. We'll start from the fundamentals and build up gradually."
+  }
 ];
 
-const timelineData = [
-  { date: "Aug 4", title: "Day 1", description: "Kickoff + Intro", icon: "🎉" },
-  { date: "Aug 5", title: "Day 2", description: "Frontend Basics", icon: "🖥️" },
-  { date: "Aug 6", title: "Day 3", description: "React Crash Course", icon: "⚛️" },
-  { date: "Aug 7", title: "Day 4", description: "Backend Intro", icon: "🔧" },
-  { date: "Aug 8", title: "Day 5", description: "API Building", icon: "🌐" },
-  { date: "Aug 9", title: "Day 6", description: "Database Integration", icon: "🗃️" },
-  { date: "Aug 10", title: "Day 7", description: "Auth & Security", icon: "🔐" },
-  { date: "Aug 11", title: "Day 8", description: "Full-stack Demo", icon: "🧪" },
-  { date: "Aug 12", title: "Day 9", description: "Mini Project", icon: "📱" },
-  { date: "Aug 13", title: "Day 10", description: "Team Formation", icon: "👥" },
-  { date: "Aug 14", title: "Hackathon Day 1", description: "Coding Marathon Begins", icon: "⚡" },
-  { date: "Aug 15", title: "Hackathon Day 2", description: "Submissions & Awards", icon: "🏆" },
-];
-
+// Rewards data
 const rewards = [
   {
     title: "Cash Prizes",
-    description: "₹50,000 total prize pool",
+    description: "₹30,000 total prize pool",
     icon: "💰",
   },
   {
@@ -205,11 +1785,6 @@ const rewards = [
     icon: "🎁",
   },
   {
-    title: "Job Opportunities",
-    description: "Direct recruitment opportunities",
-    icon: "💼",
-  },
-  {
     title: "Mentorship",
     description: "Guidance from industry experts",
     icon: "🎯",
@@ -220,629 +1795,3 @@ const rewards = [
     icon: "🤝",
   },
 ];
-
-export default function Landing() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
-
-  const hackathonDate = new Date("2024-03-15T09:00:00");
-
-  return (
-    <div className="min-h-screen bg-gray-50" style={{ backgroundColor: "#000000ff" }}>
-      {/* Navigation */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <nav className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl border-2 border-gray-500 sticky top-4 z-50">
-          <div className="px-8 py-6">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="text-2xl font-black text-gray-200">
-                  VEDIC VISION<span className="text-blue-600">&nbsp;2K25</span>
-                </div>
-              </div>
-
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-8">
-                <a
-                  href="#about"
-                  className="font-semibold text-gray-200 hover:text-blue-600 transition-colors"
-                  style={{ color: '#e0e0e0' }}
-                >
-                  About
-                </a>
-                <a
-                  href="#tracks"
-                  className="font-semibold text-gray-200 hover:text-blue-600 transition-colors"
-                  style={{ color: '#e0e0e0' }}
-                >
-                  Tracks
-                </a>
-                <a
-                  href="#timeline"
-                  className="font-semibold text-gray-200 hover:text-blue-600 transition-colors"
-                  style={{ color: '#e0e0e0' }}
-                >
-                  Timeline
-                </a>
-                <a
-                  href="#rewards"
-                  className="font-semibold text-gray-200 hover:text-blue-600 transition-colors"
-                  style={{ color: '#e0e0e0' }}
-                >
-                  Rewards
-                </a>
-                <a
-                  href="/photo-booth"
-                  className="font-semibold text-gray-200 hover:text-blue-600 transition-colors"
-                  style={{ color: '#e0e0e0' }}
-                >
-                  Photo Booth
-                </a>
-
-                <Button
-                  onClick={() => window.open("/register", "_blank")}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-2 rounded-lg border-2 border-gray-500 shadow-lg hover:shadow-md transition-all"
-                >
-                  Register Now 🎯
-                </Button>
-              </div>
-
-              {/* Mobile menu button */}
-              <div className="md:hidden">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-2 rounded-md bg-white border-2 border-gray-500"
-                >
-                  {isMenuOpen ? (
-                    <X className="h-6 w-6" />
-                  ) : (
-                    <Menu className="h-6 w-6" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-      </div>
-
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl border-2 border-gray-500">
-            <div className="px-8 py-6 space-y-2">
-              <a
-                href="#about"
-                className="block px-3 py-2 font-semibold"
-                style={{ color: '#e0e0e0' }}
-              >
-                About
-              </a>
-              <a
-                href="#tracks"
-                className="block px-3 py-2 font-semibold"
-                style={{ color: '#e0e0e0' }}
-              >
-                Tracks
-              </a>
-              <a
-                href="#timeline"
-                className="block px-3 py-2 font-semibold"
-                style={{ color: '#e0e0e0' }}
-              >
-                Timeline
-              </a>
-              <a
-                href="#rewards"
-                className="block px-3 py-2 font-semibold"
-                style={{ color: '#e0e0e0' }}
-              >
-                Rewards
-              </a>
-              <a
-                href="/photo-booth"
-                className="block px-3 py-2 font-semibold"
-                style={{ color: '#e0e0e0' }}
-              >
-                Photo Booth
-              </a>
-              <div className="px-3 py-2">
-                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold">
-                  Register Now 🎯
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hero Section */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-12 gap-6">
-            {/* Main Hero Card */}
-            <div className="lg:col-span-8">
-              <div className="rounded-2xl border-2 border-gray-500 p-8 shadow-lg h-full">
-                <Badge className="mb-4 bg-white text-gray-900 font-bold px-4 py-2 border-2 border-gray-500">
-                  March 10-16, 2024 📅
-                </Badge>
-                <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black mb-6 leading-tight" style={{ color: '#e0e0e0' }}>
-                  Join us for
-                  <br />
-                  <span style={{ color: '#e0e0e0' }}>
-                    wonder of
-                    <br />
-                    wonders
-                  </span>
-                  <br />
-                  <span className="text-3xl sm:text-4xl lg:text-5xl" style={{ color: '#e0e0e0' }}>
-                    of coding
-                  </span>
-                </h1>
-                <p className="text-xl text-white/90 mb-8 max-w-2xl font-semibold" style={{ color: '#e0e0e0' }}>
-                  Transform from a random coder into a strategic innovation
-                  artist! Build anonymous projects, calculate impact, all while
-                  maintaining your reputation.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button
-                    size="lg"
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-black px-8 py-4 text-lg rounded-lg border-2 border-gray-500 shadow-lg hover:shadow-md transition-all"
-                  >
-                    get tickets 🎫
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 font-black px-8 py-4 text-lg rounded-lg"
-                  >
-                    Learn More ➡️
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side Cards */}
-            <div className="lg:col-span-4 space-y-6">
-              <CountdownTimer targetDate={hackathonDate} />
-
-              {/* Swag and Prize Pool Cards Side by Side */}
-              <div className="flex gap-4">
-                {/* Swag Card */}
-                <div className="bg-[#272757] rounded-2xl border-2 border-gray-500 p-6 shadow-lg flex-[3]">
-                  <h3 className="text-2xl font-black mb-4" style={{ color: '#e0e0e0' }}>
-                    Bag your swags 🎒
-                  </h3>
-                  <div className="rounded-xl p-4 mb-4">
-                    <div className="w-16 h-20 rounded-lg mx-auto"></div>
-                  </div>
-                  <p className="font-bold" style={{ color: '#e0e0e0' }}>
-                    Amazing swags waiting for you!
-                  </p>
-                </div>
-
-                {/* Prize Pool Card */}
-                <div className="bg-[#8686AC] rounded-2xl border-2 border-red-100 p-6 shadow-lg flex-[1]">
-                  <h3 className="text-lg font-black mb-2" style={{ color: '#e0e0e0' }}>
-                    PRIZE POOL
-                  </h3>
-                  <div className="text-4xl font-black" style={{ color: '#e0e0e0' }}>₹30,000</div>
-                </div>
-              </div>
-
-                              <div className="bg-orange-500 rounded-2xl border-2 border-gray-500 p-6 shadow-lg">
-                <h3 className="text-lg font-black mb-2" style={{ color: '#e0e0e0' }}>
-                  PRIZE POOL
-                </h3>
-                <div className="text-4xl font-black" style={{ color: '#e0e0e0' }}>₹30,000</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Cards */}
-      <section className="py-8 px-4 sm:px-26 lg:px-18">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {/* Mission Card */}
-            <div
-              className="rounded-2xl border-2 border-red-100 p-5 shadow-lg flex flex-col justify-between"
-              style={{ minHeight: "309px" }}
-            >
-              <div
-                className="font-bold text-sm mb-2 rounded-2xl border-2 border-gray-500 inline-block"
-                style={{ width: 110, color: '#e0e0e0' }}
-              >
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MISSION
-              </div>
-              <div
-                className="font-black"
-                style={{ fontSize: "3.5rem", lineHeight: "1.1", color: '#e0e0e0' }}
-              >
-                <span>Learn</span>
-                <br />
-                <span>Connect</span>
-                <br />
-                <span>Grow</span>.
-              </div>
-            </div>
-            {/* 2x2 Small Stats */}
-            <div className="col-span-1 md:col-span-1 flex flex-col h-[309px]">
-                              <div className="flex flex-1 gap-6 mb-3">
-                  <div className=" rounded-2xl border-2 border-gray-500 p-6 shadow-lg text-center flex-1 flex flex-col justify-center">
-                  <div className="text-4xl font-black" style={{ color: '#e0e0e0' }}>6+</div>
-                  <div className="font-bold text-sm" style={{ color: '#e0e0e0' }}>
-                    Flagship Events
-                  </div>
-                </div>
-                <div className=" rounded-2xl border-2 border-gray-500 p-6 shadow-lg text-center flex-1 flex flex-col justify-center">
-                  <div className="text-4xl font-black" style={{ color: '#e0e0e0' }}>800+</div>
-                  <div className="font-bold text-sm" style={{ color: '#e0e0e0' }}>
-                    Participants
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-1 gap-6">
-                <div className=" rounded-2xl border-2 border-gray-500 p-6 shadow-lg text-center flex-1 flex flex-col justify-center">
-                  <div className="text-4xl font-black" style={{ color: '#e0e0e0' }}>10</div>
-                  <div className="font-bold text-sm" style={{ color: '#e0e0e0' }}>Days</div>
-                </div>
-                <div className=" rounded-2xl border-2 border-gray-500 p-6 shadow-lg text-center flex-1 flex flex-col justify-center">
-                  <div className="text-4xl font-black" style={{ color: '#e0e0e0' }}>TBA</div>
-                  <div className="font-bold text-sm" style={{ color: '#e0e0e0' }}>
-                    Workshops
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className=" rounded-2xl border-2 border-gray-500 p-5 shadow-lg flex flex-col justify-between"
-              style={{ minHeight: "309px", width: "630px" }}
-            >
-              {/* //image */}
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      
-      <section className="bg-black text-white py-20 px-4 sm:px-6 lg:px-12">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-5xl font-black mb-12 text-center" style={{ color: '#e0e0e0' }}>Choose Your Track</h2>
-
-        <div
-          className={`flex flex-row transition-all duration-300 ${
-            selectedIndex !== null ? "items-start gap-10" : "justify-center"
-          }`}
-        >
-          {/* Left Side – Cards */}
-          <div
-            className={`grid ${
-              selectedIndex !== null ? "grid-cols-3 grid-rows-2 gap-4" : "grid-cols-6 gap-6"
-            } transition-all duration-300`}
-          >
-            {tracks.map((track, index) => (
-              <div
-                key={index}
-                onClick={() => setSelectedIndex(index)}
-                className={`bg-[#1c1c1c] border border-gray-700 rounded-xl p-4 text-center cursor-pointer transition-all duration-300 
-                ${
-                  selectedIndex !== null
-                    ? "w-24 h-24 text-xs"
-                    : "w-40 h-40 text-base"
-                } flex flex-col items-center justify-center hover:bg-gray-800 ${
-                  selectedIndex === index ? "ring-2 ring-red-500" : ""
-                }`}
-              >
-                <div className="text-xl mb-1">{track.icon}</div>
-                <div className="font-bold">{track.title}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Right Side – Description Panel */}
-          {selectedIndex !== null && (
-            <div className="flex-1 bg-gray-900 p-8 rounded-xl shadow-md max-w-lg h-[180px] transition-opacity duration-300" style={{ width: '100%', maxWidth: 'none' }}>
-              <h3 className="text-2xl font-bold mb-4" style={{ color: '#e0e0e0' }}>{tracks[selectedIndex].title}</h3>
-              <p className="text-gray-300 text-lg leading-relaxed" style={{ color: '#e0e0e0' }}>
-                {tracks[selectedIndex].description}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-
-      {/* Benefits Box Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="w-full px-8 border-2 border-gray-500 py-12 rounded-2xl" style={{ backgroundColor: "#000000ff" }}>
-            <h4 className="px-8 py-2 border-2 border-gray-500 w-max rounded-full mb-3 text-sm" style={{ color: '#e0e0e0' }}>benefits</h4>
-            <div className="ml-3">
-              <h1 className="text-2xl font-bold mb-4" style={{ color: '#e0e0e0' }}>What's in it for me?</h1>
-              <p className="text-base mb-6 max-w-[48ch]" style={{ color: '#e0e0e0' }}>We have something for everyone this WoW, whether you are a budding entrepreneur or a passionate developer.<br/>We got you all cover! Join us for the biggest bash of the year.</p>
-              <h2 className="text-xl font-semibold mt-8 mb-4" style={{ color: '#e0e0e0' }}>I want to</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-                <div className="h-full rounded-xl overflow-hidden shadow group cursor-pointer">
-                  <div className="relative h-48">
-                    <img alt="learn tech from the experts" loading="lazy" className="w-full h-full object-cover rounded-xl" src="https://www.gitam.edu/sites/default/files/banners/know-gitam_0.jpg" />
-                    <div className="absolute top-[-1px] right-[-1px] p-3 rounded-bl-2xl" style={{ backgroundColor: "#000000ff" }}>
-                      <div className="text-white text-center px-6 py-2 rounded-lg text-[12px]" style={{ backgroundColor: "rgb(23, 78, 166)", width: "140px" }}>
-                        <p>learn tech from the experts</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 rounded-bl-xl hidden group-hover:block" style={{ backgroundColor: "rgb(23, 78, 166)", opacity: 0.92 }}>
-                        <p className="text-white mb-2 text-sm">• Exposure to Industry Experts & Technologies, Discover new career opportunities, new skills, professional contacts</p>
-                        <p className="text-white mb-2 text-sm">• Hands-on Hackathon Experience to Boost Practical Skills, Learn how to work in a team.</p>
-                        <p className="text-white mb-2 text-sm">• Networking Opportunities with Peers and Professionals</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-full rounded-xl overflow-hidden shadow group cursor-pointer">
-                  <div className="relative h-48">
-                    <img alt="build a startup" loading="lazy" className="w-full h-full object-cover rounded-xl" src="https://storage.googleapis.com/gweb-uniblog-publish-prod/images/220304_GGstartups_interior_4350.width-1300.jpg" />
-                    <div className="absolute top-[-1px] right-[-1px] p-3 rounded-bl-2xl" style={{ backgroundColor: "#000000ff" }}>
-                      <div className="text-white text-center px-6 py-2 rounded-lg text-[12px]" style={{ backgroundColor: "rgb(13, 101, 45)", width: "140px" }}>
-                        <p>build a startup</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 rounded-bl-xl hidden group-hover:block" style={{ backgroundColor: "rgb(13, 101, 45)", opacity: 0.92 }}>
-                        <p className="text-white mb-2 text-sm">• Connect with Potential Collaborators and Mentors</p>
-                        <p className="text-white mb-2 text-sm">• Gain Insights from Industry Leaders through Panel Discussions, Learn business tips from successful people.</p>
-                        <p className="text-white mb-2 text-sm">• Showcase Startup Ideas and Explore Partnership Avenues</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-full rounded-xl overflow-hidden shadow group cursor-pointer">
-                  <div className="relative h-48">
-                    <img alt="build a career in Tech" loading="lazy" className="w-full h-full object-cover rounded-xl" src="https://heinzegers.com/wp-content/uploads/2017/08/Visiting-Google-1024x576.jpg" />
-                    <div className="absolute top-[-1px] right-[-1px] p-3 rounded-bl-2xl" style={{ backgroundColor: "#000000ff" }}>
-                      <div className="text-white text-center px-6 py-2 rounded-lg text-[12px]" style={{ backgroundColor: "rgb(176, 96, 0)", width: "140px" }}>
-                        <p>build a career in Tech</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 rounded-bl-xl hidden group-hover:block" style={{ backgroundColor: "rgb(176, 96, 0)", opacity: 0.92 }}>
-                        <p className="text-white mb-2 text-sm">• Brand Visibility through Sponsorships and Talks</p>
-                        <p className="text-white mb-2 text-sm">• Engage with Young Tech Talent, Connect with other companies and startups, business connections, collaborations</p>
-                        <p className="text-white mb-2 text-sm">• Opportunities to Collaborate on Innovative Projects & Hackathon Solutions, Support student innovation through sponsorship.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-full rounded-xl overflow-hidden shadow group cursor-pointer">
-                  <div className="relative h-48">
-                    <img alt="be a freelancer" loading="lazy" className="w-full h-full object-cover rounded-xl" src="https://images.businessnewsdaily.com/app/uploads/2022/04/04072326/freelancer_Prostock-Studio_getty.jpg" />
-                    <div className="absolute top-[-1px] right-[-1px] p-3 rounded-bl-2xl" style={{ backgroundColor: "#000000ff" }}>
-                      <div className="text-white text-center px-6 py-2 rounded-lg text-[12px]" style={{ backgroundColor: "rgb(179, 20, 18)", width: "140px" }}>
-                        <p>be a freelancer</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 rounded-bl-xl hidden group-hover:block" style={{ backgroundColor: "rgb(179, 20, 18)", opacity: 0.92 }}>
-                        <p className="text-white mb-2 text-sm">• Explore the talks and workshops to understand where and when to make your next step.</p>
-                        <p className="text-white mb-2 text-sm">• Build a network of like minded people that can help you reach the next level.</p>
-                        <p className="text-white mb-2 text-sm">• Ask and get the best practices from the amazing line-up of speakers to reach the correct clients and companies.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* Timeline Section */}
-      <section className="py-20 px-6">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="text-center text-4xl md:text-5xl font-black text-white mb-12" style={{ color: '#e0e0e0' }}>
-          Your Bootcamp Journey 🚌
-        </h2>
-        <div className="relative space-y-20">
-          {timelineData.map((item, index) => {
-            const isLeft = index % 2 === 0;
-            return (
-              <motion.div 
-                key={index} 
-                className={`flex ${isLeft ? "justify-start" : "justify-end"} relative`}
-                initial={{ opacity: 0, y: 50, x: isLeft ? -50 : 50 }}
-                whileInView={{ opacity: 1, y: 0, x: 0 }}
-                transition={{ 
-                  duration: 0.8, 
-                  delay: index * 0.2,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                viewport={{ once: true, margin: "-100px" }}
-              >
-                {/* Connecting Line */}
-                {index < timelineData.length - 1 && (
-                  <motion.div 
-                    className="absolute top-0 left-1/2 transform -translate-x-1/2 h-full border-l-2 border-dashed border-indigo-400 z-0"
-                    initial={{ scaleY: 0 }}
-                    whileInView={{ scaleY: 1 }}
-                    transition={{ duration: 1, delay: index * 0.3 }}
-                    viewport={{ once: true }}
-                  />
-                )}
-
-                <motion.div 
-                  className="relative z-10 w-[90%] md:w-[45%] bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-xl shadow-md text-white"
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <motion.span 
-                      className="text-2xl"
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                    >
-                      {item.icon}
-                    </motion.span>
-                    <span className="text-sm font-bold text-indigo-300 uppercase" style={{ color: '#e0e0e0' }}>{item.date}</span>
-                  </div>
-                  <h3 className="text-xl font-bold mb-1" style={{ color: '#e0e0e0' }}>{item.title}</h3>
-                  <p className="text-gray-300" style={{ color: '#e0e0e0' }}>{item.description}</p>
-                </motion.div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-
-
-      {/* Rewards Section */}
-     <section id="rewards" className="py-20 px-4 sm:px-6 lg:px-8  overflow-hidden relative">
-      {/* Background falling coins animation (CSS-based optional enhancement) */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="animate-[falling_15s_linear_infinite] text-4xl opacity-20">💸</div>
-        <div className="absolute top-1/3 left-1/4 animate-[falling_12s_linear_infinite] text-5xl opacity-10">🪙</div>
-        <div className="absolute top-2/3 left-3/4 animate-[falling_20s_linear_infinite] text-3xl opacity-10">💰</div>
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-black mb-4 text-yellow-900 drop-shadow-lg">
-            Perks & Rewards 🎁
-          </h2>
-          <p className="text-xl text-gray-700 font-medium">
-            Amazing prizes and opportunities await you
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {rewards.map((reward, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.7, y: 50 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="border-yellow-200 border-2 rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden"
-            >
-
-              <h3 className="text-2xl font-black mb-3 text-gray-200">
-                {reward.title}
-              </h3>
-              <p className="text-gray-300 font-semibold">{reward.description}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Grand Prize */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          viewport={{ once: true }}
-          className="mt-20 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 text-white rounded-3xl p-10 shadow-2xl text-center max-w-2xl mx-auto"
-        >
-          <div className="text-6xl mb-4 drop-shadow-lg animate-pulse">🏆</div>
-          <h3 className="text-4xl font-extrabold mb-4">
-            GRAND PRIZE
-          </h3>
-          <p className="text-2xl font-bold">
-            ₹25,000 + Direct Interview + 1-Year Mentorship
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Falling coin animation keyframes */}
-      <style jsx>{`
-        @keyframes falling {
-          0% {
-            transform: translateY(-100vh) rotate(0deg);
-          }
-          100% {
-            transform: translateY(100vh) rotate(360deg);
-          }
-        }
-      `}</style>
-    </section>
-
-
-
-      {/* FAQ Section */}
-      <section id="faq" className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-5xl font-black mb-4 text-gray-900">FAQ 🤔</h2>
-            <p className="text-xl text-gray-600 font-semibold">
-              Got questions? We've got answers.
-            </p>
-          </div>
-          <Accordion>
-            {[
-              {
-                question: "How do I register for the event?",
-                answer:
-                  "Click the register button and fill out the registration form. Registration is free and open to all eligible participants.",
-              },
-              {
-                question: "What is the team size limit?",
-                answer:
-                  "Teams can have 2-4 members. You can register individually and find teammates during the team formation phase.",
-              },
-              {
-                question: "Is this event online or offline?",
-                answer:
-                  "The bootcamp will be conducted online, while the hackathon will be a hybrid event with both online and offline participation options.",
-              },
-              {
-                question: "What should I bring to the hackathon?",
-                answer:
-                  "Bring your laptop, chargers, and any hardware you might need for your project. We'll provide internet, food, and workspace.",
-              },
-              {
-                question: "Are there any prerequisites?",
-                answer:
-                  "Basic programming knowledge is recommended. The bootcamp will cover essential concepts before the hackathon begins.",
-              },
-            ].map((faq, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl border-2 border-gray-500 shadow-lg"
-              >
-                <AccordionItem value={`item-${index}`}>
-                  <AccordionTrigger>{faq.question}</AccordionTrigger>
-                  <AccordionContent>{faq.answer}</AccordionContent>
-                </AccordionItem>
-              </div>
-            ))}
-          </Accordion>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-6 mb-6">
-            <a className="hover:text-[#1a73e8] font-medium transition-colors" href="/#">VEDIC VISION 2K25</a>
-            <a className="hover:text-[#1a73e8] font-medium transition-colors" href="/agenda">Agenda</a>
-            <a className="hover:text-[#1a73e8] font-medium transition-colors" href="/faq">FAQ</a>
-            <a className="hover:text-[#1a73e8] font-medium transition-colors" href="/terms-conditions">Terms & Conditions</a>
-            <a className="hover:text-[#1a73e8] font-medium transition-colors" href="/privacy-policy">Privacy Policy</a>
-            <a className="hover:text-[#1a73e8] font-medium transition-colors" href="/coc">Community Guidelines</a>
-          </div>
-          <div className="border-t border-gray-500 pt-6 text-center">
-            <p className="text-gray-400 font-semibold" style={{ color: '#e0e0e0' }}>
-              &copy; 2024 VEDIC VISION 2K25. All rights reserved. Made with ❤️ for the
-              developer community.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
