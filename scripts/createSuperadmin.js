@@ -13,6 +13,7 @@ const createSuperadmin = async () => {
     name: "Super Admin",
     email: "admin@gmail.com",
     mobile: "+1234567890",
+    collegeName: "Admin College",
     password: "Super123",
     role: "superadmin",
   });

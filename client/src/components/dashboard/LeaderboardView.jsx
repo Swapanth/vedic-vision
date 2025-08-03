@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Medal, Award, Users, Star } from 'lucide-react';
+import { Trophy, Medal, Award, Users, Star, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { userAPI } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -8,24 +8,83 @@ const LeaderboardView = ({ themeColors }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('participants');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    totalUsers: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
+  const usersPerPage = 20;
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     loadLeaderboard();
-  }, [filter]);
+  }, [filter, currentPage, debouncedSearchQuery]);
+
+  // Reset page when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, debouncedSearchQuery]);
 
   const loadLeaderboard = async () => {
     try {
       setLoading(true);
-      const roleParam = filter === 'participants' ? 'participant' : filter === 'mentors' ? 'mentor' : undefined;
-      const response = await userAPI.getLeaderboard({ limit: 100, role: roleParam });
-      const leaderboardUsers = response.data.data.leaderboard || [];
 
-      setUsers(leaderboardUsers);
+      if (filter === 'mentors') {
+        // For mentors, use the leaderboard endpoint (no pagination needed, but use same endpoint)
+        const response = await userAPI.getLeaderboard({ limit: 20, role: 'mentor' });
+        const leaderboardUsers = response.data.data.leaderboard || [];
+        const paginationData = response.data.data.pagination || {};
+        setUsers(leaderboardUsers);
+        setPagination(paginationData);
+      } else {
+        // For participants, use the leaderboard endpoint with pagination and search
+        const response = await userAPI.getLeaderboard({
+          page: currentPage,
+          limit: usersPerPage,
+          role: 'participant',
+          search: debouncedSearchQuery.trim() || undefined,
+          sortBy: 'totalScore',
+          sortOrder: 'desc'
+        });
+
+        const usersData = response.data.data.leaderboard || [];
+        const paginationData = response.data.data.pagination || {};
+
+        setUsers(usersData);
+        setPagination({
+          totalPages: paginationData.totalPages || 1,
+          totalUsers: paginationData.totalUsers || 0,
+          hasNextPage: paginationData.hasNextPage || false,
+          hasPrevPage: paginationData.hasPrevPage || false
+        });
+      }
     } catch (error) {
       console.error('Error loading leaderboard:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   const getFilteredUsers = () => {
@@ -63,7 +122,7 @@ const LeaderboardView = ({ themeColors }) => {
   }
 
   const filteredUsers = getFilteredUsers();
-  const displayUsers = filter === 'mentors' ? filteredUsers.slice(0, 3) : filteredUsers;
+  const displayUsers = filteredUsers;
 
   return (
     <div className="space-y-6">
@@ -105,11 +164,58 @@ const LeaderboardView = ({ themeColors }) => {
         </div>
       </motion.div>
 
+      {/* Search Bar - Only for participants */}
+      {filter === 'participants' && (
+        <motion.div
+          className="rounded-2xl backdrop-blur-sm  transition-all duration-300"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="p-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: themeColors.textSecondary }} />
+              <input
+                type="text"
+                placeholder="Search participants by name or email..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 transition-all duration-200"
+                style={{
+                  backgroundColor: themeColors.backgroundSecondary,
+                  borderColor: themeColors.border,
+                  color: themeColors.text,
+                  fontSize: '16px' // Prevents zoom on iOS
+                }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Results Summary - Only for participants */}
+      {filter === 'participants' && !loading && (
+        <motion.div
+          className="text-sm px-2"
+          style={{ color: themeColors.textSecondary }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          Showing {((currentPage - 1) * usersPerPage) + 1}-{Math.min(currentPage * usersPerPage, pagination.totalUsers)} of {pagination.totalUsers} participants
+          {searchQuery && ` for "${searchQuery}"`}
+        </motion.div>
+      )}
+
 
 
       {/* Full Leaderboard */}
       <motion.div
-        className="rounded-2xl  backdrop-blur-sm border-2 transition-all duration-300"
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
         style={{
           backgroundColor: themeColors.cardBg,
           borderColor: themeColors.border
@@ -120,7 +226,7 @@ const LeaderboardView = ({ themeColors }) => {
       >
         <div className="p-6">
           <h3 className="text-xl font-bold mb-4" style={{ color: themeColors.text }}>
-            {filter === 'mentors' ? 'Mentor Directory' : 'Complete Rankings'}
+            {filter === 'mentors' ? 'Mentor Directory' : 'Participants Leaderboard'}
           </h3>
 
           {displayUsers.length === 0 ? (
@@ -130,112 +236,430 @@ const LeaderboardView = ({ themeColors }) => {
                 No users found
               </h4>
               <p className="text-sm" style={{ color: themeColors.textSecondary }}>
-                No users found for this category.
+                {searchQuery ? `No participants found matching "${searchQuery}"` : 'No users found for this category.'}
               </p>
             </div>
           ) : filter === 'mentors' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {displayUsers.map((user, index) => (
-                <motion.div
-                  key={user._id}
-                  className="p-6 rounded-xl border-2 shadow-md hover:shadow-lg transition-all"
-                  style={{
-                    backgroundColor: themeColors.cardBgSecondary,
-                    borderColor: themeColors.border
-                  }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  whileHover={{ y: -4 }}
-                >
-                  <div className="text-center">
-                    
-                    <h4 className="text-lg font-bold mb-2" style={{ color: themeColors.text }}>
-                      {user.name}
-                    </h4>
-                    <p className="text-sm mb-3" style={{ color: themeColors.textSecondary }}>
-                      {user.email}
-                    </p>
-                    
-                    {user.description && (
-                      <p className="text-sm italic" style={{ color: themeColors.textSecondary }}>
-                        {user.description}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+            /* Mentors Table */
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2" style={{ borderColor: themeColors.border }}>
+                    <th className="text-left py-4 px-4 font-semibold" style={{ color: themeColors.text }}>
+                      Mentor
+                    </th>
+                    <th className="text-left py-4 px-4 font-semibold hidden sm:table-cell" style={{ color: themeColors.text }}>
+                      Email
+                    </th>
+                    <th className="text-left py-4 px-4 font-semibold hidden md:table-cell" style={{ color: themeColors.text }}>
+                      Description
+                    </th>
+                    <th className="text-left py-4 px-4 font-semibold hidden lg:table-cell" style={{ color: themeColors.text }}>
+                      Skills
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayUsers.map((user, index) => (
+                    <motion.tr
+                      key={user._id}
+                      className="border-b transition-all hover:bg-opacity-50"
+                      style={{
+                        borderColor: themeColors.border,
+                        backgroundColor: 'transparent'
+                      }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      whileHover={{
+                        backgroundColor: `${themeColors.backgroundSecondary}50`
+                      }}
+                    >
+                      {/* Mentor Column */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-sm font-bold text-white">
+                              {user.name?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-semibold truncate" style={{ color: themeColors.text }}>
+                              {user.name}
+                            </h4>
+                            {/* Show email on mobile */}
+                            <p className="text-sm truncate sm:hidden" style={{ color: themeColors.textSecondary }}>
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Email Column - Hidden on mobile */}
+                      <td className="py-4 px-4 hidden sm:table-cell">
+                        <span className="text-sm" style={{ color: themeColors.textSecondary }}>
+                          {user.email}
+                        </span>
+                      </td>
+
+                      {/* Description Column - Hidden on mobile and tablet */}
+                      <td className="py-4 px-4 hidden md:table-cell">
+                        <span className="text-sm" style={{ color: themeColors.textSecondary }}>
+                          {user.description || 'No description available'}
+                        </span>
+                      </td>
+
+                      {/* Skills Column - Hidden on mobile, tablet, and small desktop */}
+                      <td className="py-4 px-4 hidden lg:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {user.skills && user.skills.length > 0 ? (
+                            user.skills.map((skill, skillIndex) => (
+                              <span
+                                key={skillIndex}
+                                className="px-2 py-1 text-xs rounded-lg font-medium"
+                                style={{
+                                  backgroundColor: `${themeColors.accent}20`,
+                                  color: themeColors.accent
+                                }}
+                              >
+                                {skill}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm" style={{ color: themeColors.textSecondary }}>
+                              No skills listed
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
-            <div className="space-y-3">
-              {displayUsers.map((user, index) => {
-                const rank = index + 1;
-                const isTopThree = rank <= 3;
+            /* Participants Table */
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2" style={{ borderColor: themeColors.border }}>
+                    <th className="text-left py-4 px-2 font-semibold" style={{ color: themeColors.text }}>
+                      Rank
+                    </th>
+                    <th className="text-left py-4 px-4 font-semibold" style={{ color: themeColors.text }}>
+                      Participant
+                    </th>
+                    <th className="text-left py-4 px-4 font-semibold hidden sm:table-cell" style={{ color: themeColors.text }}>
+                      Email
+                    </th>
+                    <th className="text-left py-4 px-4 font-semibold hidden md:table-cell" style={{ color: themeColors.text }}>
+                      College
+                    </th>
+                    <th className="text-right py-4 px-4 font-semibold" style={{ color: themeColors.text }}>
+                      Score
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayUsers.map((user, index) => {
+                    const globalRank = user.rank || (((currentPage - 1) * usersPerPage) + index + 1);
+                    const isTopThree = globalRank <= 3;
 
-                return (
-                  <motion.div
-                    key={user._id}
-                    className={`flex items-center p-4 rounded-xl border-2 transition-all hover:scale-102 ${isTopThree ? 'shadow-lg' : 'hover:shadow-md'}`}
-                    style={{
-                      backgroundColor: isTopThree ? themeColors.backgroundSecondary : themeColors.cardBgSecondary,
-                      borderColor: isTopThree ? themeColors.accent : themeColors.border
-                    }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    whileHover={{ y: -2 }}
-                  >
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full mr-4" style={{
-                      backgroundColor: isTopThree ? themeColors.accent : themeColors.backgroundSecondary
-                    }}>
-                      {getRankIcon(rank)}
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <div className={`h-10 w-10 bg-gradient-to-r ${getRankColor(rank)} rounded-full flex items-center justify-center`}>
-                          <span className="text-sm font-bold text-white">
-                            {user.name?.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold" style={{ color: themeColors.text }}>
-                            {user.name}
-                          </h4>
-                          <p className="text-sm" style={{ color: themeColors.textSecondary }}>
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mr-4">
-                      <span
-                        className="inline-flex px-3 py-1 text-xs font-semibold rounded-full"
+                    return (
+                      <motion.tr
+                        key={user._id}
+                        className="border-b transition-all hover:bg-opacity-50"
                         style={{
-                          backgroundColor: themeColors.success,
-                          color: '#ffffff'
+                          borderColor: themeColors.border,
+                          backgroundColor: isTopThree ? `${themeColors.accent}15` : 'transparent'
+                        }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        whileHover={{
+                          backgroundColor: isTopThree ? `${themeColors.accent}25` : `${themeColors.backgroundSecondary}50`
                         }}
                       >
-                        participant
-                      </span>
-                    </div>
+                        {/* Rank Column */}
+                        <td className="py-4 px-2">
+                          <div className="flex items-center gap-2">
+                            {isTopThree ? (
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full" style={{
+                                backgroundColor: themeColors.accent
+                              }}>
+                                {getRankIcon(globalRank)}
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold w-8 text-center" style={{ color: themeColors.text }}>
+                                #{globalRank}
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
-                    <div className="text-right">
-                      <div className="text-2xl font-bold" style={{ color: themeColors.text }}>
-                        {user.totalScore || 0}
-                      </div>
-                      <div className="text-sm" style={{ color: themeColors.textSecondary }}>
-                        points
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                        {/* Participant Column */}
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-10 w-10 bg-gradient-to-r ${getRankColor(globalRank)} rounded-full flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-sm font-bold text-white">
+                                {user.name?.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-semibold truncate" style={{ color: themeColors.text }}>
+                                {user.name}
+                              </h4>
+                              {/* Show email on mobile */}
+                              <p className="text-sm truncate sm:hidden" style={{ color: themeColors.textSecondary }}>
+                                {user.email}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Email Column - Hidden on mobile */}
+                        <td className="py-4 px-4 hidden sm:table-cell">
+                          <span className="text-sm" style={{ color: themeColors.textSecondary }}>
+                            {user.email}
+                          </span>
+                        </td>
+
+                        {/* College Column - Hidden on mobile and tablet */}
+                        <td className="py-4 px-4 hidden md:table-cell">
+                          <span className="text-sm" style={{ color: themeColors.textSecondary }}>
+                            {user.collegeName || 'N/A'}
+                          </span>
+                        </td>
+
+                        {/* Score Column */}
+                        <td className="py-4 px-4 text-right">
+                          <div>
+                            <div className="text-xl font-bold" style={{ color: themeColors.text }}>
+                              {user.totalScore || 0}
+                            </div>
+                            <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                              points
+                            </div>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
       </motion.div>
+
+      {/* Pagination - Only for participants */}
+      {filter === 'participants' && pagination.totalPages > 1 && (
+        <motion.div
+          className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <div className="p-4 sm:p-6">
+            {/* Mobile-first pagination layout */}
+            <div className="space-y-4">
+              {/* Page info and navigation on mobile */}
+              <div className="flex flex-col sm:hidden space-y-3">
+                {/* Page info */}
+                <div className="text-center text-sm" style={{ color: themeColors.textSecondary }}>
+                  Page {currentPage} of {pagination.totalPages} • {pagination.totalUsers} participants
+                </div>
+
+                {/* Navigation buttons */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                      }`}
+                    style={{
+                      backgroundColor: currentPage === 1 ? themeColors.backgroundSecondary : themeColors.accent,
+                      color: currentPage === 1 ? themeColors.textSecondary : '#ffffff'
+                    }}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Prev</span>
+                  </button>
+
+                  {/* Simple page display for mobile */}
+                  <div className="flex items-center space-x-2">
+                    {/* Show current page and nearby pages */}
+                    {currentPage > 1 && (
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className="w-8 h-8 rounded-lg font-semibold text-sm transition-all duration-200"
+                        style={{
+                          backgroundColor: themeColors.backgroundSecondary,
+                          color: themeColors.text
+                        }}
+                      >
+                        {currentPage - 1}
+                      </button>
+                    )}
+
+                    <button
+                      className="w-8 h-8 rounded-lg font-semibold text-sm"
+                      style={{
+                        backgroundColor: themeColors.accent,
+                        color: '#ffffff'
+                      }}
+                    >
+                      {currentPage}
+                    </button>
+
+                    {currentPage < pagination.totalPages && (
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className="w-8 h-8 rounded-lg font-semibold text-sm transition-all duration-200"
+                        style={{
+                          backgroundColor: themeColors.backgroundSecondary,
+                          color: themeColors.text
+                        }}
+                      >
+                        {currentPage + 1}
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === pagination.totalPages}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${currentPage === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                      }`}
+                    style={{
+                      backgroundColor: currentPage === pagination.totalPages ? themeColors.backgroundSecondary : themeColors.accent,
+                      color: currentPage === pagination.totalPages ? themeColors.textSecondary : '#ffffff'
+                    }}
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Desktop pagination layout */}
+              <div className="hidden sm:flex items-center justify-between">
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    }`}
+                  style={{
+                    backgroundColor: currentPage === 1 ? themeColors.backgroundSecondary : themeColors.accent,
+                    color: currentPage === 1 ? themeColors.textSecondary : '#ffffff'
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Previous</span>
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-2 overflow-x-auto max-w-md">
+                  {/* Show first page */}
+                  {currentPage > 3 && (
+                    <>
+                      <button
+                        onClick={() => handlePageChange(1)}
+                        className="w-10 h-10 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-105 flex-shrink-0"
+                        style={{
+                          backgroundColor: themeColors.backgroundSecondary,
+                          color: themeColors.text
+                        }}
+                      >
+                        1
+                      </button>
+                      {currentPage > 4 && (
+                        <span className="flex-shrink-0" style={{ color: themeColors.textSecondary }}>...</span>
+                      )}
+                    </>
+                  )}
+
+                  {/* Show page numbers around current page */}
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (pagination.totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= pagination.totalPages - 2) {
+                      pageNumber = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+
+                    if (pageNumber < 1 || pageNumber > pagination.totalPages) return null;
+                    if (currentPage > 3 && pageNumber === 1) return null;
+                    if (currentPage < pagination.totalPages - 2 && pageNumber === pagination.totalPages) return null;
+
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => handlePageChange(pageNumber)}
+                        className="w-10 h-10 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-105 flex-shrink-0"
+                        style={{
+                          backgroundColor: pageNumber === currentPage ? themeColors.accent : themeColors.backgroundSecondary,
+                          color: pageNumber === currentPage ? '#ffffff' : themeColors.text
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+
+                  {/* Show last page */}
+                  {currentPage < pagination.totalPages - 2 && (
+                    <>
+                      {currentPage < pagination.totalPages - 3 && (
+                        <span className="flex-shrink-0" style={{ color: themeColors.textSecondary }}>...</span>
+                      )}
+                      <button
+                        onClick={() => handlePageChange(pagination.totalPages)}
+                        className="w-10 h-10 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-105 flex-shrink-0"
+                        style={{
+                          backgroundColor: themeColors.backgroundSecondary,
+                          color: themeColors.text
+                        }}
+                      >
+                        {pagination.totalPages}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === pagination.totalPages}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${currentPage === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    }`}
+                  style={{
+                    backgroundColor: currentPage === pagination.totalPages ? themeColors.backgroundSecondary : themeColors.accent,
+                    color: currentPage === pagination.totalPages ? themeColors.textSecondary : '#ffffff'
+                  }}
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Desktop pagination info */}
+              <div className="hidden sm:block text-center text-sm" style={{ color: themeColors.textSecondary }}>
+                Page {currentPage} of {pagination.totalPages} • {pagination.totalUsers} total participants
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
 
     </div>

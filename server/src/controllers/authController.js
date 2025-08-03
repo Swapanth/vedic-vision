@@ -11,7 +11,7 @@ const generateToken = (userId) => {
 // Register new user
 export const register = async (req, res) => {
   try {
-    const { name, email, mobile, password, role = 'participant' } = req.body;
+    const { name, email, mobile, collegeName, password, role = 'participant' } = req.body;
     console.log(req.body);
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -27,6 +27,7 @@ export const register = async (req, res) => {
       name,
       email,
       mobile,
+      collegeName,
       password,
       role
     });
@@ -60,7 +61,7 @@ export const register = async (req, res) => {
 // Register new admin
 export const registerAdmin = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, collegeName, password } = req.body;
 
     // Only superadmin can access (middleware will enforce)
     const existingUser = await User.findOne({ email });
@@ -71,6 +72,7 @@ export const registerAdmin = async (req, res) => {
     const user = new User({
       name,
       email,
+      collegeName: collegeName || 'Admin College',
       password,
       role: 'admin'
     });

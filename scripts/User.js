@@ -66,10 +66,6 @@ const userSchema = new mongoose.Schema({
     default: '',
     trim: true
   },
-  skills: [{
-    type: String,
-    trim: true
-  }],
   registrationDate: {
     type: Date,
     default: Date.now

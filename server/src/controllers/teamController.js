@@ -58,10 +58,10 @@ export const getTeamById = async (req, res) => {
     }
 
     const team = await Team.findById(id)
-      .populate('leader', 'name email profilePicture')
-      .populate('members.user', 'name email profilePicture')
-      .populate('invitations.user', 'name email')
-      .populate('invitations.invitedBy', 'name email');
+      .populate('leader', 'name email collegeName profilePicture')
+      .populate('members.user', 'name email collegeName profilePicture')
+      .populate('invitations.user', 'name email collegeName')
+      .populate('invitations.invitedBy', 'name email collegeName');
 
     if (!team) {
       return res.status(404).json({
@@ -122,8 +122,8 @@ export const createTeam = async (req, res) => {
     await user.save();
 
     // Populate team data for response
-    await team.populate('leader', 'name email profilePicture');
-    await team.populate('members.user', 'name email profilePicture');
+    await team.populate('leader', 'name email collegeName profilePicture');
+    await team.populate('members.user', 'name email collegeName profilePicture');
 
     res.status(201).json({
       success: true,
@@ -182,8 +182,8 @@ export const updateTeam = async (req, res) => {
     if (description !== undefined) team.description = description;
 
     await team.save();
-    await team.populate('leader', 'name email profilePicture');
-    await team.populate('members.user', 'name email profilePicture');
+    await team.populate('leader', 'name email collegeName profilePicture');
+    await team.populate('members.user', 'name email collegeName profilePicture');
 
     res.status(200).json({
       success: true,
@@ -446,7 +446,7 @@ export const getAvailableUsers = async (req, res) => {
     };
 
     const users = await User.find(query)
-      .select('name email profilePicture registrationDate')
+      .select('name email collegeName profilePicture registrationDate')
       .sort({ name: 1 })
       .limit(50);
 

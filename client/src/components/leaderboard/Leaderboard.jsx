@@ -14,13 +14,25 @@ const Leaderboard = () => {
   const loadLeaderboard = async () => {
     try {
       setLoading(true);
-      const response = await userAPI.getAllUsers();
-      const allUsers = response.data.data.users || [];
       
-      // Sort users by total score (descending)
-      const sortedUsers = allUsers
-        .filter(user => user.totalScore !== undefined)
-        .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+      // Try both endpoints to see which one gives us all users
+      console.log('Fetching leaderboard...');
+      const leaderboardResponse = await userAPI.getLeaderboard({ limit: 1000 });
+      console.log('Leaderboard response:', leaderboardResponse.data);
+      
+      console.log('Fetching all users...');
+      const allUsersResponse = await userAPI.getAllUsers({ limit: 1000 });
+      console.log('All users response:', allUsersResponse.data);
+      
+      // Use getAllUsers as fallback since it might give us all users including mentors
+      const allUsers = allUsersResponse.data.data.users || [];
+      
+      console.log('Total users found:', allUsers.length);
+      console.log('Mentors found:', allUsers.filter(u => u.role === 'mentor').length);
+      console.log('Participants found:', allUsers.filter(u => u.role === 'participant').length);
+      
+      // Sort users by total score (descending) - if totalScore exists, otherwise keep original order
+      const sortedUsers = allUsers.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
       
       setUsers(sortedUsers);
     } catch (error) {
@@ -88,16 +100,6 @@ const Leaderboard = () => {
         <div className="mb-6">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
-              {/* <button
-                onClick={() => setFilter('all')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  filter === 'all'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                All Users
-              </button> */}
               <button
                 onClick={() => setFilter('participants')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -108,16 +110,26 @@ const Leaderboard = () => {
               >
                 Participants
               </button>
-              {/* <button
-                onClick={() => setFilter('admins')}
+              <button
+                onClick={() => setFilter('mentors')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  filter === 'admins'
+                  filter === 'mentors'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Mentors
+              </button>
+              <button
+                onClick={() => setFilter('superadmins')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  filter === 'superadmins'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Admins
-              </button> */}
+              </button>
             </nav>
           </div>
         </div>
@@ -126,7 +138,9 @@ const Leaderboard = () => {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              {filter === 'participants' ? 'Participants' : 'Admins'} Leaderboard
+              {filter === 'participants' ? 'Participants' : 
+               filter === 'mentors' ? 'Mentors' : 
+               'Admins'} Leaderboard
             </h2>
             
             {filteredUsers.length === 0 ? (
@@ -164,6 +178,12 @@ const Leaderboard = () => {
                           <div>
                             <h3 className="font-semibold text-gray-900">{user.name}</h3>
                             <p className="text-sm text-gray-600">{user.email}</p>
+                            {user.description && user.description !== 'No description available' && (
+                              <p className="text-xs text-gray-500 mt-1">{user.description}</p>
+                            )}
+                            {user.collegeName && user.collegeName !== 'Not Specified' && (
+                              <p className="text-xs text-blue-600 mt-1">{user.collegeName}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -195,7 +215,7 @@ const Leaderboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -206,6 +226,20 @@ const Leaderboard = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Participants</p>
                 <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'participant').length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Mentors</p>
+                <p className="text-2xl font-bold text-gray-900">{users.filter(u => u.role === 'mentor').length}</p>
               </div>
             </div>
           </div>

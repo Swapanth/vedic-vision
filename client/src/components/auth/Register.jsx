@@ -7,6 +7,7 @@ const Register = () => {
     name: '',
     email: '',
     mobile: '',
+    collegeName: '',
     password: '',
     confirmPassword: ''
   });
@@ -39,6 +40,10 @@ const Register = () => {
       errors.push('Mobile number is required');
     } else if (!/^\+?[\d\s\-\(\)]{10,15}$/.test(formData.mobile.trim())) {
       errors.push('Please enter a valid mobile number');
+    }
+
+    if (!formData.collegeName.trim()) {
+      errors.push('College name is required');
     }
 
     if (!formData.password) {
@@ -182,6 +187,23 @@ const Register = () => {
                   className="w-full px-4 py-3 border-2 border-gray-900 rounded-lg font-semibold text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-600 transition-all"
                   placeholder="Enter your mobile number"
                   value={formData.mobile}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* College Name */}
+              <div>
+                <label htmlFor="collegeName" className="block text-sm font-black text-gray-900 mb-2">
+                  College Name
+                </label>
+                <input
+                  id="collegeName"
+                  name="collegeName"
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border-2 border-gray-900 rounded-lg font-semibold text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-600 transition-all"
+                  placeholder="Enter your college name"
+                  value={formData.collegeName}
                   onChange={handleChange}
                 />
               </div>

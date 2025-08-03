@@ -11,7 +11,12 @@ import {
   removeParticipantsFromMentor,
   getMentorParticipants,
   getAllMentorsWithParticipants,
-  getMyMentor
+  getMyMentor,
+  createMentor,
+  getAllMentors,
+  getMentorById,
+  updateMentor,
+  deleteMentor
 } from '../controllers/userController.js';
 import { authenticateToken, adminOnly, superadminOnly, mentorOnly, participantOnly } from '../middleware/auth.js';
 import { validateMongoId, validatePagination, handleValidationErrors } from '../middleware/validation.js';
@@ -25,9 +30,16 @@ router.use(authenticateToken);
 router.get('/leaderboard', getLeaderboard);
 router.get('/dashboard-stats', adminOnly, getDashboardStats);
 router.get('/mentors', superadminOnly, getAllMentorsWithParticipants);
+router.get('/mentors/all', adminOnly, getAllMentors);
 router.get('/my-participants', mentorOnly, getMentorParticipants);
 router.get('/my-mentor', participantOnly, getMyMentor);
 router.get('/', adminOnly, validatePagination, handleValidationErrors, getAllUsers);
+
+// Mentor CRUD routes (Admin only)
+router.post('/mentors', adminOnly, createMentor);
+router.get('/mentors/:id', adminOnly, validateMongoId('id'), handleValidationErrors, getMentorById);
+router.put('/mentors/:id', adminOnly, validateMongoId('id'), handleValidationErrors, updateMentor);
+router.delete('/mentors/:id', adminOnly, validateMongoId('id'), handleValidationErrors, deleteMentor);
 
 // Mentor assignment routes (Superadmin only)
 router.post('/assign-participants', superadminOnly, assignParticipantsToMentor);

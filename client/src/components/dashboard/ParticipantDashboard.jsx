@@ -672,13 +672,13 @@ const HomeView = ({
               <div className="text-xl font-bold text-blue-700">{taskCompletionScore}</div>
             </div>
 
-            <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+            {/* <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
               <div>
                 <div className="font-semibold text-purple-800">Group Position</div>
                 <div className="text-sm text-purple-600">Current ranking</div>
               </div>
               <div className="text-xl font-bold text-purple-700">#{participantPosition}</div>
-            </div>
+            </div> */}
           </div>
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -716,7 +716,7 @@ const HomeView = ({
       </motion.div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <motion.div
           className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 text-center transition-all duration-300 hover:scale-105 border-2 hover:shadow-xl"
           whileHover={{ y: -5 }}
@@ -816,7 +816,7 @@ const HomeView = ({
               <div className="text-center p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
                 <div className="text-3xl font-bold mb-1" style={{ color: themeColors.accent }}>{overviewScore}</div>
                 <div className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>Total Score</div>
-                <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>Position #{participantPosition}</div>
+                {/* <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>Position #{participantPosition}</div> */}
               </div>
 
               <div className="space-y-2">
@@ -859,20 +859,43 @@ const HomeView = ({
               <h4 className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>MENTOR</h4>
               {mentor ? (
                 <div className="p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 mb-2">
                     <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
+                      {mentor.profilePicture ? (
+                        <img
+                          src={mentor.profilePicture}
+                          alt={mentor.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-white" />
+                      )}
                     </div>
                     <div>
-                      <div className="font-semibold" style={{ color: themeColors.text }}>{mentor.name}</div>
+                      <div className="font-bold" style={{ color: themeColors.text }}>{mentor.name}</div>
                       <div className="text-sm" style={{ color: themeColors.textSecondary }}>{mentor.email}</div>
                     </div>
                   </div>
-                  {mentor.phone && (
-                    <div className="mt-2 text-sm" style={{ color: themeColors.textSecondary }}>
-                      📞 {mentor.phone}
+                  {mentor.mobile && (
+                    <div className="mt-1 text-sm" style={{ color: themeColors.textSecondary }}>
+                      📞 {mentor.mobile}
                     </div>
                   )}
+                  {mentor.description && (
+                    <div className="mt-2  " style={{ color: themeColors.textSecondary }}>
+                      {mentor.description}
+                    </div>
+                  )}
+                  {mentor.skills && mentor.skills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {mentor.skills.map((skill, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-700 rounded font-medium">
+                          {skill.replace(/"/g, '')}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
                 </div>
               ) : (
                 <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
@@ -880,8 +903,6 @@ const HomeView = ({
                 </div>
               )}
             </div>
-
-            {/* Team Information */}
             <div className='mb-3 border-t mt-3'>
               <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: themeColors.textSecondary }}>TEAM INFO</h4>
               {team ? (
@@ -1084,7 +1105,7 @@ const ProfileView = ({ themeColors, user, setModalContent, setShowModal }) => {
                   <span className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>Role</span>
                   <span className="font-semibold capitalize" style={{ color: themeColors.text }}>{user?.role}</span>
                 </div>
-                
+
               </div>
             </div>
 

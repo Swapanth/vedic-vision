@@ -47,13 +47,24 @@ const TasksView = ({
 
   const days = generateDays();
 
-  // Navigation functions
+  // Navigation functions with responsive behavior
+  const getVisibleDays = () => {
+    // Check if mobile (you can adjust this breakpoint as needed)
+    if (window.innerWidth < 768) return 2; // Show 2 days on mobile
+    if (window.innerWidth < 1024) return 4; // Show 4 days on tablet
+    return 6; // Show 6 days on desktop
+  };
+
   const scrollLeft = () => {
-    setScrollPosition(Math.max(0, scrollPosition - 3));
+    const visibleDays = getVisibleDays();
+    const scrollAmount = window.innerWidth < 768 ? 1 : 3; // Scroll by 1 on mobile, 3 on desktop
+    setScrollPosition(Math.max(0, scrollPosition - scrollAmount));
   };
 
   const scrollRight = () => {
-    setScrollPosition(Math.min(days.length - 6, scrollPosition + 3));
+    const visibleDays = getVisibleDays();
+    const scrollAmount = window.innerWidth < 768 ? 1 : 3; // Scroll by 1 on mobile, 3 on desktop
+    setScrollPosition(Math.min(days.length - visibleDays, scrollPosition + scrollAmount));
   };
 
   // Get fire theme colors for hackathon days
@@ -227,7 +238,7 @@ const TasksView = ({
             {/* Right Arrow */}
             <motion.button
               onClick={scrollRight}
-              disabled={scrollPosition >= days.length - 6}
+              disabled={scrollPosition >= days.length - getVisibleDays()}
               className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: themeColors.cardBgSecondary,
@@ -244,7 +255,7 @@ const TasksView = ({
             <div className="mx-12 overflow-hidden">
               <motion.div
                 className="flex gap-2 transition-transform duration-300"
-                style={{ transform: `translateX(-${scrollPosition * (100 / 6)}%)` }}
+                style={{ transform: `translateX(-${scrollPosition * (100 / getVisibleDays())}%)` }}
               >
                 {days.map((day, index) => {
                   const fireTheme = getFireTheme(day);

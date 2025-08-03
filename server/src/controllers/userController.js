@@ -288,7 +288,14 @@ export const getDashboardStats = async (req, res) => {
 // Get leaderboard
 export const getLeaderboard = async (req, res) => {
   try {
-    const { limit = 100, role } = req.query;
+    const { 
+      limit = 100, 
+      role, 
+      page = 1, 
+      search, 
+      sortBy = 'totalScore', 
+      sortOrder = 'desc' 
+    } = req.query;
 
     // Build query filter
     const filter = { isActive: true };
@@ -298,27 +305,47 @@ export const getLeaderboard = async (req, res) => {
       filter.role = role;
     }
 
+    // Add search filter if specified
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
     // Handle mentors differently - they don't need scoring/ranking
     if (role === 'mentor') {
       const mentors = await User.find(filter)
-        .select('name email role description')
+        .select('name email collegeName role description skills')
         .limit(parseInt(limit))
         .lean();
 
       const mentorList = mentors.map(mentor => ({
         ...mentor,
-        description: mentor.description || 'No description available'
+        description: mentor.description || 'No description available',
+        skills: mentor.skills || []
       }));
+
+      console.log('Mentor data fetched:', JSON.stringify(mentorList, null, 2));
 
       return res.json({
         success: true,
-        data: { leaderboard: mentorList }
+        data: { 
+          leaderboard: mentorList,
+          pagination: {
+            currentPage: 1,
+            totalPages: 1,
+            totalUsers: mentorList.length,
+            hasNextPage: false,
+            hasPrevPage: false
+          }
+        }
       });
     }
 
     // For participants and others, calculate scores and rankings
     const users = await User.find(filter)
-      .select('name email role')
+      .select('name email collegeName role')
       .lean();
 
     // Calculate real-time scores for each user
@@ -353,20 +380,48 @@ export const getLeaderboard = async (req, res) => {
       })
     );
 
-    // Sort by totalScore in descending order and limit results
-    const sortedLeaderboard = leaderboardWithScores
-      .sort((a, b) => b.totalScore - a.totalScore)
-      .slice(0, parseInt(limit));
+    // Sort by specified field and order
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
+    let sortedLeaderboard = leaderboardWithScores.sort((a, b) => {
+      if (sortBy === 'totalScore') {
+        return sortOrder === 'asc' ? a.totalScore - b.totalScore : b.totalScore - a.totalScore;
+      } else if (sortBy === 'name') {
+        return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      } else if (sortBy === 'email') {
+        return sortOrder === 'asc' ? a.email.localeCompare(b.email) : b.email.localeCompare(a.email);
+      }
+      return 0;
+    });
 
-    // Add rank to each user
-    const leaderboardWithRank = sortedLeaderboard.map((user, index) => ({
+    // Calculate pagination
+    const totalUsers = sortedLeaderboard.length;
+    const totalPages = Math.ceil(totalUsers / parseInt(limit));
+    const currentPage = parseInt(page);
+    const skip = (currentPage - 1) * parseInt(limit);
+    
+    // Apply pagination
+    const paginatedLeaderboard = sortedLeaderboard.slice(skip, skip + parseInt(limit));
+
+    // Add rank to each user (based on overall position, not just current page)
+    const leaderboardWithRank = paginatedLeaderboard.map((user, index) => ({
       ...user,
-      rank: index + 1
+      rank: skip + index + 1
     }));
 
     res.json({
       success: true,
-      data: { leaderboard: leaderboardWithRank }
+      data: { 
+        leaderboard: leaderboardWithRank,
+        pagination: {
+          currentPage,
+          totalPages,
+          totalUsers,
+          hasNextPage: currentPage < totalPages,
+          hasPrevPage: currentPage > 1
+        }
+      }
     });
   } catch (error) {
     res.status(500).json({
@@ -513,13 +568,245 @@ export const getAllMentorsWithParticipants = async (req, res) => {
   }
 };
 
+// Create mentor profile (Admin only)
+export const createMentor = async (req, res) => {
+  try {
+    const { name, email, mobile, collegeName, password, description, skills } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create new mentor
+    const mentor = new User({
+      name,
+      email,
+      mobile,
+      collegeName,
+      password,
+      role: 'mentor',
+      description: description || '',
+      skills: skills || []
+    });
+
+    await mentor.save();
+
+    // Remove password from response
+    const mentorResponse = mentor.toObject();
+    delete mentorResponse.password;
+
+    console.log('Mentor created:', JSON.stringify(mentorResponse, null, 2));
+
+    res.status(201).json({
+      success: true,
+      message: 'Mentor created successfully',
+      data: { mentor: mentorResponse }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create mentor',
+      error: error.message
+    });
+  }
+};
+
+// Get all mentors
+export const getAllMentors = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search } = req.query;
+
+    // Build query filter
+    const filter = { role: 'mentor', isActive: true };
+
+    // Add search filter if specified
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { skills: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get mentors
+    const mentors = await User.find(filter)
+      .select('name email mobile collegeName description skills assignedParticipants createdAt')
+      .populate('assignedParticipants', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await User.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    console.log('All mentors fetched:', JSON.stringify(mentors, null, 2));
+
+    res.json({
+      success: true,
+      data: {
+        mentors,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalMentors: total,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch mentors',
+      error: error.message
+    });
+  }
+};
+
+// Get mentor by ID
+export const getMentorById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const mentor = await User.findOne({ _id: id, role: 'mentor' })
+      .select('-password')
+      .populate('assignedParticipants', 'name email mobile collegeName totalScore')
+      .lean();
+
+    if (!mentor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor not found'
+      });
+    }
+
+    console.log('Mentor by ID fetched:', JSON.stringify(mentor, null, 2));
+
+    res.json({
+      success: true,
+      data: { mentor }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch mentor',
+      error: error.message
+    });
+  }
+};
+
+// Update mentor profile
+export const updateMentor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, mobile, collegeName, description, skills } = req.body;
+
+    // Check if mentor exists
+    const existingMentor = await User.findOne({ _id: id, role: 'mentor' });
+    if (!existingMentor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor not found'
+      });
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email && email !== existingMentor.email) {
+      const emailExists = await User.findOne({ email, _id: { $ne: id } });
+      if (emailExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already in use by another user'
+        });
+      }
+    }
+
+    // Update mentor
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (mobile) updateData.mobile = mobile;
+    if (collegeName) updateData.collegeName = collegeName;
+    if (description !== undefined) updateData.description = description;
+    if (skills !== undefined) updateData.skills = skills;
+
+    const mentor = await User.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password').lean();
+
+    console.log('Mentor updated:', JSON.stringify(mentor, null, 2));
+
+    res.json({
+      success: true,
+      message: 'Mentor updated successfully',
+      data: { mentor }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update mentor',
+      error: error.message
+    });
+  }
+};
+
+// Delete mentor (soft delete)
+export const deleteMentor = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if mentor exists
+    const mentor = await User.findOne({ _id: id, role: 'mentor' });
+    if (!mentor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mentor not found'
+      });
+    }
+
+    // Remove mentor from all assigned participants
+    await User.updateMany(
+      { assignedMentor: id },
+      { $unset: { assignedMentor: 1 } }
+    );
+
+    // Soft delete mentor
+    await User.findByIdAndUpdate(id, { isActive: false });
+
+    console.log('Mentor deleted (soft delete):', { id, name: mentor.name });
+
+    res.json({
+      success: true,
+      message: 'Mentor deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete mentor',
+      error: error.message
+    });
+  }
+};
+
 // Get participant's assigned mentor details (Participant only)
 export const getMyMentor = async (req, res) => {
   try {
     const participantId = req.user._id;
 
     const participant = await User.findById(participantId)
-      .populate('assignedMentor', 'name email mobile profilePicture registrationDate')
+      .populate('assignedMentor', 'name email mobile profilePicture registrationDate description skills')
       .select('assignedMentor');
 
     if (!participant) {

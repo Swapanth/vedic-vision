@@ -35,6 +35,10 @@ export const validateRegister = [
     .withMessage('Mobile number must be between 10 and 15 digits')
     .matches(/^[0-9]+$/)
     .withMessage('Mobile number must contain only digits'),
+  body('collegeName')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('College name must be between 2 and 100 characters'),
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),
