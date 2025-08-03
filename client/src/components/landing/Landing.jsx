@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Menu,
   X,
@@ -986,6 +987,7 @@ function ScrollTriggeredTimeline({ bootcampJourney, themeColors }) {
 }
 
 export default function Landing() {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isDarkTheme = useThemeDetection();
@@ -1088,12 +1090,17 @@ export default function Landing() {
                 </a>
               ))}
               <div className="px-3 py-2">
-                <Button
-                  className="w-full font-bold"
-                  themeColors={themeColors}
+                <a
+                  href="/login"
+                  className="inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 w-full font-bold px-4 py-2 rounded-lg text-white border-2 border-solid"
+                  style={{
+                    color: "#ffffff",
+                    borderColor: themeColors.border,
+                    borderRadius: 50
+                  }}
                 >
-                  Register Now 🎯
-                </Button>
+                  Check Now
+                </a>
               </div>
             </div>
           </div>
@@ -1149,7 +1156,7 @@ export default function Landing() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     className="px-6 sm:px-8 py-3 sm:py-4 font-medium transition-all duration-200 hover:scale-105 text-white bg-black rounded-full text-base sm:text-lg"
-                    onClick={() => window.open("/register", "_blank")}
+                    onClick={() => navigate("/login")}
                   >
                     Get Tickets
                   </button>

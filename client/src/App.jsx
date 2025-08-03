@@ -18,8 +18,8 @@ const App = () => {
       <Router>
         <div>
           <Routes>
-            <Route path="/" element ={<Landing />} />
-            <Route path="/photo-booth" element ={<PhotoBooth />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/photo-booth" element={<PhotoBooth />} />
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -33,8 +33,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-
             
             <Route
               path="/profile"
@@ -54,11 +52,8 @@ const App = () => {
               }
             />
             
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>
