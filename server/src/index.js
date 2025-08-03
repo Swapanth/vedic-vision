@@ -53,7 +53,7 @@ const corsOptions = {
             'http://localhost:5174',
             'http://localhost:3000',
             'http://localhost:3001',
-            'https://vedic-vision-app.vercel.app'
+            'https://www.vedicvision.co.in'
         ];
         
         if (allowedOrigins.indexOf(origin) !== -1) {
