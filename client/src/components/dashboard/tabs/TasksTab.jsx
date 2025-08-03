@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
-const TasksTab = ({ tasks, onCreateTask, onToggleTaskStatus }) => {
+const TasksTab = ({ tasks, onCreateTask, onUpdateTask, onDeleteTask, onToggleTaskStatus }) => {
   const [showDialog, setShowDialog] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -13,9 +14,31 @@ const TasksTab = ({ tasks, onCreateTask, onToggleTaskStatus }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreateTask(taskForm);
+    if (editingTask) {
+      onUpdateTask(editingTask._id, taskForm);
+    } else {
+      onCreateTask(taskForm);
+    }
     setTaskForm({ title: '', description: '', day: 'day1', maxScore: 100 });
+    setEditingTask(null);
     setShowDialog(false);
+  };
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setTaskForm({
+      title: task.title,
+      description: task.description,
+      day: task.day,
+      maxScore: task.maxScore,
+    });
+    setShowDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setShowDialog(false);
+    setEditingTask(null);
+    setTaskForm({ title: '', description: '', day: 'day1', maxScore: 100 });
   };
 
   const filteredTasks = filterDay === 'all'
@@ -70,16 +93,32 @@ const TasksTab = ({ tasks, onCreateTask, onToggleTaskStatus }) => {
                 <p>Day: {task.day ? task.day.replace('day', 'Day ') + (parseInt(task.day.replace('day', '')) > 10 ? ' - Hackathon' : ' - Bootcamp') : 'Not specified'}</p>
                 <p>Max Score: {task.maxScore}</p>
               </div>
-              <button
-                onClick={() => onToggleTaskStatus(task._id)}
-                className={`mt-3 w-full px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                  task.isActive
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-              >
-                {task.isActive ? 'Deactivate' : 'Activate'}
-              </button>
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditTask(task)}
+                    className="flex-1 bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 text-xs font-medium rounded-md transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => onDeleteTask(task._id)}
+                    className="flex-1 bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 text-xs font-medium rounded-md transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+                <button
+                  onClick={() => onToggleTaskStatus(task._id)}
+                  className={`w-full px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                    task.isActive
+                      ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+                >
+                  {task.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -94,12 +133,14 @@ const TasksTab = ({ tasks, onCreateTask, onToggleTaskStatus }) => {
           <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setShowDialog(false)}
+              onClick={handleCloseDialog}
               aria-label="Close"
             >
               &times;
             </button>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Task</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {editingTask ? 'Edit Task' : 'Create New Task'}
+            </h3>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -154,7 +195,7 @@ const TasksTab = ({ tasks, onCreateTask, onToggleTaskStatus }) => {
                   type="submit"
                   className="w-full bg-[#272757] hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
                 >
-                  Create Task
+                  {editingTask ? 'Update Task' : 'Create Task'}
                 </button>
               </div>
             </form>

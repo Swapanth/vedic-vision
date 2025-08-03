@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { userAPI, attendanceAPI } from '../../../services/api';
+import { userAPI, attendanceAPI, exportAPI } from '../../../services/api';
 
 const AttendanceTab = ({ attendance, onMarkAttendance }) => {
   const [users, setUsers] = useState([]);
-  const [showMarkAttendanceModal, setShowMarkAttendanceModal] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [session, setSession] = useState('full-day');
@@ -11,6 +10,32 @@ const AttendanceTab = ({ attendance, onMarkAttendance }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Calculate daily attendance stats
+  const getDailyAttendanceStats = () => {
+    const dailyStats = {};
+    attendance.forEach(record => {
+      const date = new Date(record.date).toISOString().split('T')[0];
+      if (!dailyStats[date]) {
+        dailyStats[date] = { present: 0, total: 0 };
+      }
+      dailyStats[date].total++;
+      if (record.status === 'present') {
+        dailyStats[date].present++;
+      }
+    });
+    
+    // Sort by date
+    return Object.entries(dailyStats)
+      .sort(([a], [b]) => new Date(a) - new Date(b))
+      .map(([date, stats], index) => ({
+        day: `Day ${index + 1}`,
+        date,
+        ...stats
+      }));
+  };
+
+  const dailyStats = getDailyAttendanceStats();
 
   // Load users for attendance marking
   const loadUsers = async () => {
@@ -72,6 +97,24 @@ const AttendanceTab = ({ attendance, onMarkAttendance }) => {
     }
   };
 
+  // Export attendance data
+  const handleExportAttendance = async () => {
+    try {
+      const response = await exportAPI.exportAttendance();
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'attendance_export.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+      alert('Attendance data exported successfully!');
+    } catch (error) {
+      console.error('Error exporting attendance:', error);
+      alert('Failed to export attendance data');
+    }
+  };
+
   const toggleUserSelection = (userId) => {
     setSelectedUsers(prev => 
       prev.includes(userId) 
@@ -92,15 +135,47 @@ const AttendanceTab = ({ attendance, onMarkAttendance }) => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Attendance Management</h2>
-        <button
-          onClick={() => setShowMarkAttendanceModal(true)}
-          className="bg-[#272757] text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Mark Attendance
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleExportAttendance}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export Data
+          </button>
+         
+        </div>
       </div>
 
-      {/* Attendance Statistics */}
+      {/* Daily Attendance Overview */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Attendance Overview</h3>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+            {dailyStats.map((stat, index) => (
+              <div key={stat.date} className="border rounded-lg p-4">
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold text-gray-900">{stat.day}</h4>
+                  <p className="text-sm text-gray-500">{new Date(stat.date).toLocaleDateString()}</p>
+                  <div className="mt-2">
+                    <span className="text-2xl font-bold text-green-600">{stat.present}</span>
+                    <span className="text-sm text-gray-500"> present</span>
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-sm text-gray-500">
+                      {stat.total > 0 ? Math.round((stat.present / stat.total) * 100) : 0}% attendance
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Overall Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500">Total Records</h3>
@@ -122,7 +197,7 @@ const AttendanceTab = ({ attendance, onMarkAttendance }) => {
           <h3 className="text-sm font-medium text-gray-500">Attendance Rate</h3>
           <p className="text-2xl font-bold text-blue-600">
             {attendance.length > 0 
-              ? Math.round((attendance.filter(record => record.status === 'present').length / attendance.length) * 100)
+              ? Math.round((attendance.filter(r => r.status === 'present').length / attendance.length) * 100)
               : 0}%
           </p>
         </div>
@@ -171,140 +246,6 @@ const AttendanceTab = ({ attendance, onMarkAttendance }) => {
           <div className="text-center py-8 text-gray-500">No attendance records found.</div>
         )}
       </div>
-
-      {/* Mark Attendance Modal */}
-      {showMarkAttendanceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Mark Attendance</h3>
-              <button
-                onClick={() => setShowMarkAttendanceModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Date and Session Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                <input
-                  type="date"
-                  value={attendanceDate}
-                  onChange={(e) => setAttendanceDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Session</label>
-                <select
-                  value={session}
-                  onChange={(e) => setSession(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="full-day">Full Day</option>
-                  <option value="morning">Morning</option>
-                  <option value="afternoon">Afternoon</option>
-                  <option value="evening">Evening</option>
-                </select>
-              </div>
-            </div>
-
-            {/* User Search */}
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Select/Deselect All */}
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={selectAllUsers}
-                className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
-              >
-                Select All
-              </button>
-              <button
-                onClick={deselectAllUsers}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-              >
-                Deselect All
-              </button>
-            </div>
-
-            {/* User List */}
-            <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md">
-              {users.map((user) => (
-                <div
-                  key={user._id}
-                  className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                    selectedUsers.includes(user._id) ? 'bg-blue-50' : ''
-                  }`}
-                  onClick={() => toggleUserSelection(user._id)}
-                >
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(user._id)}
-                      onChange={() => toggleUserSelection(user._id)}
-                      className="mr-3"
-                    />
-                    <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-between items-center mt-4">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-500">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2 mt-6">
-              <button
-                onClick={() => setShowMarkAttendanceModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleMarkAttendance}
-                disabled={loading || selectedUsers.length === 0}
-                className="px-4 py-2 bg-[#272757] text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? 'Marking...' : `Mark Attendance (${selectedUsers.length})`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

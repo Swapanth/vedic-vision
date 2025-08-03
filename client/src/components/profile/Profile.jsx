@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { User, Mail, Shield, Calendar, Trophy, Edit3, Lock, X, Check, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { User, Mail, Shield, Calendar, Trophy, Edit3, Lock, X, Check, AlertCircle, Settings, Activity, Award } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 // Mock Modal component since it's not in the project
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -173,10 +174,7 @@ const Profile = () => {
                     <span className="text-sm font-medium text-gray-600">Role</span>
                     <span className="text-gray-900 font-semibold capitalize">{user.role}</span>
                   </div>
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-sm font-medium text-gray-600">Total Score</span>
-                    <span className="text-gray-900 font-semibold">{user.totalScore || 0}</span>
-                  </div>
+                  
                 </div>
               </div>
 

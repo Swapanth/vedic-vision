@@ -155,7 +155,7 @@ export const getUserSubmissions = async (req, res) => {
   }
 };
 
-// Get all submissions (Admin only)
+// Get all submissions (Admin and Mentor)
 export const getAllSubmissions = async (req, res) => {
   try {
     const {
@@ -170,9 +170,22 @@ export const getAllSubmissions = async (req, res) => {
 
     // Build query
     const query = {};
+    
+    // If user is a mentor, only show submissions from their assigned participants
+    if (req.user.role === 'mentor') {
+      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+      if (mentor && mentor.assignedParticipants) {
+        const participantIds = mentor.assignedParticipants.map(p => p._id);
+        query.userId = { $in: participantIds };
+      } else {
+        // If mentor has no assigned participants, return empty result
+        query.userId = { $in: [] };
+      }
+    }
+    
     if (status) query.status = status;
     if (taskId) query.taskId = taskId;
-    if (userId) query.userId = userId;
+    if (userId && req.user.role === 'superadmin') query.userId = userId;
 
     // Calculate pagination
     const skip = (page - 1) * limit;
@@ -251,7 +264,7 @@ export const getSubmissionById = async (req, res) => {
   }
 };
 
-// Grade submission (Admin only)
+// Grade submission (Admin and Mentor)
 export const gradeSubmission = async (req, res) => {
   try {
     const { id } = req.params;
@@ -266,6 +279,19 @@ export const gradeSubmission = async (req, res) => {
         success: false,
         message: 'Submission not found'
       });
+    }
+
+    // If user is a mentor, check if they can grade this submission
+    if (req.user.role === 'mentor') {
+      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+      const canGrade = mentor.assignedParticipants.some(p => p._id.toString() === submission.userId._id.toString());
+      
+      if (!canGrade) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only grade submissions from your assigned participants'
+        });
+      }
     }
 
     // Validate score
@@ -305,7 +331,7 @@ export const gradeSubmission = async (req, res) => {
   }
 };
 
-// Update submission grade (Admin only)
+// Update submission grade (Admin and Mentor)
 export const updateGrade = async (req, res) => {
   try {
     const { id } = req.params;
@@ -320,6 +346,19 @@ export const updateGrade = async (req, res) => {
         success: false,
         message: 'Submission not found'
       });
+    }
+
+    // If user is a mentor, check if they can update this grade
+    if (req.user.role === 'mentor') {
+      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+      const canGrade = mentor.assignedParticipants.some(p => p._id.toString() === submission.userId._id.toString());
+      
+      if (!canGrade) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only update grades for submissions from your assigned participants'
+        });
+      }
     }
 
     // Validate score
@@ -414,12 +453,27 @@ export const deleteSubmission = async (req, res) => {
   }
 };
 
-// Get pending submissions (Admin only)
+// Get pending submissions (Admin and Mentor)
 export const getPendingSubmissions = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
-    const pendingSubmissions = await Submission.find({ status: 'submitted' })
+    // Build query
+    const query = { status: 'submitted' };
+    
+    // If user is a mentor, only show pending submissions from their assigned participants
+    if (req.user.role === 'mentor') {
+      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+      if (mentor && mentor.assignedParticipants) {
+        const participantIds = mentor.assignedParticipants.map(p => p._id);
+        query.userId = { $in: participantIds };
+      } else {
+        // If mentor has no assigned participants, return empty result
+        query.userId = { $in: [] };
+      }
+    }
+
+    const pendingSubmissions = await Submission.find(query)
       .populate('userId', 'name email')
       .populate('taskId', 'title day maxScore')
       .sort({ submittedAt: 1 })

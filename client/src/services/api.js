@@ -67,6 +67,7 @@ export const taskAPI = {
 // Attendance API
 export const attendanceAPI = {
   markAttendance: (data) => api.post('/attendance', data),
+  markAttendanceForUser: (data) => api.post('/attendance/mark-for-user', data),
   markAttendanceForUsers: (data) => api.post('/attendance/mark-for-users', data),
   getMyAttendance: (params) => api.get('/attendance/my-attendance', { params }),
   canMarkAttendance: () => api.get('/attendance/can-mark'),
@@ -113,6 +114,37 @@ export const userAPI = {
   deleteUser: (id) => api.delete(`/users/${id}`),
   toggleUserStatus: (id) => api.patch(`/users/${id}/toggle-status`),
   getMyMentor: () => api.get('/users/my-mentor'),
+  getLeaderboard: (params) => api.get('/users/leaderboard', { params }),
+  // Mentor assignment methods
+  assignParticipantsToMentor: (data) => api.post('/users/assign-participants', data),
+  removeParticipantsFromMentor: (data) => api.post('/users/remove-participants', data),
+  getAllMentorsWithParticipants: () => api.get('/users/mentors'),
+  getMentorParticipants: () => api.get('/users/my-participants'),
+  // Helper method to get all participants (handles pagination internally)
+  getAllParticipants: async () => {
+    let allParticipants = [];
+    let page = 1;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await api.get('/users', { 
+        params: { 
+          role: 'participant', 
+          limit: 100, 
+          page: page 
+        } 
+      });
+      
+      const participants = response.data.data.users || [];
+      allParticipants = [...allParticipants, ...participants];
+      
+      const pagination = response.data.data.pagination;
+      hasMore = pagination && pagination.hasNextPage;
+      page++;
+    }
+    
+    return { data: { data: { users: allParticipants } } };
+  },
 };
 
 // Export API

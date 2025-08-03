@@ -5,12 +5,12 @@ import {
   exportScores,
   exportComprehensiveReport
 } from '../controllers/exportController.js';
-import { authenticateToken, adminOnly } from '../middleware/auth.js';
+import { authenticateToken, mentorOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Apply authentication and admin-only access to all routes
-router.use(authenticateToken, adminOnly);
+router.use(authenticateToken, mentorOnly);
 
 // Export routes
 router.get('/attendance', exportAttendance);

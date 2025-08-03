@@ -40,8 +40,8 @@ export const validateRegister = [
     .withMessage('Password must be at least 6 characters long'),
   body('role')
     .optional()
-    .isIn(['participant', 'admin'])
-    .withMessage('Role must be either participant or admin')
+    .isIn(['participant', 'mentor', 'admin'])
+    .withMessage('Role must be either participant, mentor, or admin')
 ];
 // ...existing code...
 export const validateLogin = [
@@ -106,6 +106,28 @@ export const validateAttendance = [
     .optional()
     .isIn(['present', 'absent', 'late'])
     .withMessage('Invalid attendance status')
+];
+
+// Mentor attendance validation rules (for marking attendance for a single user)
+export const validateMentorAttendance = [
+  body('userId')
+    .isMongoId()
+    .withMessage('Invalid user ID'),
+  body('date')
+    .isISO8601()
+    .withMessage('Invalid date format'),
+  body('status')
+    .optional()
+    .isIn(['present', 'absent', 'late'])
+    .withMessage('Invalid attendance status'),
+  body('session')
+    .optional()
+    .isString()
+    .withMessage('Session must be a string'),
+  body('remarks')
+    .optional()
+    .isString()
+    .withMessage('Remarks must be a string')
 ];
 
 // Admin attendance marking validation rules

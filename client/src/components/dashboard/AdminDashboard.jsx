@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { userAPI, taskAPI, attendanceAPI, submissionAPI, announcementAPI, exportAPI } from '../../services/api';
+import { userAPI, taskAPI, attendanceAPI, announcementAPI, exportAPI } from '../../services/api';
 import Modal from '../common/Modal';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -9,16 +9,17 @@ import OverviewTab from './tabs/OverviewTab';
 import UsersTab from './tabs/UsersTab';
 import TasksTab from './tabs/TasksTab';
 import AttendanceTab from './tabs/AttendanceTab';
-import SubmissionsTab from './tabs/SubmissionsTab';
+import MentorsTab from './tabs/MentorsTab';
+import MentorAssignmentTab from './tabs/MentorAssignmentTab';
 import AnnouncementsTab from './tabs/AnnouncementsTab';
 import ExportsTab from './tabs/ExportsTab';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
+  const [mentors, setMentors] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [attendance, setAttendance] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -33,18 +34,18 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       // Load users with default pagination for initial load
-      const [usersRes, tasksRes, attendanceRes, submissionsRes, announcementsRes] = await Promise.all([
-        userAPI.getAllUsers({ page: 1, limit: 10 }),
+      const [usersRes, mentorsRes, tasksRes, attendanceRes, announcementsRes] = await Promise.all([
+        userAPI.getAllUsers({ page: 1, limit: 10, role: 'participant' }),
+        userAPI.getAllUsers({ page: 1, limit: 50, role: 'mentor' }),
         taskAPI.getAllTasks(),
         attendanceAPI.getAllAttendance(),
-        submissionAPI.getAllSubmissions(),
         announcementAPI.getAllAnnouncements(),
       ]);
 
       setUsers(usersRes.data.data.users || []);
+      setMentors(mentorsRes.data.data.users || []);
       setTasks(tasksRes.data.data.tasks || []);
       setAttendance(attendanceRes.data.data.attendance || []);
-      setSubmissions(submissionsRes.data.data.submissions || []);
       setAnnouncements(announcementsRes.data.data.announcements || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -52,6 +53,32 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to load mentors with params for MentorsTab
+  const handleLoadMentors = async (params) => {
+    // For mentor tab, get all mentors with their assigned participants if no search/filter params
+    if (!params.search && params.role === 'mentor') {
+      const res = await userAPI.getAllMentorsWithParticipants();
+      const mentors = res.data.data.mentors || [];
+      // Format to match expected pagination structure
+      return {
+        data: {
+          users: mentors,
+          pagination: {
+            total: mentors.length,
+            totalPages: Math.ceil(mentors.length / (params.limit || 10)),
+            page: params.page || 1,
+            hasNextPage: false,
+            hasPrevPage: false
+          }
+        }
+      };
+    }
+    // Fallback to regular user API for search/filtering
+    const res = await userAPI.getAllUsers(params);
+    setMentors(res.data.data.users || []);
+    return { data: res.data.data };
   };
 
   // Function to load users with params for UsersTab
@@ -88,6 +115,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleUpdateTask = async (taskId, taskForm) => {
+    try {
+      await taskAPI.updateTask(taskId, taskForm);
+      showSuccessModal('Success', 'Task updated successfully!');
+      loadDashboardData();
+    } catch (error) {
+      showSuccessModal('Error', 'Failed to update task: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (window.confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      try {
+        await taskAPI.deleteTask(taskId);
+        showSuccessModal('Success', 'Task deleted successfully!');
+        loadDashboardData();
+      } catch (error) {
+        showSuccessModal('Error', 'Failed to delete task: ' + (error.response?.data?.message || error.message));
+      }
+    }
+  };
+
   const handleCreateAnnouncement = async (announcementForm) => {
     try {
       const announcementData = {
@@ -96,26 +145,16 @@ const AdminDashboard = () => {
         priority: announcementForm.priority,
         targetAudience: announcementForm.targetAudience
       };
-      
+
       if (announcementForm.expiresAt) {
         announcementData.expiresAt = announcementForm.expiresAt;
       }
-      
+
       await announcementAPI.createAnnouncement(announcementData);
       showSuccessModal('Success', 'Announcement created successfully!');
       loadDashboardData();
     } catch (error) {
       showSuccessModal('Error', 'Failed to create announcement: ' + (error.response?.data?.message || error.message));
-    }
-  };
-
-  const handleGradeSubmission = async (submissionId, gradingForm) => {
-    try {
-      await submissionAPI.gradeSubmission(submissionId, gradingForm);
-      showSuccessModal('Success', 'Submission graded successfully!');
-      loadDashboardData();
-    } catch (error) {
-      showSuccessModal('Error', 'Failed to grade submission: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -147,16 +186,13 @@ const AdminDashboard = () => {
         case 'attendance':
           response = await exportAPI.exportAttendance();
           break;
-        case 'submissions':
-          response = await exportAPI.exportSubmissions();
-          break;
         case 'scores':
           response = await exportAPI.exportScores();
           break;
         default:
           return;
       }
-      
+
       const blob = new Blob([response.data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -177,9 +213,10 @@ const AdminDashboard = () => {
   const tabs = [
     { id: 'overview', name: 'Overview', icon: '📊' },
     { id: 'users', name: 'Users', icon: '👥' },
+    { id: 'mentors', name: 'Mentors', icon: '👨‍🏫' },
+    { id: 'mentor-assignment', name: 'Assign Mentors', icon: '🔗' },
     { id: 'tasks', name: 'Tasks', icon: '📝' },
     { id: 'attendance', name: 'Attendance', icon: '✅' },
-    { id: 'submissions', name: 'Submissions', icon: '📤' },
     { id: 'announcements', name: 'Announcements', icon: '📢' },
     { id: 'exports', name: 'Exports', icon: '📥' },
   ];
@@ -187,21 +224,23 @@ const AdminDashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab users={users} tasks={tasks} attendance={attendance} submissions={submissions} />;
+        return <OverviewTab users={users} tasks={tasks} attendance={attendance} mentors={mentors} />;
       case 'users':
         return <UsersTab users={users} onLoadUsers={handleLoadUsers} />;
+      case 'mentors':
+        return <MentorsTab mentors={mentors} onLoadMentors={handleLoadMentors} />;
+      case 'mentor-assignment':
+        return <MentorAssignmentTab onShowModal={showSuccessModal} />;
       case 'tasks':
-        return <TasksTab tasks={tasks} onCreateTask={handleCreateTask} onToggleTaskStatus={handleToggleTaskStatus} />;
+        return <TasksTab tasks={tasks} onCreateTask={handleCreateTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onToggleTaskStatus={handleToggleTaskStatus} />;
       case 'attendance':
         return <AttendanceTab attendance={attendance} onMarkAttendance={loadDashboardData} />;
-      case 'submissions':
-        return <SubmissionsTab submissions={submissions} onGradeSubmission={handleGradeSubmission} />;
       case 'announcements':
         return <AnnouncementsTab announcements={announcements} onCreateAnnouncement={handleCreateAnnouncement} onDeleteAnnouncement={handleDeleteAnnouncement} />;
       case 'exports':
         return <ExportsTab onExportData={handleExportData} />;
       default:
-        return <OverviewTab users={users} tasks={tasks} attendance={attendance} submissions={submissions} />;
+        return <OverviewTab users={users} tasks={tasks} attendance={attendance} mentors={mentors} />;
     }
   };
 
@@ -224,11 +263,10 @@ const AdminDashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   <span className="mr-2">{tab.icon}</span>
                   {tab.name}

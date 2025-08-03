@@ -9,7 +9,7 @@ import {
   deleteSubmission,
   getPendingSubmissions
 } from '../controllers/submissionController.js';
-import { authenticateToken, adminOnly, participantOnly } from '../middleware/auth.js';
+import { authenticateToken, adminOnly, participantOnly, mentorOrAdmin } from '../middleware/auth.js';
 import { uploadSubmission, handleUploadError } from '../middleware/upload.js';
 import {
   validateSubmission,
@@ -26,13 +26,13 @@ router.use(authenticateToken);
 
 // Specific routes first
 router.get('/my-submissions', participantOnly, validatePagination, handleValidationErrors, getUserSubmissions);
-router.get('/pending', adminOnly, getPendingSubmissions);
-router.get('/', adminOnly, validatePagination, handleValidationErrors, getAllSubmissions);
+router.get('/pending', mentorOrAdmin, getPendingSubmissions);
+router.get('/', mentorOrAdmin, validatePagination, handleValidationErrors, getAllSubmissions);
 router.post('/', participantOnly, uploadSubmission, handleUploadError, validateSubmission, handleValidationErrors, submitTask);
 
 // Routes with parameters (more specific first)
-router.post('/:id/grade', adminOnly, validateMongoId('id'), validateGrading, handleValidationErrors, gradeSubmission);
-router.put('/:id/grade', adminOnly, validateMongoId('id'), validateGrading, handleValidationErrors, updateGrade);
+router.post('/:id/grade', mentorOrAdmin, validateMongoId('id'), validateGrading, handleValidationErrors, gradeSubmission);
+router.put('/:id/grade', mentorOrAdmin, validateMongoId('id'), validateGrading, handleValidationErrors, updateGrade);
 router.get('/:id', validateMongoId('id'), handleValidationErrors, getSubmissionById);
 router.delete('/:id', validateMongoId('id'), handleValidationErrors, deleteSubmission);
 

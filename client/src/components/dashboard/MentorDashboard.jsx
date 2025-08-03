@@ -14,6 +14,8 @@ const MentorDashboard = () => {
   const [activeTab, setActiveTab] = useState('attendance');
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', content: null });
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [taskSubmissions, setTaskSubmissions] = useState([]);
 
   useEffect(() => {
     loadMentorData();
@@ -23,13 +25,13 @@ const MentorDashboard = () => {
     try {
       setLoading(true);
       const [participantsRes, attendanceRes, submissionsRes, tasksRes] = await Promise.all([
-        userAPI.getAllUsers({ role: 'participant' }),
+        userAPI.getMentorParticipants(), // Get only assigned participants
         attendanceAPI.getAllAttendance(),
         submissionAPI.getAllSubmissions(),
         taskAPI.getAllTasks(),
       ]);
 
-      setParticipants(participantsRes.data.data.users || []);
+      setParticipants(participantsRes.data.data.participants || []);
       setAttendance(attendanceRes.data.data.attendance || []);
       setSubmissions(submissionsRes.data.data.submissions || []);
       setTasks(tasksRes.data.data.tasks || []);
@@ -55,7 +57,7 @@ const MentorDashboard = () => {
 
   const markAttendance = async (participantId, date, status) => {
     try {
-      await attendanceAPI.markAttendance({
+      await attendanceAPI.markAttendanceForUser({
         userId: participantId,
         date,
         status
@@ -75,9 +77,33 @@ const MentorDashboard = () => {
       });
       showNotification('Success', 'Feedback provided successfully!');
       loadMentorData();
+      // Reload task submissions if we're in task review mode
+      if (selectedTask) {
+        await loadTaskSubmissions(selectedTask._id);
+      }
     } catch (error) {
       showNotification('Error', 'Failed to provide feedback: ' + (error.response?.data?.message || error.message));
     }
+  };
+
+  const loadTaskSubmissions = async (taskId) => {
+    try {
+      const taskSubmissionsRes = await submissionAPI.getAllSubmissions({ taskId });
+      setTaskSubmissions(taskSubmissionsRes.data.data.submissions || []);
+    } catch (error) {
+      console.error('Error loading task submissions:', error);
+      showNotification('Error', 'Failed to load task submissions');
+    }
+  };
+
+  const handleTaskClick = async (task) => {
+    setSelectedTask(task);
+    await loadTaskSubmissions(task._id);
+  };
+
+  const handleBackToTasks = () => {
+    setSelectedTask(null);
+    setTaskSubmissions([]);
   };
 
   if (loading) {
@@ -87,15 +113,15 @@ const MentorDashboard = () => {
   const tabs = [
     { id: 'attendance', name: 'Mark Attendance', icon: '✅' },
     { id: 'reports', name: 'Daily Reports', icon: '📊' },
-    { id: 'submissions', name: 'Task Submissions', icon: '📤' },
-    { id: 'feedback', name: 'Provide Feedback', icon: '💬' },
+    { id: 'task-reviews', name: 'Task Reviews', icon: '📝' },
   ];
 
   const renderAttendanceTab = () => {
-    const today = new Date().toISOString().split('T')[0];
+    // Bootcamp starts on August 4th, 2025
+    const bootcampStartDate = new Date('2025-08-04');
     const bootcampDays = Array.from({ length: 12 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - 11 + i);
+      const date = new Date(bootcampStartDate);
+      date.setDate(bootcampStartDate.getDate() + i);
       return date.toISOString().split('T')[0];
     });
 
@@ -114,6 +140,10 @@ const MentorDashboard = () => {
                     Day {bootcampDays.indexOf(date) + 1}
                     <br />
                     <span className="text-xs text-gray-400">
+                      {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                    <br />
+                    <span className="text-xs text-gray-400">
                       {bootcampDays.indexOf(date) >= 10 ? 'Hackathon' : 'Bootcamp'}
                     </span>
                   </th>
@@ -129,7 +159,7 @@ const MentorDashboard = () => {
                   </td>
                   {bootcampDays.map(date => {
                     const attendanceRecord = attendance.find(
-                      a => a.user._id === participant._id && a.date.split('T')[0] === date
+                      a => a.userId._id === participant._id && a.date.split('T')[0] === date
                     );
                     return (
                       <td key={date} className="px-3 py-4 text-center">
@@ -157,8 +187,8 @@ const MentorDashboard = () => {
 
   const renderReportsTab = () => {
     const participantStats = participants.map(participant => {
-      const userAttendance = attendance.filter(a => a.user._id === participant._id);
-      const userSubmissions = submissions.filter(s => s.user._id === participant._id);
+      const userAttendance = attendance.filter(a => a.userId._id === participant._id);
+      const userSubmissions = submissions.filter(s => s.userId._id === participant._id);
       
       return {
         ...participant,
@@ -201,117 +231,247 @@ const MentorDashboard = () => {
     );
   };
 
-  const renderSubmissionsTab = () => {
-    return (
-      <div className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Recent Task Submissions</h3>
-        <div className="space-y-4">
-          {submissions.slice(0, 10).map(submission => (
-            <div key={submission._id} className="border rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-medium text-gray-900">{submission.user.name}</h4>
-                  <p className="text-sm text-gray-600">{submission.task.title}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500">
-                    {new Date(submission.submittedAt).toLocaleDateString()}
+  const renderTaskReviewsTab = () => {
+    if (selectedTask) {
+      // Show submissions for the selected task
+      return (
+        <div className="p-6">
+          <div className="flex items-center mb-6">
+            <button
+              onClick={handleBackToTasks}
+              className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Tasks
+            </button>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">{selectedTask.title}</h3>
+              <p className="text-sm text-gray-600">Day {selectedTask.day.replace('day', '')} - Max Score: {selectedTask.maxScore}</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {taskSubmissions.length > 0 ? (
+              taskSubmissions.map(submission => (
+                <div key={submission._id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="font-medium text-gray-900">{submission.userId.name}</h4>
+                      <p className="text-xs text-gray-500">
+                        Submitted: {new Date(submission.submittedAt).toLocaleString()}
+                      </p>
+                      {submission.score !== undefined && submission.score !== null && (
+                        <p className="text-sm font-semibold text-green-600 mt-1">
+                          Score: {submission.score}/{selectedTask.maxScore}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        submission.status === 'graded' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {submission.status === 'graded' ? 'Graded' : 'Pending Review'}
+                      </span>
+                    </div>
                   </div>
-                  {submission.score && (
-                    <div className="font-semibold text-green-600">{submission.score}/100</div>
+                  
+                  {/* Submission Content */}
+                  {submission.content?.text && (
+                    <div className="mb-4">
+                      <h5 className="font-medium text-gray-700 mb-2">Submission:</h5>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                        {submission.content.text}
+                      </p>
+                    </div>
                   )}
-                </div>
-              </div>
-              {submission.submissionText && (
-                <p className="text-sm text-gray-700 mb-2">{submission.submissionText.substring(0, 200)}...</p>
-              )}
-              {submission.feedback && (
-                <div className="bg-blue-50 p-2 rounded text-sm">
-                  <strong>Feedback:</strong> {submission.feedback}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
 
-  const renderFeedbackTab = () => {
-    const pendingSubmissions = submissions.filter(s => !s.feedback || !s.score);
+                  {submission.content?.link && (
+                    <div className="mb-4">
+                      <h5 className="font-medium text-gray-700 mb-2">Submission Link:</h5>
+                      <a 
+                        href={submission.content.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        {submission.content.linkTitle || submission.content.link}
+                      </a>
+                    </div>
+                  )}
+
+                  {submission.content?.fileUrl && (
+                    <div className="mb-4">
+                      <h5 className="font-medium text-gray-700 mb-2">Submitted File:</h5>
+                      <a 
+                        href={`http://localhost:9000${submission.content.fileUrl}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {submission.content.fileName || 'Download File'}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Existing Feedback */}
+                  {submission.feedback && (
+                    <div className="mb-4 bg-blue-50 p-3 rounded">
+                      <h5 className="font-medium text-gray-700 mb-1">Previous Feedback:</h5>
+                      <p className="text-sm text-gray-600">{submission.feedback}</p>
+                    </div>
+                  )}
+
+                  {/* Grading Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Score (0-{selectedTask.maxScore})
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={selectedTask.maxScore}
+                        className="w-full border rounded px-3 py-2"
+                        id={`score-${submission._id}`}
+                        defaultValue={submission.score || ''}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Feedback
+                      </label>
+                      <textarea
+                        className="w-full border rounded px-3 py-2"
+                        rows="3"
+                        id={`feedback-${submission._id}`}
+                        defaultValue={submission.feedback || ''}
+                        placeholder="Provide constructive feedback..."
+                      />
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      const score = document.getElementById(`score-${submission._id}`).value;
+                      const feedback = document.getElementById(`feedback-${submission._id}`).value;
+                      if (score && feedback) {
+                        provideFeedback(submission._id, feedback, score);
+                      } else {
+                        showNotification('Error', 'Please provide both score and feedback');
+                      }
+                    }}
+                    className="mt-3 bg-[#272757] text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    {submission.status === 'graded' ? 'Update Grade' : 'Submit Grade'}
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-8">No submissions found for this task</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Show day-wise tasks list
+    const tasksByDay = tasks.reduce((acc, task) => {
+      const day = task.day;
+      if (!acc[day]) {
+        acc[day] = [];
+      }
+      acc[day].push(task);
+      return acc;
+    }, {});
+
+    const dayOrder = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'day8', 'day9', 'day10', 'day11', 'day12'];
 
     return (
       <div className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Provide Feedback</h3>
-        <div className="space-y-4">
-          {pendingSubmissions.map(submission => (
-            <div key={submission._id} className="border rounded-lg p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h4 className="font-medium text-gray-900">{submission.user.name}</h4>
-                  <p className="text-sm text-gray-600">{submission.task.title}</p>
-                  <p className="text-xs text-gray-500">
-                    Submitted: {new Date(submission.submittedAt).toLocaleString()}
-                  </p>
+        <h3 className="text-lg font-semibold mb-6">Task Reviews - Day Wise</h3>
+        
+        <div className="space-y-6">
+          {dayOrder.map(day => {
+            const dayTasks = tasksByDay[day] || [];
+            const dayNumber = day.replace('day', '');
+            const bootcampStartDate = new Date('2025-08-04');
+            const dayDate = new Date(bootcampStartDate);
+            dayDate.setDate(bootcampStartDate.getDate() + parseInt(dayNumber) - 1);
+            
+            return (
+              <div key={day} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      Day {dayNumber}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {dayDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {parseInt(dayNumber) >= 11 ? 'Hackathon' : 'Bootcamp'}
+                    </p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {dayTasks.length} task{dayTasks.length !== 1 ? 's' : ''}
+                  </div>
                 </div>
-              </div>
-              
-              {submission.submissionText && (
-                <div className="mb-4">
-                  <h5 className="font-medium text-gray-700 mb-2">Submission:</h5>
-                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                    {submission.submissionText}
-                  </p>
-                </div>
-              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Score (0-100)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    className="w-full border rounded px-3 py-2"
-                    id={`score-${submission._id}`}
-                    defaultValue={submission.score || ''}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Feedback
-                  </label>
-                  <textarea
-                    className="w-full border rounded px-3 py-2"
-                    rows="3"
-                    id={`feedback-${submission._id}`}
-                    defaultValue={submission.feedback || ''}
-                    placeholder="Provide constructive feedback..."
-                  />
-                </div>
+                {dayTasks.length > 0 ? (
+                  <div className="grid gap-3">
+                    {dayTasks.map(task => {
+                      const taskSubmissions = submissions.filter(s => s.taskId._id === task._id);
+                      const gradedSubmissions = taskSubmissions.filter(s => s.status === 'graded');
+                      
+                      return (
+                        <div 
+                          key={task._id} 
+                          className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-gray-900">{task.title}</h5>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Max Score: {task.maxScore} | Status: {task.isActive ? 'Active' : 'Inactive'}
+                              </p>
+                            </div>
+                            <div className="text-right ml-4">
+                              <div className="text-sm text-gray-600">
+                                {taskSubmissions.length} submission{taskSubmissions.length !== 1 ? 's' : ''}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {gradedSubmissions.length} graded
+                              </div>
+                              {taskSubmissions.length > gradedSubmissions.length && (
+                                <div className="text-xs text-orange-600 font-medium">
+                                  {taskSubmissions.length - gradedSubmissions.length} pending
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No tasks assigned for this day</p>
+                )}
               </div>
-              
-              <button
-                onClick={() => {
-                  const score = document.getElementById(`score-${submission._id}`).value;
-                  const feedback = document.getElementById(`feedback-${submission._id}`).value;
-                  if (score && feedback) {
-                    provideFeedback(submission._id, feedback, score);
-                  } else {
-                    showNotification('Error', 'Please provide both score and feedback');
-                  }
-                }}
-                className="mt-3 bg-[#272757] text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Submit Feedback
-              </button>
-            </div>
-          ))}
-          {pendingSubmissions.length === 0 && (
-            <p className="text-gray-500 text-center py-8">No pending submissions to review</p>
-          )}
+            );
+          })}
         </div>
       </div>
     );
@@ -323,10 +483,8 @@ const MentorDashboard = () => {
         return renderAttendanceTab();
       case 'reports':
         return renderReportsTab();
-      case 'submissions':
-        return renderSubmissionsTab();
-      case 'feedback':
-        return renderFeedbackTab();
+      case 'task-reviews':
+        return renderTaskReviewsTab();
       default:
         return renderAttendanceTab();
     }

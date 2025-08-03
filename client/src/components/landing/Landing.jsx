@@ -34,6 +34,11 @@ import track12 from "../../assets/12.png";
 import track13 from "../../assets/13.png";
 import track14 from "../../assets/14.png";
 import track15 from "../../assets/15.png";
+import track16 from "../../assets/16.jpeg";
+import track17 from "../../assets/17.jpeg";
+import track18 from "../../assets/18.jpeg";
+import track19 from "../../assets/19.jpg";
+import track20 from "../../assets/20.jpeg";
 
 // Holi Color Drop Effect
 function RainbowCursorTrail() {
@@ -580,6 +585,43 @@ function RewardsCarousel({ themeColors }) {
   );
 }
 
+// Event Images Carousel Component
+function EventImagesCarousel() {
+  const eventImages = [track16, track17, track18, track19, track20];
+  const duplicatedImages = [...eventImages, ...eventImages]; // To make seamless loop
+
+  return (
+    <div className="w-full h-full relative overflow-hidden">
+      <motion.div
+        className="flex h-full"
+        animate={{ x: ["0%", `-${100 / 2}%`] }} // Scroll half because we duplicated
+        transition={{
+          duration: 10, // Slower, smoother scroll
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        style={{ width: `${(duplicatedImages.length) * 200 / eventImages.length}%` }}
+      >
+        {duplicatedImages.map((image, index) => (
+          <div
+            key={index}
+          >
+            <img
+              src={image}
+              alt={`Event ${index + 1}`}
+              className="h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">📸</div>`;
+              }}
+            />
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 // Tech Marquee Component
 function TechMarquee() {
   const hackathonTechs = [
@@ -639,51 +681,96 @@ function TechMarquee() {
   const duplicatedTechs = [...hackathonTechs, ...hackathonTechs];
 
   return (
-    <div className="h-full flex flex-col justify-center">
-      <div className="relative h-full overflow-hidden">
-        <motion.div
-          className="flex flex-col gap-3"
-          animate={{
-            y: [0, -50 * hackathonTechs.length]
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-
-        >
-          {duplicatedTechs.map((tech, index) => (
-            <motion.div
-              key={`${tech.name}-${index}`}
-              className="flex items-center justify-center"
-              style={{
-                height: "60px",
-                minHeight: "60px"
-              }}
-              whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.2 }}
-            >
+    <div className="h-full w-full flex items-center justify-center">
+      <div className="relative w-full h-full overflow-hidden">
+        {/* Mobile: Horizontal scrolling */}
+        <div className="block sm:hidden h-full w-full">
+          <motion.div
+            className="flex gap-4 h-full items-center"
+            animate={{
+              x: [0, -48 * hackathonTechs.length]
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            style={{ width: 'max-content' }}
+          >
+            {duplicatedTechs.map((tech, index) => (
               <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center"
-
+                key={`${tech.name}-${index}`}
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  minWidth: "44px",
+                  minHeight: "44px"
+                }}
               >
-                <img
-                  src={tech.icon}
-                  alt={tech.name}
-                  className="w-30 h-30"
-                  style={{
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
-                  }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentNode.innerHTML = `<div style="width: 24px; height: 24px; background: ${tech.color}; border-radius: 4px;"></div>`;
-                  }}
-                />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-sm">
+                  <img
+                    src={tech.icon}
+                    alt={tech.name}
+                    className="w-7 h-7"
+                    style={{
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentNode.innerHTML = `<div style="width: 22px; height: 22px; background: ${tech.color}; border-radius: 4px;"></div>`;
+                    }}
+                  />
+                </div>
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Desktop: Vertical scrolling */}
+        <div className="hidden sm:block h-full">
+          <motion.div
+            className="flex flex-col gap-3 h-full justify-center"
+            animate={{
+              y: [0, -50 * hackathonTechs.length]
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            {duplicatedTechs.map((tech, index) => (
+              <motion.div
+                key={`${tech.name}-${index}`}
+                className="flex items-center justify-center flex-shrink-0"
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  minWidth: "60px",
+                  minHeight: "60px"
+                }}
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+                  <img
+                    src={tech.icon}
+                    alt={tech.name}
+                    className="w-8 h-8"
+                    style={{
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentNode.innerHTML = `<div style="width: 24px; height: 24px; background: ${tech.color}; border-radius: 4px;"></div>`;
+                    }}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -1014,181 +1101,142 @@ export default function Landing() {
       )}
 
       {/* Hero Section */}
-      <section className="py-8 px-4 sm:px-6 lg:px-10" >
+      <section className="py-4 sm:py-8 px-4 sm:px-6 lg:px-10">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+
             {/* Main Hero Card */}
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-8 order-1 lg:order-1">
               <div
-                className="rounded-2xl border-2 p-8 shadow-lg h-full"
+                className="rounded-[24px] sm:rounded-[50px] border-2 shadow-lg h-full px-6 sm:px-12 lg:px-20 py-6 sm:py-10"
                 style={{
                   borderColor: themeColors.border,
                   backgroundColor: themeColors.cardBg,
-                  padding: '90px',
-                  borderRadius: 50,
-                  maxHeight: '600px'
                 }}
               >
-
                 <p
-                  style={{
-                    fontSize: 30,
-                    color: themeColors.text,
-
-                    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                  }}
+                  className="text-[20px] sm:text-[24px] lg:text-[30px] text-black dark:text-white leading-tight font-normal"
+                  style={{ color: themeColors.text }}
                 >
-                  <span style={{ fontWeight: '400' }}>Join us for</span>
+                  <span>Join us for</span>
                   <br />
-                  <span style={{ fontWeight: '650', fontSize: 50 }}>Innovate, Elevate,<br /> Energize</span>
-                  <br />
-                  <span
-                    style={{ fontWeight: '400' }}
-                  >
-                    of learning
+                  <span className="font-semibold text-[28px] sm:text-[36px] lg:text-[50px]">
+                    Innovate, Elevate,<br className="hidden sm:block" /> Energize
                   </span>
+                  <br />
+                  <span className="font-normal">of learning</span>
                 </p>
-                <div className="mb-8">
+
+                <div className="my-6 sm:my-8">
                   <div
-                    className="w-160 h-0.5 mb-6"
-                    style={{ backgroundColor: themeColors.textSecondary }}
+                    className="h-0.5 mb-4 sm:mb-6"
+                    style={{ backgroundColor: themeColors.textSecondary, width: '160px' }}
                   />
                   <div
-                    className="mb-6"
-                    style={{
-                      color: themeColors.textSecondary,
-                      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                      fontSize: '1.125rem',
-                      fontWeight: '400'
-                    }}
+                    className="text-base sm:text-lg font-normal mb-4 sm:mb-6"
+                    style={{ color: themeColors.textSecondary }}
                   >
-                    August 04-15, 2025
+                    August 04–15, 2025
                   </div>
                   <p
-                    className="text-lg max-w-2xl leading-relaxed"
-                    style={{
-                      color: themeColors.textSecondary,
-                      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                      fontWeight: '400'
-                    }}
+                    className="text-sm sm:text-base lg:text-lg leading-relaxed font-normal"
+                    style={{ color: themeColors.textSecondary }}
                   >
                     Code with purpose — create innovative solutions for yoga sessions, meditation spaces, physical fitness, and holistic well-being.
-
                   </p>
                 </div>
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
-                    className="px-8 py-4 text-lg font-medium transition-all duration-200 hover:scale-105"
-                    style={{
-                      backgroundColor: '#000000',
-                      color: '#ffffff',
-                      borderRadius: '50px',
-                      border: 'none',
-                      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                      fontWeight: '400'
-                    }}
+                    className="px-6 sm:px-8 py-3 sm:py-4 font-medium transition-all duration-200 hover:scale-105 text-white bg-black rounded-full text-base sm:text-lg"
                     onClick={() => window.open("/register", "_blank")}
                   >
-                    get tickets
+                    Get Tickets
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Right Side Cards */}
-            <div className="lg:col-span-4 space-y-6">
+            <div className="lg:col-span-4 space-y-4 sm:space-y-6 order-2 lg:order-2">
               <CountdownTimer targetDate={hackathonDate} themeColors={themeColors} />
 
-              {/* Swag and Prize Pool Cards */}
-              <div style={{ display: 'flex', gap: '16px', height: 290 }}>
+              {/* Swag & Tech Cards */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Swag Card */}
                 <div
+                  className="w-full sm:w-[72%] p-4 sm:p-6 rounded-xl border-2 shadow-md h-[200px] sm:h-[300px]"
                   style={{
                     backgroundColor: '#19afc3',
                     borderColor: themeColors.border,
-                    border: '2px solid',
-                    borderRadius: '16px',
-                    padding: '24px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    width: '72%',
-                    minWidth: '0'
-
                   }}
                 >
-                  <p className="text-2xl" style={{ color: themeColors.text, fontFamily: 'sans-serif', fontWeight: '600' }}>
-                    Bag your<br /> swags
+                  <p className="text-white font-semibold text-lg sm:text-xl lg:text-2xl mb-1 sm:mb-3">
+                    Bag your <br /> swags
                   </p>
-                  <div className="flex-1">
+                  <div className="flex-1 min-h-[80px] sm:min-h-[100px]">
                     <SwagCarousel />
                   </div>
-
                 </div>
 
+                {/* Tech Marquee Card */}
                 <div
+                  className="w-full sm:w-[28%] p-3 sm:p-6 rounded-xl border-2 shadow-md relative overflow-hidden h-[120px] sm:h-[300px]"
                   style={{
                     backgroundColor: '#D1EED8',
                     borderColor: themeColors.border,
-                    border: '2px solid',
-                    borderRadius: '16px',
-                    padding: '24px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    width: '28%',
-                    minWidth: '0',
-                    overflow: 'hidden',
-                    position: 'relative'
                   }}
                 >
                   <TechMarquee />
                 </div>
               </div>
 
-              <div >
-                <div
-                  style={{
-                    backgroundColor: '#F8BB15',
-                    borderColor: themeColors.border,
-                    border: '2px solid',
-                    borderRadius: 40,
-                    padding: '24px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    minWidth: '0',
-                    fontFamily: 'sans-serif'
-                  }}
-                ><p className="text-2xl" style={{ color: themeColors.border }}>
-                    PRIZE POOL
-                  </p>
-                  <h1 className="text-5xl  mb-4" style={{ color: themeColors.border, fontWeight: '700' }}>
-                    ₹30,000
-                  </h1>
 
-
-                </div>
-
-
+              {/* Prize Pool */}
+              <div
+                className="rounded-[24px] sm:rounded-[40px] p-4 sm:p-6 shadow-md text-center sm:text-left"
+                style={{
+                  backgroundColor: '#F8BB15',
+                  borderColor: themeColors.border,
+                  border: '2px solid',
+                  fontFamily: 'sans-serif',
+                }}
+              >
+                <p
+                  className="text-xl sm:text-2xl font-semibold mb-2"
+                  style={{ color: themeColors.border }}
+                >
+                  PRIZE POOL
+                </p>
+                <h1
+                  className="text-[2.5rem] sm:text-[3rem] lg:text-[3.5rem] font-bold"
+                  style={{ color: themeColors.border }}
+                >
+                  ₹30,000
+                </h1>
               </div>
             </div>
-
-
 
           </div>
         </div>
       </section>
 
+
       {/* Stats Cards */}
       <section className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
             {/* Mission Card */}
             <div
-              className="rounded-2xl p-5 shadow-lg flex flex-col justify-between"
+              className="rounded-2xl p-5 shadow-lg flex flex-col justify-between min-h-[280px] sm:min-h-[309px]"
               style={{
-                minHeight: "309px",
                 backgroundColor: '#5C8C3D',
-
                 borderColor: themeColors.border
               }}
             >
               <div
-                className=" text-sm mb-2 rounded-2xl border-2 inline-block px-4 py-1"
+                className="text-sm mb-2 rounded-2xl border-2 inline-block px-4 py-1"
                 style={{
                   borderColor: themeColors.border,
                   color: themeColors.text,
@@ -1200,7 +1248,7 @@ export default function Landing() {
               <div
                 className="font-black"
                 style={{
-                  fontSize: "3.5rem",
+                  fontSize: "2.5rem", // responsive control will handle scale
                   lineHeight: "1.1",
                   color: themeColors.text
                 }}
@@ -1212,7 +1260,7 @@ export default function Landing() {
             </div>
 
             {/* Stats Grid */}
-            <div className="col-span-1 sm:col-span-1 md:col-span-1 grid grid-cols-2 gap-3 h-[309px]">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-3 h-full">
               {[
                 { number: "20+", label: "Mentors" },
                 { number: "250+", label: "Participants" },
@@ -1224,18 +1272,16 @@ export default function Landing() {
                 return (
                   <div
                     key={index}
-                    className="p-6 shadow-lg text-center flex flex-col justify-center rounded-3xl"
+                    className="p-4 sm:p-6 text-center flex flex-col justify-center rounded-3xl shadow-lg w-full"
                     style={{
                       background: backgroundColor,
                       borderColor: themeColors.border,
-                      width: "180px",  // Half of 380 because 2 cards per row
-                      maxWidth: "100%"
                     }}
                   >
-                    <div className="text-3xl font-black mb-1 text-white">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-black mb-1 text-white">
                       {stat.number}
                     </div>
-                    <div className="font-bold text-xs text-white">
+                    <div className="font-bold text-xs sm:text-sm text-white">
                       {stat.label}
                     </div>
                   </div>
@@ -1243,114 +1289,102 @@ export default function Landing() {
               })}
             </div>
 
-            {/* Image placeholder */}
+            {/* Event Images Carousel */}
             <div
-              className="rounded-3xl border-2 p-5 shadow-lg "
+              className="rounded-3xl shadow-lg overflow-hidden w-full lg:w-[500px] xl:w-[600px]"
               style={{
-                minHeight: "309px",
-                minWidth: "600px",
-                borderRadius: 50,
                 backgroundColor: themeColors.cardBg,
                 borderColor: themeColors.border
               }}
             >
-              <div
-                className="w-full h-full rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: themeColors.cardBgSecondary }}
-              >
-                <span style={{ color: themeColors.textSecondary }}>Event Image Placeholder</span>
-              </div>
+              <EventImagesCarousel />
             </div>
+
           </div>
         </div>
       </section>
 
 
+
       {/* Tracks Section */}
       <section
-        className="py-20 px-4 sm:px-6 lg:px-12"
+        className="py-12 sm:py-20 px-4 sm:px-6 lg:px-12"
         style={{ backgroundColor: themeColors.cardBg }}
       >
         <div className="max-w-7xl mx-auto">
           <h2
-            className="text-5xl font-black mb-12 text-center"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black mb-8 sm:mb-12 text-center"
             style={{ color: themeColors.text }}
           >
             Choose Your Track
           </h2>
 
-          <div
-            className={`flex flex-row transition-all duration-300 ${selectedIndex !== null ? "items-start gap-10" : "justify-center"
-              }`}
-          >
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
             {/* Track Cards */}
-            <div
-              className={`grid ${selectedIndex !== null ? "grid-cols-3 grid-rows-2 gap-4" : "grid-cols-6 gap-6"
-                } transition-all duration-300`}
-            >
-              {tracks.map((track, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectedIndex(index)}
-                  className={`border-2 rounded-xl p-4 text-center cursor-pointer transition-all duration-300 
-                  ${selectedIndex !== null
-                      ? "w-24 h-24 text-xs"
-                      : "w-40 h-40 text-base"
-                    } flex flex-col items-center justify-center hover:opacity-80 ${selectedIndex === index ? "ring-2 ring-red-500" : ""
-                    }`}
-                  style={{
-                    backgroundColor: themeColors.cardBgSecondary,
-                    borderColor: themeColors.border,
-                    color: themeColors.text
-                  }}
-                >
-                  <div className="text-xl mb-1">{track.icon}</div>
-                  <div className="font-bold">{track.title}</div>
-                </div>
-              ))}
+            <div className="w-full lg:w-[35%]">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                {tracks.map((track, index) => (
+                  <div
+                    key={index}
+                    onClick={() => setSelectedIndex(index)}
+                    className={`border-2 rounded-xl p-2 sm:p-3 text-center cursor-pointer transition-all duration-300 
+          h-20 sm:h-24 text-xs sm:text-sm flex flex-col items-center justify-center hover:opacity-80 
+          ${selectedIndex === index ? "ring-2 ring-red-500" : ""}`}
+                    style={{
+                      backgroundColor: themeColors.cardBgSecondary,
+                      borderColor: themeColors.border,
+                      color: themeColors.text
+                    }}
+                  >
+                    <div className="text-lg sm:text-xl mb-1">{track.icon}</div>
+                    <div className="font-bold leading-tight">{track.title}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Description Panel */}
             {selectedIndex !== null && (
               <div
-                className="border-2 flex-1 p-8 rounded-xl shadow-md max-w-lg h-[180px] transition-opacity duration-300 flex items-center gap-6"
+                className="border-2 w-full lg:flex-[2] p-4 sm:p-6 lg:p-8 h-40 lg:h-38  xl:h-52 rounded-xl shadow-md transition-opacity duration-300"
                 style={{
                   backgroundColor: themeColors.cardBgSecondary,
                   borderColor: themeColors.border,
-                  width: '100%',
-                  maxWidth: 'none'
                 }}
               >
-                {/* Text Content */}
-                <div className="flex-1">
-                  <h3
-                    className="text-2xl font-bold mb-4"
-                    style={{ color: themeColors.text }}
-                  >
-                    {tracks[selectedIndex].title}
-                  </h3>
-                  <p
-                    className="text-lg leading-relaxed"
-                    style={{ color: themeColors.textSecondary }}
-                  >
-                    {tracks[selectedIndex].description}
-                  </p>
-                </div>
+                <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-4 sm:gap-6">
+                  {/* Text Content */}
+                  <div className="flex-1 text-center sm:text-left">
+                    <h3
+                      className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
+                      style={{ color: themeColors.text }}
+                    >
+                      {tracks[selectedIndex].title}
+                    </h3>
+                    <p
+                      className="text-sm sm:text-base lg:text-lg leading-relaxed"
+                      style={{ color: themeColors.textSecondary }}
+                    >
+                      {tracks[selectedIndex].description}
+                    </p>
+                  </div>
 
-                {/* Image */}
-                <div className="flex-shrink-0">
-                  <img
-                    src={tracks[selectedIndex].image}
-                    alt={tracks[selectedIndex].title}
-                    className="w-75 h-75 object-cover "
-                    style={{
-                      filter: isDarkTheme ? 'brightness(0.9)' : 'none'
-                    }}
-                  />
+                  {/* Image */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={tracks[selectedIndex].image}
+                      alt={tracks[selectedIndex].title}
+                      className="w-35 h-35 sm:w-34 sm:h-34 lg:w-40 lg:h-40 xl:w-60 xl:h-50 object-cover"
+                      style={{
+                        filter: isDarkTheme ? 'brightness(0.9)' : 'none'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
           </div>
+
         </div>
       </section>
 

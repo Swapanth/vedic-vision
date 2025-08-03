@@ -56,6 +56,11 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  description: {
+    type: String,
+    default: '',
+    trim: true
+  },
   registrationDate: {
     type: Date,
     default: Date.now
@@ -85,10 +90,23 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 // Method to update total score
 userSchema.methods.updateTotalScore = async function() {
   const Submission = mongoose.model('Submission');
+  const Attendance = mongoose.model('Attendance');
+  
+  // Calculate task submission points
   const submissions = await Submission.find({ userId: this._id });
-  this.totalScore = submissions.reduce((total, submission) => {
+  const taskPoints = submissions.reduce((total, submission) => {
     return total + (submission.score || 0);
   }, 0);
+  
+  // Calculate attendance points (10 points per day present)
+  const presentDays = await Attendance.countDocuments({ 
+    userId: this._id, 
+    status: 'present' 
+  });
+  const attendancePoints = presentDays * 10;
+  
+  // Total score = task points + attendance points
+  this.totalScore = taskPoints + attendancePoints;
   await this.save();
 };
 

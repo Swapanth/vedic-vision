@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Submission from '../models/Submission.js';
 import Attendance from '../models/Attendance.js';
@@ -287,19 +288,79 @@ export const getDashboardStats = async (req, res) => {
 // Get leaderboard
 export const getLeaderboard = async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
+    const { limit = 100, role } = req.query;
 
-    const leaderboard = await User.find({ 
-      role: 'participant',
-      isActive: true 
-    })
-      .select('name email totalScore')
-      .sort({ totalScore: -1 })
-      .limit(parseInt(limit));
+    // Build query filter
+    const filter = { isActive: true };
+    
+    // Add role filter if specified
+    if (role && ['participant', 'mentor', 'admin'].includes(role)) {
+      filter.role = role;
+    }
+
+    // Handle mentors differently - they don't need scoring/ranking
+    if (role === 'mentor') {
+      const mentors = await User.find(filter)
+        .select('name email role description')
+        .limit(parseInt(limit))
+        .lean();
+
+      const mentorList = mentors.map(mentor => ({
+        ...mentor,
+        description: mentor.description || 'No description available'
+      }));
+
+      return res.json({
+        success: true,
+        data: { leaderboard: mentorList }
+      });
+    }
+
+    // For participants and others, calculate scores and rankings
+    const users = await User.find(filter)
+      .select('name email role')
+      .lean();
+
+    // Calculate real-time scores for each user
+    const Submission = mongoose.model('Submission');
+    const Attendance = mongoose.model('Attendance');
+
+    const leaderboardWithScores = await Promise.all(
+      users.map(async (user) => {
+        // Calculate task submission points
+        const submissions = await Submission.find({ userId: user._id }).lean();
+        const taskPoints = submissions.reduce((total, submission) => {
+          return total + (submission.score || 0);
+        }, 0);
+
+        // Calculate attendance points (10 points per day present)
+        const presentDays = await Attendance.countDocuments({ 
+          userId: user._id, 
+          status: 'present' 
+        });
+        const attendancePoints = presentDays * 10;
+
+        // Total score = task points + attendance points
+        const totalScore = taskPoints + attendancePoints;
+
+        return {
+          ...user,
+          totalScore,
+          taskPoints,
+          attendancePoints,
+          presentDays
+        };
+      })
+    );
+
+    // Sort by totalScore in descending order and limit results
+    const sortedLeaderboard = leaderboardWithScores
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .slice(0, parseInt(limit));
 
     // Add rank to each user
-    const leaderboardWithRank = leaderboard.map((user, index) => ({
-      ...user.toObject(),
+    const leaderboardWithRank = sortedLeaderboard.map((user, index) => ({
+      ...user,
       rank: index + 1
     }));
 

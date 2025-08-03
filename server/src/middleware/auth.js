@@ -81,6 +81,9 @@ export const mentorOnly = authorizeRoles('mentor');
 // All authenticated users middleware
 export const authenticatedUsers = authorizeRoles('participant', 'mentor', 'superadmin'); 
 
+// Mentor and admin access middleware
+export const mentorOrAdmin = authorizeRoles('mentor', 'superadmin');
+
 export const superadminOnly = (req, res, next) => {
   if (req.user && req.user.role === 'superadmin') {
     return next();
