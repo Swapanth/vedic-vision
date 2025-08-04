@@ -105,6 +105,36 @@ const MentorDashboard = () => {
     }
   };
 
+  const removeAttendance = async (participantId, date) => {
+    // Find the attendance record to delete
+    const attendanceRecord = attendance.find(
+      a => a.userId._id === participantId &&
+        new Date(a.date).toISOString().split('T')[0] === date
+    );
+
+    if (!attendanceRecord) {
+      showNotification('Error', 'No attendance record found to remove');
+      return;
+    }
+
+    // Optimistically remove from UI
+    setAttendance(prevAttendance =>
+      prevAttendance.filter(a => a._id !== attendanceRecord._id)
+    );
+
+    try {
+      await attendanceAPI.deleteAttendance(attendanceRecord._id);
+      showNotification('Success', 'Attendance status removed successfully!');
+      // Refresh attendance data to get the actual server response
+      await loadMentorData();
+    } catch (error) {
+      console.error('Error removing attendance:', error);
+      // Revert optimistic update on error
+      await loadMentorData();
+      showNotification('Error', 'Failed to remove attendance: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
   const provideFeedback = async (submissionId, feedback, score) => {
     try {
       await submissionAPI.gradeSubmission(submissionId, {
@@ -258,8 +288,8 @@ const MentorDashboard = () => {
                   onChange={(e) => setBulkStatus(e.target.value)}
                   className="w-full border rounded px-3 py-2"
                 >
-                  <option value="present">Present ✅</option>
-                  <option value="absent">Absent ❌</option>
+                  <option value="present">Present</option>
+                  <option value="absent">Absent</option>
                 </select>
               </div>
               <div className="flex items-end">
@@ -375,15 +405,20 @@ const MentorDashboard = () => {
                         <select
                           value={attendanceRecord?.status || ''}
                           onChange={(e) => {
-                            if (e.target.value) {
+                            if (e.target.value === 'remove') {
+                              removeAttendance(participant._id, date);
+                            } else if (e.target.value) {
                               markAttendance(participant._id, date, e.target.value);
                             }
                           }}
                           className="text-xs border rounded px-2 py-1"
                         >
                           <option value="">-</option>
-                          <option value="present">✅</option>
-                          <option value="absent">❌</option>
+                          <option value="present">Present</option>
+                          <option value="absent">Absent</option>
+                          {attendanceRecord && (
+                            <option value="remove">Remove</option>
+                          )}
                         </select>
                       </td>
                     );

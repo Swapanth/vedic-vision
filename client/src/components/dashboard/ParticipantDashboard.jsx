@@ -60,8 +60,17 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
   };
 
   const getAttendanceForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return attendance.find(a => a.date.split('T')[0] === dateStr);
+    // Format local date as YYYY-MM-DD without timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const localDateStr = `${year}-${month}-${day}`;
+
+    return attendance.find(a => {
+      // Extract date part from API response (which is in UTC)
+      const apiDateStr = a.date.split('T')[0];
+      return apiDateStr === localDateStr;
+    });
   };
 
   // Check if a date is within the event period (August 4-15, 2025)
@@ -895,7 +904,7 @@ const HomeView = ({
                       ))}
                     </div>
                   )}
-                  
+
                 </div>
               ) : (
                 <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
