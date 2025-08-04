@@ -1,22 +1,27 @@
-import Attendance from '../models/Attendance.js';
-import User from '../models/User.js';
+import Attendance from "../models/Attendance.js";
+import User from "../models/User.js";
 
 // Mark attendance (Participants)
 export const markAttendance = async (req, res) => {
   try {
-    const { date, session = 'full-day', status = 'present', remarks } = req.body;
+    const {
+      date,
+      session = "full-day",
+      status = "present",
+      remarks,
+    } = req.body;
 
     // Check if attendance already exists for this date and session
     const existingAttendance = await Attendance.findOne({
       userId: req.user._id,
       date: new Date(date),
-      session
+      session,
     });
 
     if (existingAttendance) {
       return res.status(400).json({
         success: false,
-        message: 'Attendance already marked for this session'
+        message: "Attendance already marked for this session",
       });
     }
 
@@ -26,11 +31,11 @@ export const markAttendance = async (req, res) => {
       session,
       status,
       remarks,
-      markedBy: req.user._id // Self-marked attendance
+      markedBy: req.user._id, // Self-marked attendance
     });
 
     await attendance.save();
-    await attendance.populate('userId', 'name email');
+    await attendance.populate("userId", "name email");
 
     // Update user's total score to include attendance points
     const user = await User.findById(req.user._id);
@@ -38,14 +43,14 @@ export const markAttendance = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Attendance marked successfully',
-      data: { attendance }
+      message: "Attendance marked successfully",
+      data: { attendance },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to mark attendance',
-      error: error.message
+      message: "Failed to mark attendance",
+      error: error.message,
     });
   }
 };
@@ -53,24 +58,35 @@ export const markAttendance = async (req, res) => {
 // Mark attendance for a single user (Mentor and Admin)
 export const markAttendanceForSingleUser = async (req, res) => {
   try {
-    const { userId, date, session = 'full-day', status = 'present', remarks } = req.body;
+    const {
+      userId,
+      date,
+      session = "full-day",
+      status = "present",
+      remarks,
+    } = req.body;
 
     if (!userId || !date) {
       return res.status(400).json({
         success: false,
-        message: 'User ID and date are required'
+        message: "User ID and date are required",
       });
     }
 
     // If user is a mentor, check if they can mark attendance for this participant
-    if (req.user.role === 'mentor') {
-      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
-      const canMark = mentor.assignedParticipants.some(p => p._id.toString() === userId);
-      
+    if (req.user.role === "mentor") {
+      const mentor = await User.findById(req.user._id).populate(
+        "assignedParticipants"
+      );
+      const canMark = mentor.assignedParticipants.some(
+        (p) => p._id.toString() === userId
+      );
+
       if (!canMark) {
         return res.status(403).json({
           success: false,
-          message: 'You can only mark attendance for your assigned participants'
+          message:
+            "You can only mark attendance for your assigned participants",
         });
       }
     }
@@ -79,7 +95,7 @@ export const markAttendanceForSingleUser = async (req, res) => {
     let attendance = await Attendance.findOne({
       userId,
       date: new Date(date),
-      session
+      session,
     });
 
     if (attendance) {
@@ -89,7 +105,7 @@ export const markAttendanceForSingleUser = async (req, res) => {
       attendance.markedBy = req.user._id;
       attendance.markedAt = new Date();
       await attendance.save();
-      await attendance.populate('userId', 'name email');
+      await attendance.populate("userId", "name email");
     } else {
       // Create new attendance record
       attendance = new Attendance({
@@ -98,11 +114,11 @@ export const markAttendanceForSingleUser = async (req, res) => {
         session,
         status,
         remarks,
-        markedBy: req.user._id
+        markedBy: req.user._id,
       });
 
       await attendance.save();
-      await attendance.populate('userId', 'name email');
+      await attendance.populate("userId", "name email");
     }
 
     // Update user's total score to include attendance points
@@ -111,14 +127,14 @@ export const markAttendanceForSingleUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Attendance marked successfully',
-      data: { attendance }
+      message: "Attendance marked successfully",
+      data: { attendance },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to mark attendance',
-      error: error.message
+      message: "Failed to mark attendance",
+      error: error.message,
     });
   }
 };
@@ -126,25 +142,34 @@ export const markAttendanceForSingleUser = async (req, res) => {
 // Mark attendance for multiple users (Admin and Mentor)
 export const markAttendanceForUsers = async (req, res) => {
   try {
-    const { date, session = 'full-day', attendees } = req.body;
+    const { date, session = "full-day", attendees } = req.body;
 
-    if (!date || !attendees || !Array.isArray(attendees) || attendees.length === 0) {
+    if (
+      !date ||
+      !attendees ||
+      !Array.isArray(attendees) ||
+      attendees.length === 0
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Date and attendees array are required'
+        message: "Date and attendees array are required",
       });
     }
 
     // If user is a mentor, get their assigned participants
     let allowedParticipantIds = null;
-    if (req.user.role === 'mentor') {
-      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+    if (req.user.role === "mentor") {
+      const mentor = await User.findById(req.user._id).populate(
+        "assignedParticipants"
+      );
       if (mentor && mentor.assignedParticipants) {
-        allowedParticipantIds = mentor.assignedParticipants.map(p => p._id.toString());
+        allowedParticipantIds = mentor.assignedParticipants.map((p) =>
+          p._id.toString()
+        );
       } else {
         return res.status(403).json({
           success: false,
-          message: 'You have no assigned participants'
+          message: "You have no assigned participants",
         });
       }
     }
@@ -156,13 +181,17 @@ export const markAttendanceForUsers = async (req, res) => {
     // Process each attendee
     for (const attendee of attendees) {
       try {
-        const { userId, status = 'present', remarks } = attendee;
+        const { userId, status = "present", remarks } = attendee;
 
         // If user is a mentor, check if they can mark attendance for this participant
-        if (req.user.role === 'mentor' && !allowedParticipantIds.includes(userId)) {
+        if (
+          req.user.role === "mentor" &&
+          !allowedParticipantIds.includes(userId)
+        ) {
           errors.push({
             userId,
-            error: 'You can only mark attendance for your assigned participants'
+            error:
+              "You can only mark attendance for your assigned participants",
           });
           continue;
         }
@@ -171,7 +200,7 @@ export const markAttendanceForUsers = async (req, res) => {
         let attendance = await Attendance.findOne({
           userId,
           date: attendanceDate,
-          session
+          session,
         });
 
         if (attendance) {
@@ -181,7 +210,7 @@ export const markAttendanceForUsers = async (req, res) => {
           attendance.markedBy = req.user._id;
           attendance.markedAt = new Date();
           await attendance.save();
-          await attendance.populate('userId', 'name email');
+          await attendance.populate("userId", "name email");
         } else {
           // Create new attendance record
           attendance = new Attendance({
@@ -190,11 +219,11 @@ export const markAttendanceForUsers = async (req, res) => {
             session,
             status,
             remarks,
-            markedBy: req.user._id // Track who marked the attendance
+            markedBy: req.user._id, // Track who marked the attendance
           });
 
           await attendance.save();
-          await attendance.populate('userId', 'name email');
+          await attendance.populate("userId", "name email");
         }
 
         // Update user's total score to include attendance points
@@ -205,7 +234,7 @@ export const markAttendanceForUsers = async (req, res) => {
       } catch (error) {
         errors.push({
           userId: attendee.userId,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -215,14 +244,14 @@ export const markAttendanceForUsers = async (req, res) => {
       message: `Attendance marked for ${results.length} users`,
       data: {
         successful: results,
-        errors: errors
-      }
+        errors: errors,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to mark attendance for users',
-      error: error.message
+      message: "Failed to mark attendance for users",
+      error: error.message,
     });
   }
 };
@@ -232,22 +261,22 @@ export const getUserAttendance = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 30,
       startDate,
       endDate,
       session,
-      status
+      status,
     } = req.query;
 
     // Build query
     const query = { userId: req.user._id };
-    
+
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
       if (endDate) query.date.$lte = new Date(endDate);
     }
-    
+
     if (session) query.session = session;
     if (status) query.status = status;
 
@@ -266,7 +295,9 @@ export const getUserAttendance = async (req, res) => {
     // Get attendance statistics
     const stats = await Attendance.getAttendanceStats(
       req.user._id,
-      startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      startDate
+        ? new Date(startDate)
+        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
       endDate ? new Date(endDate) : new Date()
     );
 
@@ -280,15 +311,15 @@ export const getUserAttendance = async (req, res) => {
           totalPages,
           totalRecords: total,
           hasNextPage: page < totalPages,
-          hasPrevPage: page > 1
-        }
-      }
+          hasPrevPage: page > 1,
+        },
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch attendance',
-      error: error.message
+      message: "Failed to fetch attendance",
+      error: error.message,
     });
   }
 };
@@ -304,42 +335,44 @@ export const getAllAttendance = async (req, res) => {
       session,
       status,
       userId,
-      sortBy = 'date',
-      sortOrder = 'desc'
+      sortBy = "date",
+      sortOrder = "desc",
     } = req.query;
 
     // Build query
     const query = {};
-    
+
     // If user is a mentor, only show attendance for their assigned participants
-    if (req.user.role === 'mentor') {
-      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+    if (req.user.role === "mentor") {
+      const mentor = await User.findById(req.user._id).populate(
+        "assignedParticipants"
+      );
       if (mentor && mentor.assignedParticipants) {
-        const participantIds = mentor.assignedParticipants.map(p => p._id);
+        const participantIds = mentor.assignedParticipants.map((p) => p._id);
         query.userId = { $in: participantIds };
       } else {
         // If mentor has no assigned participants, return empty result
         query.userId = { $in: [] };
       }
     }
-    
+
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
       if (endDate) query.date.$lte = new Date(endDate);
     }
-    
+
     if (session) query.session = session;
     if (status) query.status = status;
-    if (userId && req.user.role === 'superadmin') query.userId = userId;
+    if (userId && req.user.role === "superadmin") query.userId = userId;
 
     // Calculate pagination
     const skip = (page - 1) * limit;
-    const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+    const sortOptions = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
     // Get attendance records
     const attendanceRecords = await Attendance.find(query)
-      .populate('userId', 'name email')
+      .populate("userId", "name email")
       .sort(sortOptions)
       .skip(skip)
       .limit(parseInt(limit));
@@ -356,15 +389,15 @@ export const getAllAttendance = async (req, res) => {
           totalPages,
           totalRecords: total,
           hasNextPage: page < totalPages,
-          hasPrevPage: page > 1
-        }
-      }
+          hasPrevPage: page > 1,
+        },
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch attendance records',
-      error: error.message
+      message: "Failed to fetch attendance records",
+      error: error.message,
     });
   }
 };
@@ -379,12 +412,12 @@ export const updateAttendance = async (req, res) => {
       id,
       { status, remarks },
       { new: true }
-    ).populate('userId', 'name email');
+    ).populate("userId", "name email");
 
     if (!attendance) {
       return res.status(404).json({
         success: false,
-        message: 'Attendance record not found'
+        message: "Attendance record not found",
       });
     }
 
@@ -394,30 +427,52 @@ export const updateAttendance = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Attendance updated successfully',
-      data: { attendance }
+      message: "Attendance updated successfully",
+      data: { attendance },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to update attendance',
-      error: error.message
+      message: "Failed to update attendance",
+      error: error.message,
     });
   }
 };
 
-// Delete attendance record (Admin only)
+// Delete attendance record (Admin and Mentor)
 export const deleteAttendance = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const attendance = await Attendance.findByIdAndDelete(id);
+    // First find the attendance record to check permissions
+    const attendance = await Attendance.findById(id);
     if (!attendance) {
       return res.status(404).json({
         success: false,
-        message: 'Attendance record not found'
+        message: "Attendance record not found",
       });
     }
+
+    // If user is a mentor, check if they can delete attendance for this participant
+    if (req.user.role === "mentor") {
+      const mentor = await User.findById(req.user._id).populate(
+        "assignedParticipants"
+      );
+      const canDelete = mentor.assignedParticipants.some(
+        (p) => p._id.toString() === attendance.userId.toString()
+      );
+
+      if (!canDelete) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You can only delete attendance for your assigned participants",
+        });
+      }
+    }
+
+    // Delete the attendance record
+    await Attendance.findByIdAndDelete(id);
 
     // Update user's total score to reflect attendance deletion
     const user = await User.findById(attendance.userId);
@@ -425,13 +480,13 @@ export const deleteAttendance = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Attendance record deleted successfully'
+      message: "Attendance record deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to delete attendance record',
-      error: error.message
+      message: "Failed to delete attendance record",
+      error: error.message,
     });
   }
 };
@@ -448,21 +503,23 @@ export const getAttendanceStats = async (req, res) => {
     const dateQuery = {
       date: {
         $gte: startDate ? new Date(startDate) : defaultStartDate,
-        $lte: endDate ? new Date(endDate) : defaultEndDate
-      }
+        $lte: endDate ? new Date(endDate) : defaultEndDate,
+      },
     };
 
     // If user is a mentor, only show stats for their assigned participants
-    if (req.user.role === 'mentor') {
-      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+    if (req.user.role === "mentor") {
+      const mentor = await User.findById(req.user._id).populate(
+        "assignedParticipants"
+      );
       if (mentor && mentor.assignedParticipants) {
-        const participantIds = mentor.assignedParticipants.map(p => p._id);
+        const participantIds = mentor.assignedParticipants.map((p) => p._id);
         dateQuery.userId = { $in: participantIds };
       } else {
         // If mentor has no assigned participants, return empty stats
         dateQuery.userId = { $in: [] };
       }
-    } else if (userId && req.user.role === 'superadmin') {
+    } else if (userId && req.user.role === "superadmin") {
       dateQuery.userId = userId;
     }
 
@@ -471,10 +528,10 @@ export const getAttendanceStats = async (req, res) => {
       { $match: dateQuery },
       {
         $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
     // Daily attendance trends
@@ -484,23 +541,23 @@ export const getAttendanceStats = async (req, res) => {
         $group: {
           _id: {
             date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-            status: '$status'
+            status: "$status",
           },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       {
         $group: {
-          _id: '$_id.date',
+          _id: "$_id.date",
           attendance: {
             $push: {
-              status: '$_id.status',
-              count: '$count'
-            }
-          }
-        }
+              status: "$_id.status",
+              count: "$count",
+            },
+          },
+        },
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
     // User-wise attendance summary (if not filtered by specific user)
@@ -511,58 +568,61 @@ export const getAttendanceStats = async (req, res) => {
         {
           $group: {
             _id: {
-              userId: '$userId',
-              status: '$status'
+              userId: "$userId",
+              status: "$status",
             },
-            count: { $sum: 1 }
-          }
+            count: { $sum: 1 },
+          },
         },
         {
           $group: {
-            _id: '$_id.userId',
+            _id: "$_id.userId",
             attendance: {
               $push: {
-                status: '$_id.status',
-                count: '$count'
-              }
-            }
-          }
+                status: "$_id.status",
+                count: "$count",
+              },
+            },
+          },
         },
         {
           $lookup: {
-            from: 'users',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'user'
-          }
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user",
+          },
         },
         {
           $project: {
-            user: { $arrayElemAt: ['$user', 0] },
-            attendance: 1
-          }
-        }
+            user: { $arrayElemAt: ["$user", 0] },
+            attendance: 1,
+          },
+        },
       ]);
     }
 
-    const statsBreakdown = overallStats.reduce((acc, stat) => {
-      acc[stat._id] = stat.count;
-      return acc;
-    }, { present: 0, absent: 0, late: 0 });
+    const statsBreakdown = overallStats.reduce(
+      (acc, stat) => {
+        acc[stat._id] = stat.count;
+        return acc;
+      },
+      { present: 0, absent: 0, late: 0 }
+    );
 
     res.json({
       success: true,
       data: {
         overall: statsBreakdown,
         dailyTrends,
-        userSummary: userSummary.slice(0, 20) // Limit to top 20 users
-      }
+        userSummary: userSummary.slice(0, 20), // Limit to top 20 users
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch attendance statistics',
-      error: error.message
+      message: "Failed to fetch attendance statistics",
+      error: error.message,
     });
   }
 };
@@ -577,14 +637,16 @@ export const getTodayAttendance = async (req, res) => {
 
     // Build query
     const query = {
-      date: { $gte: today, $lt: tomorrow }
+      date: { $gte: today, $lt: tomorrow },
     };
 
     // If user is a mentor, only show today's attendance for their assigned participants
-    if (req.user.role === 'mentor') {
-      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+    if (req.user.role === "mentor") {
+      const mentor = await User.findById(req.user._id).populate(
+        "assignedParticipants"
+      );
       if (mentor && mentor.assignedParticipants) {
-        const participantIds = mentor.assignedParticipants.map(p => p._id);
+        const participantIds = mentor.assignedParticipants.map((p) => p._id);
         query.userId = { $in: participantIds };
       } else {
         // If mentor has no assigned participants, return empty result
@@ -593,39 +655,42 @@ export const getTodayAttendance = async (req, res) => {
     }
 
     const todayAttendance = await Attendance.find(query)
-      .populate('userId', 'name email')
+      .populate("userId", "name email")
       .sort({ session: 1, markedAt: -1 });
 
     // Get statistics for today (use the same query filter)
     const todayStats = await Attendance.aggregate([
       {
-        $match: query
+        $match: query,
       },
       {
         $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
-    const statsBreakdown = todayStats.reduce((acc, stat) => {
-      acc[stat._id] = stat.count;
-      return acc;
-    }, { present: 0, absent: 0, late: 0 });
+    const statsBreakdown = todayStats.reduce(
+      (acc, stat) => {
+        acc[stat._id] = stat.count;
+        return acc;
+      },
+      { present: 0, absent: 0, late: 0 }
+    );
 
     res.json({
       success: true,
       data: {
         attendance: todayAttendance,
-        stats: statsBreakdown
-      }
+        stats: statsBreakdown,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch today\'s attendance',
-      error: error.message
+      message: "Failed to fetch today's attendance",
+      error: error.message,
     });
   }
 };
@@ -633,38 +698,52 @@ export const getTodayAttendance = async (req, res) => {
 // Check if user can mark attendance (Participants)
 export const canMarkAttendance = async (req, res) => {
   try {
-    console.log('canMarkAttendance called. User:', req.user._id, 'Query:', req.query, 'Params:', req.params, 'Body:', req.body);
-    
+    console.log(
+      "canMarkAttendance called. User:",
+      req.user._id,
+      "Query:",
+      req.query,
+      "Params:",
+      req.params,
+      "Body:",
+      req.body
+    );
+
     const { date, session } = req.query;
 
     // Use today's date and default session if not provided
-    const checkDate = date || new Date().toISOString().split('T')[0];
-    const checkSession = session || 'full-day';
+    const checkDate = date || new Date().toISOString().split("T")[0];
+    const checkSession = session || "full-day";
 
-    console.log('Checking attendance for date:', checkDate, 'session:', checkSession);
+    console.log(
+      "Checking attendance for date:",
+      checkDate,
+      "session:",
+      checkSession
+    );
 
     const existingAttendance = await Attendance.findOne({
       userId: req.user._id,
       date: new Date(checkDate),
-      session: checkSession
+      session: checkSession,
     });
 
-    console.log('Existing attendance found:', existingAttendance);
+    console.log("Existing attendance found:", existingAttendance);
 
     res.json({
       success: true,
       data: {
         canMark: !existingAttendance,
         alreadyMarked: !!existingAttendance,
-        existingRecord: existingAttendance
-      }
+        existingRecord: existingAttendance,
+      },
     });
   } catch (error) {
-    console.error('Error in canMarkAttendance:', error);
+    console.error("Error in canMarkAttendance:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to check attendance status',
-      error: error.message
+      message: "Failed to check attendance status",
+      error: error.message,
     });
   }
-}; 
+};

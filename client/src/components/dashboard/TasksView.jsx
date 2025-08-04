@@ -395,9 +395,30 @@ const TasksView = ({
                     </div>
 
                     {/* Task Description */}
-                    <p className="text-sm mb-4" style={{ color: themeColors.textSecondary }}>
-                      {task.description}
-                    </p>
+                    <div className="text-sm mb-4" style={{ color: themeColors.textSecondary }}>
+                      {task.description.split('\n').map((line, index) => {
+                        // Check if line is a numbered list item (starts with number followed by dot)
+                        const isNumberedItem = /^\d+\.\s/.test(line.trim());
+                        // Check if line is a bullet point (starts with - or *)
+                        const isBulletItem = /^[-*]\s/.test(line.trim());
+                        
+                        if (isNumberedItem || isBulletItem) {
+                          return (
+                            <div key={index} className="ml-4 mb-1">
+                              {line.trim()}
+                            </div>
+                          );
+                        } else if (line.trim() === '') {
+                          return <br key={index} />;
+                        } else {
+                          return (
+                            <div key={index} className="mb-1">
+                              {line.trim()}
+                            </div>
+                          );
+                        }
+                      })}
+                    </div>
 
                     {/* Task Details */}
                     {/* Submission Info */}

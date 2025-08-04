@@ -20,23 +20,50 @@ const MentorDashboard = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [bulkStatus, setBulkStatus] = useState('present');
+  const [bulkMarkingLoading, setBulkMarkingLoading] = useState(false);
 
   useEffect(() => {
     loadMentorData();
   }, []);
 
+  const loadAllAttendance = async () => {
+    let allAttendance = [];
+    let currentPage = 1;
+    let hasNextPage = true;
+
+    while (hasNextPage) {
+      try {
+        const response = await attendanceAPI.getAllAttendance({
+          page: currentPage,
+          limit: 100
+        });
+
+        const { attendance, pagination } = response.data.data;
+        allAttendance = [...allAttendance, ...attendance];
+
+        hasNextPage = pagination.hasNextPage;
+        currentPage++;
+      } catch (error) {
+        console.error('Error fetching attendance page:', currentPage, error);
+        break;
+      }
+    }
+
+    return allAttendance;
+  };
+
   const loadMentorData = async () => {
     try {
       setLoading(true);
-      const [participantsRes, attendanceRes, submissionsRes, tasksRes] = await Promise.all([
+      const [participantsRes, allAttendance, submissionsRes, tasksRes] = await Promise.all([
         userAPI.getMentorParticipants(), // Get only assigned participants
-        attendanceAPI.getAllAttendance(),
+        loadAllAttendance(), // Fetch all attendance records across all pages
         submissionAPI.getAllSubmissions(),
         taskAPI.getAllTasks(),
       ]);
 
       setParticipants(participantsRes.data.data.participants || []);
-      setAttendance(attendanceRes.data.data.attendance || []);
+      setAttendance(allAttendance);
       setSubmissions(submissionsRes.data.data.submissions || []);
       setTasks(tasksRes.data.data.tasks || []);
     } catch (error) {
@@ -60,34 +87,6 @@ const MentorDashboard = () => {
   };
 
   const markAttendance = async (participantId, date, status) => {
-    // Optimistic update - update UI immediately
-    const optimisticRecord = {
-      _id: `temp-${Date.now()}`,
-      userId: { _id: participantId },
-      date: new Date(date).toISOString(),
-      status,
-      session: 'full-day',
-      markedAt: new Date().toISOString()
-    };
-
-    // Update attendance state optimistically
-    setAttendance(prevAttendance => {
-      const existingIndex = prevAttendance.findIndex(
-        a => a.userId._id === participantId &&
-          new Date(a.date).toISOString().split('T')[0] === date
-      );
-
-      if (existingIndex >= 0) {
-        // Update existing record
-        const updated = [...prevAttendance];
-        updated[existingIndex] = { ...updated[existingIndex], status };
-        return updated;
-      } else {
-        // Add new record
-        return [...prevAttendance, optimisticRecord];
-      }
-    });
-
     try {
       await attendanceAPI.markAttendanceForUser({
         userId: participantId,
@@ -99,8 +98,6 @@ const MentorDashboard = () => {
       await loadMentorData();
     } catch (error) {
       console.error('Error marking attendance:', error);
-      // Revert optimistic update on error
-      await loadMentorData();
       showNotification('Error', 'Failed to mark attendance: ' + (error.response?.data?.message || error.message));
     }
   };
@@ -205,6 +202,7 @@ const MentorDashboard = () => {
       return;
     }
 
+    setBulkMarkingLoading(true);
     try {
       const attendees = selectedParticipants.map(userId => ({
         userId,
@@ -218,12 +216,14 @@ const MentorDashboard = () => {
       });
 
       showNotification('Success', `Attendance marked for ${selectedParticipants.length} participants!`);
-      loadMentorData();
+      await loadMentorData();
       setBulkMarkingMode(false);
       setSelectedParticipants([]);
       setSelectedDate('');
     } catch (error) {
       showNotification('Error', 'Failed to mark bulk attendance: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setBulkMarkingLoading(false);
     }
   };
 
@@ -295,10 +295,20 @@ const MentorDashboard = () => {
               <div className="flex items-end">
                 <button
                   onClick={handleBulkMarkAttendance}
-                  disabled={!selectedDate || selectedParticipants.length === 0}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={!selectedDate || selectedParticipants.length === 0 || bulkMarkingLoading}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  Mark Attendance ({selectedParticipants.length})
+                  {bulkMarkingLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    `Mark Attendance (${selectedParticipants.length})`
+                  )}
                 </button>
               </div>
             </div>
@@ -403,6 +413,7 @@ const MentorDashboard = () => {
                     return (
                       <td key={date} className="px-3 py-4 text-center">
                         <select
+                          key={`${participant._id}-${date}-${attendanceRecord?._id || 'none'}`}
                           value={attendanceRecord?.status || ''}
                           onChange={(e) => {
                             if (e.target.value === 'remove') {

@@ -37,7 +37,7 @@ router.post('/mark-for-user', mentorOrAdmin, validateMentorAttendance, handleVal
 router.post('/mark-for-users', mentorOrAdmin, validateAdminAttendance, handleValidationErrors, markAttendanceForUsers);
 
 // Routes with parameters
-router.put('/:id', adminOnly, validateMongoId('id'), handleValidationErrors, updateAttendance);
-router.delete('/:id', adminOnly, validateMongoId('id'), handleValidationErrors, deleteAttendance);
+router.put('/:id', mentorOrAdmin, validateMongoId('id'), handleValidationErrors, updateAttendance);
+router.delete('/:id', mentorOrAdmin, validateMongoId('id'), handleValidationErrors, deleteAttendance);
 
 export default router; 
