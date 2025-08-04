@@ -440,9 +440,7 @@ function SwagCarousel() {
     {
       image: "https://wow.vizag.dev/swags/tshirt.png",
     },
-    {
-      image: "https://wow.vizag.dev/swags/bottle.png",
-    }
+    
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -500,7 +498,7 @@ function RewardsCarousel({ themeColors }) {
     { image: track8, title: "Networking", subtitle: "Connect & Grow" },
     { image: track9, title: "Swag & Goodies", subtitle: "T-shirts & Stickers" },
     { image: track10, title: "Mentorship", subtitle: "Industry Guidance" },
-    { image: track11, title: "Cash Prizes", subtitle: "₹30,000 Prize Pool" },
+    { image: track11, title: "Cash Prizes", subtitle: "₹35,000 Prize Pool" },
     { image: track7, title: "Certificates", subtitle: "Digital Recognition" },
   ];
 
@@ -1108,7 +1106,7 @@ export default function Landing() {
       )}
 
       {/* Hero Section */}
-      <section className="py-4 sm:py-8 px-4 sm:px-6 lg:px-10">
+      <section id="about" className="py-4 sm:py-8 px-4 sm:px-6 lg:px-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
 
@@ -1158,7 +1156,7 @@ export default function Landing() {
                     className="px-6 sm:px-8 py-3 sm:py-4 font-medium transition-all duration-200 hover:scale-105 text-white bg-black rounded-full text-base sm:text-lg"
                     onClick={() => navigate("/login")}
                   >
-                    Get Tickets
+                    Let's Build
                   </button>
                 </div>
               </div>
@@ -1219,7 +1217,7 @@ export default function Landing() {
                   className="text-[2.5rem] sm:text-[3rem] lg:text-[3.5rem] font-bold"
                   style={{ color: themeColors.border }}
                 >
-                  ₹30,000
+                  ₹35,000
                 </h1>
               </div>
             </div>
@@ -1315,6 +1313,7 @@ export default function Landing() {
 
       {/* Tracks Section */}
       <section
+        id="tracks"
         className="py-12 sm:py-20 px-4 sm:px-6 lg:px-12"
         style={{ backgroundColor: themeColors.cardBg }}
       >
@@ -1395,8 +1394,36 @@ export default function Landing() {
         </div>
       </section>
 
+
+
+
+
+      {/* Bootcamp Journey Section with Scroll-Triggered Horizontal Movement */}
+      <section id="timeline" className="py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: themeColors.background }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2
+              className="text-4xl md:text-6xl font-black mb-4"
+              style={{ color: themeColors.text }}
+            >
+              Your 10-Day Bootcamp Journey
+            </h2>
+            <p
+              className="text-xl max-w-3xl mx-auto"
+              style={{ color: themeColors.textSecondary }}
+            >
+              From Java fundamentals to full-stack deployment - master the complete development cycle in just 10 days
+            </p>
+          </div>
+
+          <ScrollTriggeredTimeline bootcampJourney={bootcampJourney} themeColors={themeColors} />
+
+        </div>
+      </section>
+
+
       {/* Benefits Box Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div
             className="w-full px-8 border-2 py-12 rounded-2xl"
@@ -1507,32 +1534,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
-      </section>
-
-
-
-      {/* Bootcamp Journey Section with Scroll-Triggered Horizontal Movement */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: themeColors.background }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2
-              className="text-4xl md:text-6xl font-black mb-4"
-              style={{ color: themeColors.text }}
-            >
-              Your 10-Day Bootcamp Journey
-            </h2>
-            <p
-              className="text-xl max-w-3xl mx-auto"
-              style={{ color: themeColors.textSecondary }}
-            >
-              From Java fundamentals to full-stack deployment - master the complete development cycle in just 10 days
-            </p>
-          </div>
-
-          <ScrollTriggeredTimeline bootcampJourney={bootcampJourney} themeColors={themeColors} />
-
-        </div>
-      </section>
+      </section> */}
 
       {/* Rewards Section */}
       <section id="rewards" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -1550,6 +1552,8 @@ export default function Landing() {
 
         </div>
       </section>
+
+
 
 
       {/* Our Sponsors Section */}
@@ -1792,7 +1796,7 @@ const faqData = [
   },
   {
     question: "What's included in the registration fee?",
-    answer: "Registration includes access to all workshops, mentorship sessions, meals during the event, swags, certificates, and eligibility for prizes worth ₹30,000+."
+    answer: "Registration includes access to all workshops, mentorship sessions, meals during the event, swags, certificates, and eligibility for prizes worth ₹35,000+."
   },
   {
     question: "How are teams formed for the hackathon?",
@@ -1812,7 +1816,7 @@ const faqData = [
 const rewards = [
   {
     title: "Cash Prizes",
-    description: "₹30,000 total prize pool",
+    description: "₹35,000 total prize pool",
     icon: "💰",
   },
   {

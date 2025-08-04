@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Upload, Download, Menu, X, Home, Info, Code, Camera } from "lucide-react";
 
+import track1 from "../../assets/20.png";
+
 // Theme detection hook (same as landing page)
 const useThemeDetection = () => {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
@@ -124,7 +126,6 @@ const PhotoBooth = () => {
   const [shape, setShape] = useState("Original");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const fileInputRef = useRef(null);
-  const canvasRef = useRef(null);
 
   const isDarkTheme = useThemeDetection();
   const themeColors = getThemeColors(isDarkTheme);
@@ -170,18 +171,19 @@ const PhotoBooth = () => {
       ctx.drawImage(img, 0, 0, 400, 400);
       ctx.restore();
 
-      // Add WOW frame elements (emojis) at bottom right
-      ctx.font = '32px Arial';
-      ctx.fillText('🦊', 320, 370);
-      ctx.fillText('🐛', 350, 370);
-      ctx.fillText('👓', 320, 390);
-      ctx.fillText('🍍', 350, 390);
+      // Add track image at top center
+      const trackImg = new Image();
+      trackImg.onload = () => {
+        // Draw track image at top center (96x96 pixels to match preview)
+        ctx.drawImage(trackImg, 152, 16, 96, 96);
 
-      // Download the canvas as image
-      const link = document.createElement('a');
-      link.download = `vedic-vision-badge-${Date.now()}.png`;
-      link.href = canvas.toDataURL();
-      link.click();
+        // Download the canvas as image
+        const link = document.createElement('a');
+        link.download = `vedic-vision-badge-${Date.now()}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      };
+      trackImg.src = track1;
     };
 
     img.src = preview;
@@ -200,7 +202,7 @@ const PhotoBooth = () => {
         <nav
           className="backdrop-blur-xl rounded-2xl border-2 sticky top-4 z-50"
           style={{
-            backgroundColor: themeColors.cardBg,
+            backgroundColor: themeColors.background,
             borderColor: themeColors.border
           }}
         >
@@ -222,22 +224,7 @@ const PhotoBooth = () => {
                   <Home className="w-5 h-5" />
                   <span>Home</span>
                 </a>
-                <a
-                  href="/#about"
-                  className="flex items-center space-x-2 font-semibold transition-colors hover:opacity-80"
-                  style={{ color: themeColors.text }}
-                >
-                  <Info className="w-5 h-5" />
-                  <span>About</span>
-                </a>
-                <a
-                  href="/#tracks"
-                  className="flex items-center space-x-2 font-semibold transition-colors hover:opacity-80"
-                  style={{ color: themeColors.text }}
-                >
-                  <Code className="w-5 h-5" />
-                  <span>Tracks</span>
-                </a>
+
                 <a
                   href="/photo-booth"
                   className="flex items-center space-x-2 font-semibold"
@@ -246,7 +233,7 @@ const PhotoBooth = () => {
                   <Camera className="w-5 h-5" />
                   <span>Photo Booth</span>
                 </a>
- 
+
               </div>
 
               {/* Mobile menu button */}
@@ -277,7 +264,7 @@ const PhotoBooth = () => {
           <div
             className="backdrop-blur-xl rounded-2xl border-2"
             style={{
-              backgroundColor: themeColors.navBg,
+              backgroundColor: themeColors.background,
               borderColor: themeColors.border
             }}
           >
@@ -319,7 +306,7 @@ const PhotoBooth = () => {
           <div
             className="rounded-2xl border-2 p-8 shadow-lg"
             style={{
-              backgroundColor: themeColors.cardBg,
+              backgroundColor: themeColors.background,
               borderColor: themeColors.border
             }}
           >
@@ -367,11 +354,11 @@ const PhotoBooth = () => {
                       key={shapeOption.id}
                       onClick={() => setShape(shapeOption.id)}
                       className={`px-4 py-2 rounded-lg border-2 transition-colors duration-200 font-semibold ${shape === shapeOption.id
-                          ? 'border-blue-500 bg-blue-500/20'
-                          : 'hover:opacity-80'
+                        ? 'border-blue-500 bg-blue-500/20'
+                        : 'hover:opacity-80'
                         }`}
                       style={{
-                        backgroundColor: shape === shapeOption.id ? `${themeColors.accent}20` : themeColors.cardBgSecondary,
+                        backgroundColor: shape === shapeOption.id ? `${themeColors.accent}20` : themeColors.background,
                         borderColor: shape === shapeOption.id ? themeColors.accent : themeColors.border,
                         color: shape === shapeOption.id ? themeColors.accent : themeColors.text
                       }}
@@ -406,15 +393,15 @@ const PhotoBooth = () => {
           {/* Right Panel - Preview */}
           <div className="flex justify-center items-start">
             <div
-              className="w-full max-w-md rounded-2xl border-2 p-6 shadow-lg"
+              className=" max-w-md rounded-2xl border-2 p-6 shadow-lg"
               style={{
                 backgroundColor: themeColors.cardBg,
                 borderColor: themeColors.border
               }}
             >
-             
+
               <div
-                className="aspect-square rounded-lg  flex items-center justify-center relative overflow-hidden"
+                className="aspect-[4/3] rounded-lg flex items-center justify-center relative overflow-hidden"
                 style={{
                   backgroundColor: themeColors.cardBgSecondary,
                   borderColor: themeColors.border
@@ -425,27 +412,30 @@ const PhotoBooth = () => {
                     src={preview}
                     alt="Preview"
                     className={`w-full h-full object-cover ${shape === "Circle"
-                        ? "rounded-full"
-                        : shape === "Square"
-                          ? "rounded-none"
-                          : "rounded-lg"
+                      ? "rounded-full"
+                      : shape === "Square"
+                        ? "rounded-none"
+                        : "rounded-lg"
                       }`}
                   />
                 ) : (
-                  <div className="text-center" style={{ color: themeColors.textSecondary }}>
-                   
+                  <div className="flex items-center justify-center h-full">
+                    <img
+                      src={track1}
+                      alt="Track"
+                      className="w-200 h-200 object-contain"
+                    />
                   </div>
                 )}
 
-                {/* WOW Frame Characters - positioned at bottom right */}
+                {/* Track Image - positioned at top when preview exists */}
                 {preview && (
-                  <div className="absolute bottom-2 right-2">
-                    <div className="flex items-center space-x-1">
-                      <div className="text-2xl">🦊</div>
-                      <div className="text-2xl">🐛</div>
-                      <div className="text-2xl">👓</div>
-                      <div className="text-2xl">🍍</div>
-                    </div>
+                  <div className="absolute .">
+                    <img
+                      src={track1}
+                      alt="Track"
+                      className="w-200 h-200 object-contain"
+                    />
                   </div>
                 )}
               </div>

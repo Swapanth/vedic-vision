@@ -119,36 +119,72 @@ const User = mongoose.model("User", userSchema);
 // CSV parsing function for mentors
 function parseCSV(csvContent) {
   const lines = csvContent.trim().split("\n");
-  const headers = lines[0].split(",").map((header) => header.trim());
 
+  // Parse CSV properly handling quoted fields
+  function parseCSVLine(line) {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  const headers = parseCSVLine(lines[0]).map((header) =>
+    header.trim().toLowerCase()
+  );
   console.log("CSV Headers found:", headers);
 
   const mentors = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(",").map((value) => value.trim());
+    const values = parseCSVLine(lines[i]);
 
-    if (values.length >= 5) {
-      // Parse skills - assuming they're separated by semicolons or pipes
-      const skillsString = values[4] || "";
+    if (values.length >= 4) {
+      // Create object mapping headers to values
+      const rowData = {};
+      headers.forEach((header, index) => {
+        rowData[header] = values[index] || "";
+      });
+
+      // Parse skills - handle both comma and other separators
+      const skillsString = rowData.skills || "";
       const skills = skillsString
         ? skillsString
-            .split(/[;|]/)
+            .split(/[,;|]/)
             .map((skill) => skill.trim())
             .filter((skill) => skill)
         : [];
 
       const mentor = {
-        name: values[0],
-        mobile: values[1],
-        email: values[2],
-        description: values[3] || "",
+        name: rowData.name || "",
+        mobile: rowData.moblie || rowData.mobile || "", // Handle typo in CSV header
+        email: rowData.email || "",
+        description: rowData.description || "",
         skills: skills,
-        password: values[1], // Using mobile number as password
+        password: rowData.moblie || rowData.mobile || "", // Using mobile number as password
         role: "mentor",
         collegeName: "Not Specified", // Default college name for mentors
       };
-      mentors.push(mentor);
+
+      // Only add if we have required fields
+      if (mentor.name && mentor.mobile && mentor.email) {
+        mentors.push(mentor);
+      } else {
+        console.log(`⚠️  Skipping row ${i + 1}: Missing required fields`);
+      }
     }
   }
 

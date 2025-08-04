@@ -167,11 +167,8 @@ const MentorDashboard = () => {
                           value={attendanceRecord?.status || ''}
                           onChange={(e) => markAttendance(participant._id, date, e.target.value)}
                           className="text-xs border rounded px-2 py-1"
-                        >
-                          <option value="">-</option>
-                          <option value="present">✅</option>
+                        >                          <option value="present">✅</option>
                           <option value="absent">❌</option>
-                          <option value="late">⏰</option>
                         </select>
                       </td>
                     );
