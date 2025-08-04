@@ -76,30 +76,34 @@ export const markAttendanceForSingleUser = async (req, res) => {
     }
 
     // Check if attendance already exists for this date and session
-    const existingAttendance = await Attendance.findOne({
+    let attendance = await Attendance.findOne({
       userId,
       date: new Date(date),
       session
     });
 
-    if (existingAttendance) {
-      return res.status(400).json({
-        success: false,
-        message: 'Attendance already marked for this session'
+    if (attendance) {
+      // Update existing attendance record
+      attendance.status = status;
+      attendance.remarks = remarks;
+      attendance.markedBy = req.user._id;
+      attendance.markedAt = new Date();
+      await attendance.save();
+      await attendance.populate('userId', 'name email');
+    } else {
+      // Create new attendance record
+      attendance = new Attendance({
+        userId,
+        date: new Date(date),
+        session,
+        status,
+        remarks,
+        markedBy: req.user._id
       });
+
+      await attendance.save();
+      await attendance.populate('userId', 'name email');
     }
-
-    const attendance = new Attendance({
-      userId,
-      date: new Date(date),
-      session,
-      status,
-      remarks,
-      markedBy: req.user._id
-    });
-
-    await attendance.save();
-    await attendance.populate('userId', 'name email');
 
     // Update user's total score to include attendance points
     const user = await User.findById(userId);
@@ -164,32 +168,34 @@ export const markAttendanceForUsers = async (req, res) => {
         }
 
         // Check if attendance already exists for this user, date, and session
-        const existingAttendance = await Attendance.findOne({
+        let attendance = await Attendance.findOne({
           userId,
           date: attendanceDate,
           session
         });
 
-        if (existingAttendance) {
-          errors.push({
+        if (attendance) {
+          // Update existing attendance record
+          attendance.status = status;
+          attendance.remarks = remarks;
+          attendance.markedBy = req.user._id;
+          attendance.markedAt = new Date();
+          await attendance.save();
+          await attendance.populate('userId', 'name email');
+        } else {
+          // Create new attendance record
+          attendance = new Attendance({
             userId,
-            error: 'Attendance already marked for this session'
+            date: attendanceDate,
+            session,
+            status,
+            remarks,
+            markedBy: req.user._id // Track who marked the attendance
           });
-          continue;
+
+          await attendance.save();
+          await attendance.populate('userId', 'name email');
         }
-
-        // Create new attendance record
-        const attendance = new Attendance({
-          userId,
-          date: attendanceDate,
-          session,
-          status,
-          remarks,
-          markedBy: req.user._id // Track who marked the attendance
-        });
-
-        await attendance.save();
-        await attendance.populate('userId', 'name email');
 
         // Update user's total score to include attendance points
         const user = await User.findById(userId);

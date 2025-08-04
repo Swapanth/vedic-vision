@@ -27,7 +27,6 @@ export const validateRegister = [
     .withMessage('Name must be between 2 and 50 characters'),
   body('email')
     .isEmail()
-    .normalizeEmail()
     .withMessage('Please provide a valid email'),
   body('mobile')
     .trim()
@@ -51,7 +50,6 @@ export const validateRegister = [
 export const validateLogin = [
   body('email')
     .isEmail()
-    .normalizeEmail()
     .withMessage('Please provide a valid email'),
   body('password')
     .notEmpty()
