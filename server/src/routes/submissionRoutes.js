@@ -1,13 +1,11 @@
 import express from 'express';
 import {
   submitTask,
-  updateSubmission,
   getUserSubmissions,
   getAllSubmissions,
   getSubmissionById,
   gradeSubmission,
   updateGrade,
-  returnSubmission,
   deleteSubmission,
   getPendingSubmissions
 } from '../controllers/submissionController.js';
@@ -33,10 +31,8 @@ router.get('/', mentorOrAdmin, validatePagination, handleValidationErrors, getAl
 router.post('/', participantOnly, uploadSubmission, handleUploadError, validateSubmission, handleValidationErrors, submitTask);
 
 // Routes with parameters (more specific first)
-router.put('/:id', participantOnly, uploadSubmission, handleUploadError, validateMongoId('id'), validateSubmission, handleValidationErrors, updateSubmission);
 router.post('/:id/grade', mentorOrAdmin, validateMongoId('id'), validateGrading, handleValidationErrors, gradeSubmission);
 router.put('/:id/grade', mentorOrAdmin, validateMongoId('id'), validateGrading, handleValidationErrors, updateGrade);
-router.post('/:id/return', mentorOrAdmin, validateMongoId('id'), handleValidationErrors, returnSubmission);
 router.get('/:id', validateMongoId('id'), handleValidationErrors, getSubmissionById);
 router.delete('/:id', validateMongoId('id'), handleValidationErrors, deleteSubmission);
 

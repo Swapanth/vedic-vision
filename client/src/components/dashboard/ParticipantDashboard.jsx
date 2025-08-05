@@ -212,7 +212,6 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
   const [mentor, setMentor] = useState(null);
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submissionLoading, setSubmissionLoading] = useState(false);
   const [activeView, setActiveView] = useState('home'); // 'home', 'tasks', 'leaderboard', 'profile'
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', content: null, taskId: null });
@@ -285,55 +284,31 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
         return;
       }
 
-      setSubmissionLoading(true);
-
       const formData = new FormData();
       formData.append('taskId', taskId.toString());
 
-      // Determine submission type and content based on what's provided
-      let submissionType;
-      let content = {};
+      let submissionType = 'text';
+      let content = { text: submissionForm.description || 'No description provided' };
 
-      if (submissionForm.link && submissionForm.description) {
-        // If both link and description are provided, treat as text with link
-        submissionType = 'text';
-        content = { 
-          text: submissionForm.description,
-          link: submissionForm.link
-        };
-      } else if (submissionForm.link) {
-        // If only link is provided, treat as link submission
+      if (submissionForm.link) {
         submissionType = 'link';
         content = { link: submissionForm.link };
-      } else {
-        // If only description is provided, treat as text submission
-        submissionType = 'text';
-        content = { text: submissionForm.description };
       }
 
       formData.append('submissionType', submissionType);
       formData.append('content', JSON.stringify(content));
 
-      // Check if this is an edit operation
-      if (modalContent.isEdit && modalContent.submissionId) {
-        await submissionAPI.updateSubmission(modalContent.submissionId, formData);
-        showSuccessModal('Success', 'Submission updated successfully!');
-      } else {
-        await submissionAPI.submitTask(taskId, formData);
-        showSuccessModal('Success', 'Task submitted successfully!');
-      }
-      
+      await submissionAPI.submitTask(taskId, formData);
+      showSuccessModal('Success', 'Task submitted successfully!');
       setSubmissionForm({ description: '', link: '' });
       setShowModal(false);
       loadDashboardData();
     } catch (error) {
-      let errorMessage = modalContent.isEdit ? 'Failed to update submission' : 'Failed to submit task';
+      let errorMessage = 'Failed to submit task';
       if (error.response?.data?.message) {
         errorMessage += ': ' + error.response.data.message;
       }
       showSuccessModal('Error', errorMessage);
-    } finally {
-      setSubmissionLoading(false);
     }
   };
 
@@ -611,11 +586,6 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
         <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={modalContent.title}>
           {modalContent.taskId ? (
             <div className="space-y-4">
-              <div className="mb-4 p-3 bg-blue-50 rounded-md">
-                <p className="text-sm text-blue-700">
-                  💡 <strong>Tip:</strong> Provide at least one field - description, link, or both.
-                </p>
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
@@ -624,42 +594,34 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
                   value={submissionForm.description}
                   onChange={(e) => setSubmissionForm(prev => ({ ...prev, description: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={8}
-                  placeholder="Describe your submission, what you learned, challenges faced, etc..."
+                  rows={10}
+                  placeholder="Describe your submission..."
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Link
+                  Link (optional)
                 </label>
                 <input
                   type="url"
                   value={submissionForm.link}
                   onChange={(e) => setSubmissionForm(prev => ({ ...prev, link: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://github.com/username/repo or https://deployed-app.com"
+                  placeholder="https://..."
                 />
               </div>
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                  disabled={submissionLoading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleSubmitTask(modalContent.taskId)}
-                  disabled={submissionLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  {submissionLoading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  )}
-                  {submissionLoading 
-                    ? (modalContent.isEdit ? 'Updating...' : 'Submitting...') 
-                    : (modalContent.isEdit ? 'Update Submission' : 'Submit Task')
-                  }
+                  Submit Task
                 </button>
               </div>
             </div>
