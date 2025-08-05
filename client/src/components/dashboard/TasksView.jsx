@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, CheckCircle, AlertCircle, BookOpen, ExternalLink, FileText, ChevronLeft, ChevronRight, Flame, Edit3, RotateCcw, Eye } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, BookOpen, ExternalLink, FileText, ChevronLeft, ChevronRight, Flame, Edit3, RotateCcw, Eye, Info } from 'lucide-react';
 
 const TasksView = ({
   themeColors,
@@ -106,6 +106,7 @@ const TasksView = ({
     console.log('Submission for task', task._id, ':', submission);
 
     if (submission?.status === 'graded') return 'completed';
+    if (submission?.status === 'returned') return 'returned';
     if (submission?.status === 'submitted') return 'under_review';
     return 'not_submitted';
   };
@@ -116,6 +117,8 @@ const TasksView = ({
         return { bg: '#10b981', text: '#ffffff' }; // Green
       case 'under_review':
         return { bg: '#f59e0b', text: '#ffffff' }; // Orange
+      case 'returned':
+        return { bg: '#ef4444', text: '#ffffff' }; // Red
       default: // not_submitted
         return { bg: '#6b7280', text: '#ffffff' }; // Gray
     }
@@ -127,6 +130,8 @@ const TasksView = ({
         return <CheckCircle className="w-4 h-4" />;
       case 'under_review':
         return <Eye className="w-4 h-4" />;
+      case 'returned':
+        return <AlertCircle className="w-4 h-4" />;
       default: // not_submitted
         return <BookOpen className="w-4 h-4" />;
     }
@@ -138,7 +143,9 @@ const TasksView = ({
         return 'Completed';
       case 'under_review':
         return 'Under Review';
-      default: // not_ubmitted
+      case 'returned':
+        return 'Needs Revision';
+      default: // not_submitted
         return 'Not Submitted';
     }
   };
@@ -174,27 +181,159 @@ const TasksView = ({
   };
 
   const handleEditSubmission = (task, submission) => {
-    setSubmissionForm({
-      description: submission.content?.text || '',
-      link: submission.content?.link || ''
-    });
+    console.log('Editing submission:', submission);
+    console.log('Submission content:', submission.content);
+    console.log('Submission type:', submission.submissionType);
+
+    // Extract text and link from submission content
+    // The backend stores both text and link in content object regardless of submission type
+    const description = submission.content?.text || '';
+    const link = submission.content?.link || '';
+
+    console.log('Setting form with description:', description);
+    console.log('Setting form with link:', link);
+
+    // Set modal content first
     setModalContent({
       title: `Edit Submission: ${task.title}`,
       content: null,
       taskId: task._id,
+      submissionId: submission._id,
       isEdit: true
+    });
+
+    // Set form data after a small delay to ensure modal state is set
+    setTimeout(() => {
+      setSubmissionForm({
+        description: description,
+        link: link
+      });
+    }, 0);
+
+    setShowModal(true);
+  };
+
+  const handleViewDetails = (task) => {
+    const submission = submissions.find(s => s.taskId._id === task._id);
+    const status = getTaskStatus(task);
+    
+    setModalContent({
+      title: `Task Details: ${task.title}`,
+      content: (
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-2">Description</h4>
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+              {task.description.split('\n').map((line, index) => {
+                const isNumberedItem = /^\d+\.\s/.test(line.trim());
+                const isBulletItem = /^[-*]\s/.test(line.trim());
+
+                if (isNumberedItem || isBulletItem) {
+                  return (
+                    <div key={index} className="ml-4 mb-1">
+                      {line.trim()}
+                    </div>
+                  );
+                } else if (line.trim() === '') {
+                  return <br key={index} />;
+                } else {
+                  return (
+                    <div key={index} className="mb-1">
+                      {line.trim()}
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          </div>
+
+          {task.instructions && (
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Instructions</h4>
+              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+                {task.instructions}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Max Score</h4>
+              <p className="text-lg font-bold text-blue-600">{task.maxScore} points</p>
+            </div>
+            {submission && submission.score !== undefined && (
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Your Score</h4>
+                <p className="text-lg font-bold text-green-600">{submission.score}/{task.maxScore}</p>
+              </div>
+            )}
+          </div>
+
+          {submission && (
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Your Submission</h4>
+              <div className="bg-gray-50 p-3 rounded-md space-y-2">
+                {submission.content?.text && (
+                  <div>
+                    <span className="text-xs font-medium text-gray-500">Description:</span>
+                    <p className="text-sm text-gray-700">{submission.content.text}</p>
+                  </div>
+                )}
+                {submission.content?.link && (
+                  <div>
+                    <span className="text-xs font-medium text-gray-500">Link:</span>
+                    <a
+                      href={formatUrl(submission.content.link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline block"
+                    >
+                      {submission.content.link}
+                    </a>
+                  </div>
+                )}
+                <div className="text-xs text-gray-500">
+                  Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
+                  {submission.feedback && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded">
+                      <strong>Feedback:</strong> {submission.feedback}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+      taskId: null // No task ID to prevent submission form
     });
     setShowModal(true);
   };
 
   const handleRedoTask = (task) => {
-    setSubmissionForm({ description: '', link: '' });
+    const submission = submissions.find(s => s.taskId._id === task._id);
+    
+    // Set form with existing submission data
+    const description = submission?.content?.text || '';
+    const link = submission?.content?.link || '';
+    
     setModalContent({
       title: `Redo Task: ${task.title}`,
       content: null,
       taskId: task._id,
+      submissionId: submission?._id,
+      isEdit: true, // Treat redo as edit operation
       isRedo: true
     });
+
+    // Set form data after a small delay to ensure modal state is set
+    setTimeout(() => {
+      setSubmissionForm({
+        description: description,
+        link: link
+      });
+    }, 0);
+
     setShowModal(true);
   };
 
@@ -394,74 +533,42 @@ const TasksView = ({
                       </div>
                     </div>
 
-                    {/* Task Description */}
+                    {/* Simplified Task Description */}
                     <div className="text-sm mb-4" style={{ color: themeColors.textSecondary }}>
-                      {task.description.split('\n').map((line, index) => {
-                        // Check if line is a numbered list item (starts with number followed by dot)
-                        const isNumberedItem = /^\d+\.\s/.test(line.trim());
-                        // Check if line is a bullet point (starts with - or *)
-                        const isBulletItem = /^[-*]\s/.test(line.trim());
-                        
-                        if (isNumberedItem || isBulletItem) {
-                          return (
-                            <div key={index} className="ml-4 mb-1">
-                              {line.trim()}
-                            </div>
-                          );
-                        } else if (line.trim() === '') {
-                          return <br key={index} />;
-                        } else {
-                          return (
-                            <div key={index} className="mb-1">
-                              {line.trim()}
-                            </div>
-                          );
+                      <p className="line-clamp-3">
+                        {task.description.length > 150 
+                          ? `${task.description.substring(0, 150)}...` 
+                          : task.description
                         }
-                      })}
+                      </p>
                     </div>
 
-                    {/* Task Details */}
-                    {/* Submission Info */}
-                    {submission && (
-                      <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                        <div className="text-xs font-medium mb-2" style={{ color: themeColors.text }}>
-                          Your Submission:
-                        </div>
-                        {submission.content?.text && (
-                          <div className="flex items-start space-x-2 mb-2">
-                            <FileText className="w-4 h-4 mt-0.5" style={{ color: themeColors.textSecondary }} />
-                            <p className="text-xs" style={{ color: themeColors.textSecondary }}>
-                              {submission.content.text}
-                            </p>
-                          </div>
-                        )}
-                        {submission.content?.link && (
-                          <div className="flex items-center space-x-2 mb-2">
-                            <ExternalLink className="w-4 h-4" style={{ color: themeColors.textSecondary }} />
-                            <a
-                              href={formatUrl(submission.content.link)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs hover:underline"
-                              style={{ color: themeColors.accent }}
-                            >
-                              View Submission Link
-                            </a>
-                          </div>
-                        )}
-                        {submission.score !== undefined && (
-                          <div className="text-xs font-bold" style={{ color: themeColors.success }}>
-                            Score: {submission.score}/{task.maxScore}
-                          </div>
-                        )}
-                        <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>
-                          Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    )}
+                    {/* Quick Info */}
+                    <div className="flex justify-between items-center mb-4 text-xs" style={{ color: themeColors.textSecondary }}>
+                      <span>Max Score: {task.maxScore} points</span>
+                      {submission && submission.score !== undefined && (
+                        <span className="font-bold" style={{ color: themeColors.success }}>
+                          Your Score: {submission.score}/{task.maxScore}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Action Buttons */}
                     <div className="space-y-2">
+                      {/* View Details Button - Always available */}
+                      <button
+                        onClick={() => handleViewDetails(task)}
+                        className="w-full px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-200 hover:scale-105 flex items-center justify-center"
+                        style={{
+                          borderColor: themeColors.border,
+                          backgroundColor: themeColors.backgroundSecondary,
+                          color: themeColors.text
+                        }}
+                      >
+                        <Info className="w-4 h-4 mr-2" />
+                        View Details
+                      </button>
+
                       {/* Submit Task Button - for not submitted tasks */}
                       {status === 'not_submitted' && (
                         <button
@@ -476,8 +583,8 @@ const TasksView = ({
                         </button>
                       )}
 
-                      {/* Edit and Redo buttons for submitted/under review tasks */}
-                      {(status === 'submitted' || status === 'under_review') && (
+                      {/* Edit and Redo buttons for submitted/under review/returned tasks */}
+                      {(status === 'submitted' || status === 'under_review' || status === 'returned') && (
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEditSubmission(task, submission)}
@@ -488,7 +595,7 @@ const TasksView = ({
                             }}
                           >
                             <Edit3 className="w-4 h-4 mr-2" />
-                            Edit
+                            {status === 'returned' ? 'Revise' : 'Edit'}
                           </button>
                           <button
                             onClick={() => handleRedoTask(task)}
@@ -514,8 +621,6 @@ const TasksView = ({
                           Task Completed
                         </div>
                       )}
-
-
                     </div>
                   </motion.div>
                 );

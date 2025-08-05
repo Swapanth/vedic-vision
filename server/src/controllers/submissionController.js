@@ -67,13 +67,20 @@ export const submitTask = async (req, res) => {
       };
     } else if (submissionType === 'link') {
       submissionData.content = {
-        link: parsedContent.link,
-        linkTitle: parsedContent.linkTitle || ''
+        link: parsedContent.link
       };
+      // Also include text if provided
+      if (parsedContent.text) {
+        submissionData.content.text = parsedContent.text;
+      }
     } else if (submissionType === 'text') {
       submissionData.content = {
         text: parsedContent.text
       };
+      // Also include link if provided
+      if (parsedContent.link) {
+        submissionData.content.link = parsedContent.link;
+      }
     } else {
       return res.status(400).json({
         success: false,
@@ -98,6 +105,114 @@ export const submitTask = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to submit task',
+      error: error.message
+    });
+  }
+};
+
+// Update submission (Participants only - before grading)
+export const updateSubmission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { submissionType, content } = req.body;
+    
+    // Parse content if it's a JSON string
+    let parsedContent = content;
+    if (typeof content === 'string') {
+      try {
+        parsedContent = JSON.parse(content);
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid content format'
+        });
+      }
+    }
+
+    // Find the submission
+    const submission = await Submission.findById(id).populate('taskId');
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Submission not found'
+      });
+    }
+
+    // Check if user owns this submission
+    if (submission.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only update your own submissions'
+      });
+    }
+
+    // Check if submission is already graded
+    if (submission.status === 'graded') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update graded submission'
+      });
+    }
+
+    // Verify task is still active
+    if (!submission.taskId.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: 'Task is no longer active'
+      });
+    }
+
+    // Update submission content based on type
+    if (submissionType === 'file' && req.file) {
+      submission.content = {
+        fileUrl: `/uploads/submissions/${req.file.filename}`,
+        fileName: req.file.originalname,
+        fileSize: req.file.size
+      };
+    } else if (submissionType === 'link') {
+      submission.content = {
+        link: parsedContent.link
+      };
+      // Also include text if provided
+      if (parsedContent.text) {
+        submission.content.text = parsedContent.text;
+      }
+    } else if (submissionType === 'text') {
+      submission.content = {
+        text: parsedContent.text
+      };
+      // Also include link if provided
+      if (parsedContent.link) {
+        submission.content.link = parsedContent.link;
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid submission type or missing file'
+      });
+    }
+
+    // Update submission type and reset status to submitted
+    submission.submissionType = submissionType;
+    submission.status = 'submitted';
+    submission.submittedAt = new Date();
+
+    await submission.save();
+
+    await submission.populate([
+      { path: 'userId', select: 'name email' },
+      { path: 'taskId', select: 'title day maxScore' }
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Submission updated successfully',
+      data: { submission }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update submission',
       error: error.message
     });
   }
@@ -395,6 +510,68 @@ export const updateGrade = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update grade',
+      error: error.message
+    });
+  }
+};
+
+// Return submission for revision (Admin and Mentor)
+export const returnSubmission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { feedback } = req.body;
+
+    const submission = await Submission.findById(id)
+      .populate('taskId', 'title maxScore')
+      .populate('userId', 'name email');
+
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Submission not found'
+      });
+    }
+
+    // If user is a mentor, check if they can return this submission
+    if (req.user.role === 'mentor') {
+      const mentor = await User.findById(req.user._id).populate('assignedParticipants');
+      const canReturn = mentor.assignedParticipants.some(p => p._id.toString() === submission.userId._id.toString());
+      
+      if (!canReturn) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only return submissions from your assigned participants'
+        });
+      }
+    }
+
+    // Check if submission can be returned
+    if (submission.status === 'graded') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot return graded submission'
+      });
+    }
+
+    // Update submission
+    submission.status = 'returned';
+    submission.feedback = feedback;
+    submission.gradedBy = req.user._id;
+    submission.gradedAt = new Date();
+
+    await submission.save();
+
+    await submission.populate('gradedBy', 'name email');
+
+    res.json({
+      success: true,
+      message: 'Submission returned for revision',
+      data: { submission }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to return submission',
       error: error.message
     });
   }

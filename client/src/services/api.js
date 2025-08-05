@@ -83,12 +83,16 @@ export const submissionAPI = {
   submitTask: (taskId, formData) => {
     return api.post('/submissions', formData);
   },
+  updateSubmission: (submissionId, formData) => {
+    return api.put(`/submissions/${submissionId}`, formData);
+  },
   getMySubmissions: (params) => api.get('/submissions/my-submissions', { params }),
   getAllSubmissions: (params) => api.get('/submissions', { params }),
   getPendingSubmissions: () => api.get('/submissions/pending'),
   getSubmissionById: (id) => api.get(`/submissions/${id}`),
   gradeSubmission: (id, data) => api.post(`/submissions/${id}/grade`, data),
   updateGrade: (id, data) => api.put(`/submissions/${id}/grade`, data),
+  returnSubmission: (id, data) => api.post(`/submissions/${id}/return`, data),
   deleteSubmission: (id) => api.delete(`/submissions/${id}`),
 };
 

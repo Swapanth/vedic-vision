@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Shield, Calendar, Trophy, Edit3, Lock, X, Check, AlertCircle, Settings, Activity, Award } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import LoadingSpinner from '../common/LoadingSpinner';
 // Mock Modal component since it's not in the project
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -29,7 +28,12 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-
+// Mock LoadingSpinner component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+  </div>
+);
 
 const Profile = () => {
   const { user, updateProfile, changePassword } = useAuth();

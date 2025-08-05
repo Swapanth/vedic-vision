@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import LoadingSpinner from '../../common/LoadingSpinner';
 
 const UsersTab = ({ users, onLoadUsers }) => {
   const [searchTerm, setSearchTerm] = useState('');
