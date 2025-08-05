@@ -33,9 +33,20 @@ const SubmissionsTab = ({ submissions, onGradeSubmission }) => {
             </div>
             
             <div className="mb-3">
-              <p className="text-sm text-gray-700">
-                {submission.content?.text || submission.description || 'No description'}
-              </p>
+              <div className="text-sm text-gray-700 mb-2">
+                {submission.content?.text && (
+                  <p>{submission.content.text}</p>
+                )}
+                {submission.content?.linkTitle && (
+                  <div>
+                    <span className="font-medium">Description: </span>
+                    <span>{submission.content.linkTitle}</span>
+                  </div>
+                )}
+                {!submission.content?.text && !submission.content?.linkTitle && (
+                  <p>No description</p>
+                )}
+              </div>
               {submission.content?.fileUrl && (
                 <a href={submission.content.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-sm">
                   📎 Download File

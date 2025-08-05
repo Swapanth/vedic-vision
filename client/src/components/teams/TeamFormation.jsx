@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { teamAPI, voteAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../common/Modal';
-import LoadingSpinner from '../common/LoadingSpinner';
+import LoadingSpinner, { PageLoader } from '../common/LoadingSpinner';
 import TeamVoting from '../voting/TeamVoting';
 import Toast from '../common/Toast';
 

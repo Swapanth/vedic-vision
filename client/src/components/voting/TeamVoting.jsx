@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { voteAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import LoadingSpinner from '../common/LoadingSpinner';
+import LoadingSpinner, { CardLoader } from '../common/LoadingSpinner';
 import Toast from '../common/Toast';
 
 const TeamVoting = ({ isOpen, onClose, onVoteUpdate }) => {
@@ -379,10 +379,7 @@ const TeamVoting = ({ isOpen, onClose, onVoteUpdate }) => {
                 {/* Teams List */}
                 {loading ? (
                   <div className="flex justify-center py-12 bg-white rounded-2xl border-2 border-gray-900 p-8 shadow-lg">
-                    <div className="text-center">
-                      <LoadingSpinner />
-                      <p className="text-gray-600 font-semibold mt-4">Loading teams...</p>
-                    </div>
+                    <CardLoader text="Loading teams..." />
                   </div>
                 ) : (
                   <div className="space-y-4 max-h-80 overflow-y-auto p-2">

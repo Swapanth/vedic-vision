@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const TasksTab = ({ tasks, onCreateTask, onUpdateTask, onDeleteTask, onToggleTaskStatus }) => {
+const TasksTab = ({ tasks, onCreateTask, onUpdateTask, onDeleteTask, onToggleTaskStatus, taskLoading }) => {
   const [showDialog, setShowDialog] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
@@ -193,8 +193,12 @@ const TasksTab = ({ tasks, onCreateTask, onUpdateTask, onDeleteTask, onToggleTas
               <div className="flex items-end">
                 <button
                   type="submit"
-                  className="w-full bg-[#272757] hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                  disabled={taskLoading}
+                  className="w-full bg-[#272757] hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
+                  {taskLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  )}
                   {editingTask ? 'Update Task' : 'Create Task'}
                 </button>
               </div>

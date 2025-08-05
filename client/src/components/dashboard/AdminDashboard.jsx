@@ -22,6 +22,7 @@ const AdminDashboard = () => {
   const [attendance, setAttendance] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [taskLoading, setTaskLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', content: null });
@@ -106,22 +107,28 @@ const AdminDashboard = () => {
   };
 
   const handleCreateTask = async (taskForm) => {
+    setTaskLoading(true);
     try {
       await taskAPI.createTask(taskForm);
       showSuccessModal('Success', 'Task created successfully!');
       loadDashboardData();
     } catch (error) {
       showSuccessModal('Error', 'Failed to create task: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setTaskLoading(false);
     }
   };
 
   const handleUpdateTask = async (taskId, taskForm) => {
+    setTaskLoading(true);
     try {
       await taskAPI.updateTask(taskId, taskForm);
       showSuccessModal('Success', 'Task updated successfully!');
       loadDashboardData();
     } catch (error) {
       showSuccessModal('Error', 'Failed to update task: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setTaskLoading(false);
     }
   };
 
@@ -232,7 +239,7 @@ const AdminDashboard = () => {
       case 'mentor-assignment':
         return <MentorAssignmentTab onShowModal={showSuccessModal} />;
       case 'tasks':
-        return <TasksTab tasks={tasks} onCreateTask={handleCreateTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onToggleTaskStatus={handleToggleTaskStatus} />;
+        return <TasksTab tasks={tasks} onCreateTask={handleCreateTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onToggleTaskStatus={handleToggleTaskStatus} taskLoading={taskLoading} />;
       case 'attendance':
         return <AttendanceTab attendance={attendance} onMarkAttendance={loadDashboardData} />;
       case 'announcements':

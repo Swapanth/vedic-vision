@@ -4,7 +4,7 @@ import { Menu, X, User, LogOut, Home, Calendar, CheckCircle, Clock, Trophy, User
 import { useAuth } from '../../context/AuthContext';
 import { taskAPI, attendanceAPI, submissionAPI, announcementAPI, userAPI } from '../../services/api';
 import Modal from '../common/Modal';
-import LoadingSpinner from '../common/LoadingSpinner';
+import LoadingSpinner, { PageLoader, ButtonLoader } from '../common/LoadingSpinner';
 import TasksView from './TasksView';
 import LeaderboardView from './LeaderboardView';
 
@@ -226,6 +226,7 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
     description: '',
     link: '',
   });
+  const [submissionLoading, setSubmissionLoading] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -278,6 +279,7 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
   };
 
   const handleSubmitTask = async (taskId) => {
+    setSubmissionLoading(true);
     try {
       if (!submissionForm.description && !submissionForm.link) {
         showSuccessModal('Error', 'Please provide a description or link for your submission');
@@ -292,28 +294,38 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
 
       if (submissionForm.link) {
         submissionType = 'link';
-        content = { link: submissionForm.link };
+        content = { 
+          link: submissionForm.link,
+          linkTitle: submissionForm.description || ''
+        };
       }
 
       formData.append('submissionType', submissionType);
       formData.append('content', JSON.stringify(content));
+      
+      // Add isEdit flag if this is an edit operation
+      if (modalContent.isEdit || modalContent.isRedo) {
+        formData.append('isEdit', 'true');
+      }
 
       await submissionAPI.submitTask(taskId, formData);
-      showSuccessModal('Success', 'Task submitted successfully!');
+      showSuccessModal('Success', modalContent.isEdit ? 'Submission updated successfully!' : 'Task submitted successfully!');
       setSubmissionForm({ description: '', link: '' });
       setShowModal(false);
       loadDashboardData();
     } catch (error) {
-      let errorMessage = 'Failed to submit task';
+      let errorMessage = modalContent.isEdit ? 'Failed to update submission' : 'Failed to submit task';
       if (error.response?.data?.message) {
         errorMessage += ': ' + error.response.data.message;
       }
       showSuccessModal('Error', errorMessage);
+    } finally {
+      setSubmissionLoading(false);
     }
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <PageLoader text="Loading your dashboard..." />;
   }
 
   // Calculate statistics
@@ -619,9 +631,14 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
                 </button>
                 <button
                   onClick={() => handleSubmitTask(modalContent.taskId)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  disabled={submissionLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
-                  Submit Task
+                  {submissionLoading ? (
+                    <ButtonLoader text={modalContent.isEdit ? 'Updating...' : 'Submitting...'} />
+                  ) : (
+                    modalContent.isEdit ? 'Update Submission' : 'Submit Task'
+                  )}
                 </button>
               </div>
             </div>

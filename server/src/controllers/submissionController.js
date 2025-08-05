@@ -6,7 +6,7 @@ import path from 'path';
 // Submit task (Participants only)
 export const submitTask = async (req, res) => {
   try {
-    const { taskId, submissionType, content } = req.body;
+    const { taskId, submissionType, content, isEdit } = req.body;
     
     // Parse content if it's a JSON string
     let parsedContent = content;
@@ -43,6 +43,51 @@ export const submitTask = async (req, res) => {
       taskId
     });
 
+    // If editing and submission exists, update it
+    if (isEdit === 'true' && existingSubmission) {
+      // Prepare updated content
+      let updatedContent = {};
+      
+      if (submissionType === 'file' && req.file) {
+        updatedContent = {
+          fileUrl: `/uploads/submissions/${req.file.filename}`,
+          fileName: req.file.originalname,
+          fileSize: req.file.size
+        };
+      } else if (submissionType === 'link') {
+        updatedContent = {
+          link: parsedContent.link,
+          linkTitle: parsedContent.linkTitle || ''
+        };
+      } else if (submissionType === 'text') {
+        updatedContent = {
+          text: parsedContent.text
+        };
+      }
+
+      // Update existing submission
+      existingSubmission.submissionType = submissionType;
+      existingSubmission.content = updatedContent;
+      existingSubmission.submittedAt = new Date();
+      existingSubmission.status = 'submitted'; // Reset status if it was graded
+      existingSubmission.score = null; // Reset score
+      existingSubmission.feedback = null; // Reset feedback
+      
+      await existingSubmission.save();
+      
+      await existingSubmission.populate([
+        { path: 'userId', select: 'name email' },
+        { path: 'taskId', select: 'title day maxScore' }
+      ]);
+
+      return res.json({
+        success: true,
+        message: 'Submission updated successfully',
+        data: { submission: existingSubmission }
+      });
+    }
+
+    // If not editing but submission exists, return error
     if (existingSubmission) {
       return res.status(400).json({
         success: false,

@@ -175,7 +175,7 @@ const TasksView = ({
 
   const handleEditSubmission = (task, submission) => {
     setSubmissionForm({
-      description: submission.content?.text || '',
+      description: submission.content?.linkTitle || submission.content?.text || '',
       link: submission.content?.link || ''
     });
     setModalContent({
