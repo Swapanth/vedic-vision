@@ -22,7 +22,7 @@ const App = () => {
             <Route path="/photo-booth" element={<PhotoBooth />} />
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/swapanth/register" element={<Register />} />
             
             {/* Protected routes */}
             <Route
