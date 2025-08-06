@@ -205,7 +205,7 @@ export const getAllSubmissions = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 40,
       status,
       taskId,
       userId,
