@@ -151,8 +151,25 @@ const MentorDashboard = () => {
 
   const loadTaskSubmissions = async (taskId) => {
     try {
-      const taskSubmissionsRes = await submissionAPI.getAllSubmissions({ taskId });
-      setTaskSubmissions(taskSubmissionsRes.data.data.submissions || []);
+      let allSubmissions = [];
+      let currentPage = 1;
+      let hasNextPage = true;
+
+      while (hasNextPage) {
+        const taskSubmissionsRes = await submissionAPI.getAllSubmissions({ 
+          taskId, 
+          page: currentPage, 
+          limit: 100 
+        });
+        
+        const { submissions, pagination } = taskSubmissionsRes.data.data;
+        allSubmissions = [...allSubmissions, ...submissions];
+
+        hasNextPage = pagination.hasNextPage;
+        currentPage++;
+      }
+
+      setTaskSubmissions(allSubmissions);
     } catch (error) {
       console.error('Error loading task submissions:', error);
       showNotification('Error', 'Failed to load task submissions');

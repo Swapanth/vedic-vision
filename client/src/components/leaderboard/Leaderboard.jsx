@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { userAPI } from '../../services/api';
-import LoadingSpinner from '../common/LoadingSpinner';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const Leaderboard = () => {
   const [users, setUsers] = useState([]);
@@ -82,7 +82,13 @@ const Leaderboard = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SkeletonLoader />
+        </div>
+      </div>
+    );
   }
 
   const filteredUsers = getFilteredUsers();
