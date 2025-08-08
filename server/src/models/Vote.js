@@ -70,8 +70,10 @@ voteSchema.pre('save', async function(next) {
   if (this.isNew) {
     const Team = mongoose.model('Team');
     const team = await Team.findById(this.team);
-    
-    if (team && team.members.some(member => member.user.toString() === this.voter.toString())) {
+    if (!team || !Array.isArray(team.members)) {
+      return next(new Error('Team not found or invalid team members'));
+    }
+    if (team.members.some(member => member.user.toString() === this.voter.toString())) {
       return next(new Error('You cannot vote for your own team'));
     }
   }

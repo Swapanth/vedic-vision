@@ -72,6 +72,19 @@ export const submitVote = async (req, res) => {
     });
   } catch (error) {
     console.error('Error submitting vote:', error);
+    if (
+      error.name === 'ValidationError' ||
+      (typeof error.message === 'string' && (
+        error.message.includes('You cannot vote for your own team') ||
+        error.message.includes('Team not found') ||
+        error.message.includes('invalid team members')
+      ))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to submit vote',

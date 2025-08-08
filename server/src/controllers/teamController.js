@@ -1,37 +1,45 @@
 import Team from '../models/Team.js';
 import User from '../models/User.js';
+import ProblemStatement from '../models/ProblemStatement.js';
 import mongoose from 'mongoose';
 
 // Get all teams
 export const getAllTeams = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+
+    // Build query
+    const query = { isActive: true };
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+
+    // Calculate pagination
     const skip = (page - 1) * limit;
+    const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
-    const query = {
-      isActive: true,
-      ...(search && { name: { $regex: search, $options: 'i' } })
-    };
-
+    // Get teams with pagination
     const teams = await Team.find(query)
-      .populate('leader', 'name email')
-      .populate('members.user', 'name email')
-      .sort({ createdAt: -1 })
+      .populate('leader', 'name email collegeName profilePicture')
+      .populate('members.user', 'name email collegeName profilePicture')
+      .populate('problemStatement', 'title description')
+      .sort(sortOptions)
       .skip(skip)
       .limit(parseInt(limit));
 
     const total = await Team.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
 
-    res.status(200).json({
+    res.json({
       success: true,
       data: {
         teams,
         pagination: {
           currentPage: parseInt(page),
-          totalPages: Math.ceil(total / limit),
-          totalItems: total,
-          hasNext: page * limit < total,
-          hasPrev: page > 1
+          totalPages,
+          totalTeams: total,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
         }
       }
     });
@@ -87,11 +95,20 @@ export const getTeamById = async (req, res) => {
 // Create new team
 export const createTeam = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    console.log('Create team request body:', req.body); // Debug log
+    const { name, description, problemStatement } = req.body;
     const userId = req.user.id;
+    console.log('User ID:', userId); // Debug log
 
     // Check if user is already in a team
     const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.'
+      });
+    }
+    
     if (user.team) {
       return res.status(400).json({
         success: false,
@@ -108,22 +125,53 @@ export const createTeam = async (req, res) => {
       });
     }
 
+    // Validate problem statement exists and is a valid ObjectId
+    if (!problemStatement) {
+      return res.status(400).json({
+        success: false,
+        message: 'Problem statement is required.'
+      });
+    }
+
+    // Validate that problemStatement is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(problemStatement)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid problem statement ID.'
+      });
+    }
+
+    // Verify that the problem statement actually exists
+    const problemExists = await ProblemStatement.findById(problemStatement);
+    if (!problemExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Problem statement not found.'
+      });
+    }
+
+    console.log('Creating team with data:', { name, description, problemStatement, leader: userId }); // Debug log
+
     // Create new team
     const team = new Team({
       name,
       description,
+      problemStatement,
       leader: userId
     });
 
     await team.save();
+    console.log('Team saved successfully:', team._id); // Debug log
 
     // Update user's team reference
     user.team = team._id;
     await user.save();
+    console.log('User team reference updated'); // Debug log
 
     // Populate team data for response
     await team.populate('leader', 'name email collegeName profilePicture');
     await team.populate('members.user', 'name email collegeName profilePicture');
+    await team.populate('problemStatement', 'title description');
 
     res.status(201).json({
       success: true,
@@ -131,7 +179,7 @@ export const createTeam = async (req, res) => {
       data: { team }
     });
   } catch (error) {
-    console.error('Create team error:', error);
+    console.error('Create team error details:', error); // Enhanced error logging
     res.status(500).json({
       success: false,
       message: 'Failed to create team',
@@ -144,7 +192,7 @@ export const createTeam = async (req, res) => {
 export const updateTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, problemStatement } = req.body;
     const userId = req.user.id;
 
     const team = await Team.findById(id);
@@ -177,13 +225,34 @@ export const updateTeam = async (req, res) => {
       }
     }
 
+    // Validate problem statement if provided
+    if (problemStatement) {
+      if (!mongoose.Types.ObjectId.isValid(problemStatement)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid problem statement ID.'
+        });
+      }
+
+      // Verify that the problem statement actually exists
+      const problemExists = await ProblemStatement.findById(problemStatement);
+      if (!problemExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'Problem statement not found.'
+        });
+      }
+    }
+
     // Update team
     if (name) team.name = name;
     if (description !== undefined) team.description = description;
+    if (problemStatement) team.problemStatement = problemStatement;
 
     await team.save();
     await team.populate('leader', 'name email collegeName profilePicture');
     await team.populate('members.user', 'name email collegeName profilePicture');
+    await team.populate('problemStatement', 'title description');
 
     res.status(200).json({
       success: true,
@@ -269,6 +338,7 @@ export const leaveTeam = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const { transferToUserId } = req.body; // Optional: specific user to transfer leadership to
 
     const team = await Team.findById(id);
     if (!team) {
@@ -286,45 +356,108 @@ export const leaveTeam = async (req, res) => {
       });
     }
 
-    // If user is the leader, check team size
-    if (team.isLeader(userId)) {
-      if (team.members.length > 1) {
-        return res.status(400).json({
-          success: false,
-          message: 'Team leader cannot leave while there are other members. Transfer leadership or disband the team.'
-        });
-      } else {
-        // If leader is the only member, delete the team
-        await Team.findByIdAndDelete(id);
-        
-        // Update user's team reference
-        const user = await User.findById(userId);
-        user.team = null;
-        await user.save();
+    const isLeader = team.isLeader(userId);
+    const teamSize = team.members.length;
 
-        return res.status(200).json({
-          success: true,
-          message: 'Team disbanded successfully'
-        });
-      }
+    // Case 1: Leader is the only member - Delete the team
+    if (isLeader && teamSize === 1) {
+      await Team.findByIdAndDelete(id);
+      
+      // Update user's team reference
+      const user = await User.findById(userId);
+      user.team = null;
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Team disbanded successfully as you were the only member'
+      });
     }
 
-    // Remove user from team
-    await team.removeMember(userId);
-    
-    // Update user's team reference
-    const user = await User.findById(userId);
-    user.team = null;
-    await user.save();
+    // Case 2: Leader leaving with other members - Transfer leadership
+    if (isLeader && teamSize > 1) {
+      let newLeader;
 
-    await team.populate('leader', 'name email profilePicture');
-    await team.populate('members.user', 'name email profilePicture');
+      // If specific user is provided for leadership transfer
+      if (transferToUserId) {
+        if (!team.isMember(transferToUserId)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Specified user is not a member of this team'
+          });
+        }
+        newLeader = transferToUserId;
+      } else {
+        // Auto-select the first non-leader member as new leader
+        const nonLeaderMembers = team.members.filter(member => 
+          member.user.toString() !== userId.toString()
+        );
+        
+        if (nonLeaderMembers.length === 0) {
+          return res.status(500).json({
+            success: false,
+            message: 'No eligible members found for leadership transfer'
+          });
+        }
+        
+        newLeader = nonLeaderMembers[0].user;
+      }
 
-    res.status(200).json({
-      success: true,
-      message: 'Successfully left the team',
-      data: { team }
-    });
+      // Transfer leadership
+      team.leader = newLeader;
+      
+      // Update roles in members array
+      team.members = team.members.map((member) => {
+        if (member.user.toString() === newLeader.toString()) {
+          return { ...member.toObject(), role: 'leader' };
+        }
+        if (member.user.toString() === userId.toString()) {
+          return { ...member.toObject(), role: 'member' };
+        }
+        return member;
+      });
+
+      // Remove the leaving user from team
+      await team.removeMember(userId);
+      await team.save();
+
+      // Update leaving user's team reference
+      const leavingUser = await User.findById(userId);
+      leavingUser.team = null;
+      await leavingUser.save();
+
+      // Populate team data for response
+      await team.populate('leader', 'name email profilePicture');
+      await team.populate('members.user', 'name email profilePicture');
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully left the team. Leadership transferred to ${team.leader.name}`,
+        data: { team }
+      });
+    }
+
+    // Case 3: Regular member leaving
+    if (!isLeader) {
+      // Remove user from team
+      await team.removeMember(userId);
+      
+      // Update user's team reference
+      const user = await User.findById(userId);
+      user.team = null;
+      await user.save();
+
+      // Populate team data for response
+      await team.populate('leader', 'name email profilePicture');
+      await team.populate('members.user', 'name email profilePicture');
+
+      return res.status(200).json({
+        success: true,
+        message: 'Successfully left the team',
+        data: { team }
+      });
+    }
+
   } catch (error) {
     console.error('Leave team error:', error);
     res.status(500).json({
@@ -401,7 +534,7 @@ export const removeMember = async (req, res) => {
   }
 };
 
-// Get user's current team
+// Get user's team
 export const getMyTeam = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -409,12 +542,20 @@ export const getMyTeam = async (req, res) => {
     const user = await User.findById(userId).populate({
       path: 'team',
       populate: [
-        { path: 'leader', select: 'name email profilePicture' },
-        { path: 'members.user', select: 'name email profilePicture' }
+        { path: 'leader', select: 'name email collegeName profilePicture' },
+        { path: 'members.user', select: 'name email collegeName profilePicture' },
+        { path: 'problemStatement', select: 'title description' }
       ]
     });
 
-    res.status(200).json({
+    if (!user.team) {
+      return res.status(404).json({
+        success: false,
+        message: 'You are not part of any team'
+      });
+    }
+
+    res.json({
       success: true,
       data: { team: user.team }
     });
@@ -422,7 +563,7 @@ export const getMyTeam = async (req, res) => {
     console.error('Get my team error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch your team',
+      message: 'Failed to fetch team',
       error: error.message
     });
   }
@@ -507,5 +648,53 @@ export const deleteTeam = async (req, res) => {
       message: 'Failed to delete team',
       error: error.message
     });
+  }
+};
+
+export const transferLeadership = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newLeaderId } = req.body;
+    const userId = req.user.id;
+
+    if (!newLeaderId) {
+      return res.status(400).json({ success: false, message: 'newLeaderId is required' });
+    }
+
+    const team = await Team.findById(id);
+    if (!team) {
+      return res.status(404).json({ success: false, message: 'Team not found' });
+    }
+
+    if (!team.isLeader(userId)) {
+      return res.status(403).json({ success: false, message: 'Only team leader can transfer leadership' });
+    }
+
+    if (!team.isMember(newLeaderId) && team.leader.toString() !== newLeaderId.toString()) {
+      return res.status(400).json({ success: false, message: 'New leader must be a current team member' });
+    }
+
+    // Update roles in members array
+    team.members = team.members.map((m) => {
+      if (m.user.toString() === team.leader.toString()) {
+        return { ...m.toObject(), role: 'member' };
+      }
+      if (m.user.toString() === newLeaderId.toString()) {
+        return { ...m.toObject(), role: 'leader' };
+      }
+      return m;
+    });
+
+    // Set new leader
+    team.leader = newLeaderId;
+    await team.save();
+
+    await team.populate('leader', 'name email profilePicture');
+    await team.populate('members.user', 'name email profilePicture');
+
+    return res.status(200).json({ success: true, message: 'Leadership transferred successfully', data: { team } });
+  } catch (error) {
+    console.error('Transfer leadership error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to transfer leadership', error: error.message });
   }
 };

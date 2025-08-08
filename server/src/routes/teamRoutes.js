@@ -9,11 +9,12 @@ import {
   removeMember,
   getMyTeam,
   getAvailableUsers,
-  deleteTeam
+  deleteTeam,
+  transferLeadership
 } from '../controllers/teamController.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { body, param } from 'express-validator';
-import { validateteam } from '../middleware/validation.js';
+import { handleValidationErrors } from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -29,7 +30,12 @@ const createTeamValidation = [
     .optional()
     .trim()
     .isLength({ max: 200 })
-    .withMessage('Description must not exceed 200 characters')
+    .withMessage('Description must not exceed 200 characters'),
+  body('problemStatement')
+    .notEmpty()
+    .withMessage('Problem statement is required')
+    .isMongoId()
+    .withMessage('Invalid problem statement ID')
 ];
 
 const updateTeamValidation = [
@@ -63,12 +69,13 @@ router.use(authenticateToken);
 router.get('/', getAllTeams);
 router.get('/my-team', getMyTeam);
 router.get('/available-users', getAvailableUsers);
-router.get('/:id', teamIdValidation, validateteam, getTeamById);
-router.post('/', createTeamValidation, validateteam, createTeam);
-router.put('/:id', updateTeamValidation, validateteam, updateTeam);
-router.post('/:id/join', teamIdValidation, validateteam, joinTeam);
-router.post('/:id/leave', teamIdValidation, validateteam, leaveTeam);
-router.delete('/:id/members/:memberId', memberIdValidation, validateteam, removeMember);
-router.delete('/:id', teamIdValidation, validateteam, deleteTeam);
+router.get('/:id', teamIdValidation, handleValidationErrors, getTeamById);
+router.post('/', createTeamValidation, handleValidationErrors, createTeam);
+router.put('/:id', updateTeamValidation, handleValidationErrors, updateTeam);
+router.post('/:id/join', teamIdValidation, handleValidationErrors, joinTeam);
+router.post('/:id/leave', teamIdValidation, handleValidationErrors, leaveTeam);
+router.post('/:id/transfer-leadership', teamIdValidation, handleValidationErrors, transferLeadership);
+router.delete('/:id/members/:memberId', memberIdValidation, handleValidationErrors, removeMember);
+router.delete('/:id', teamIdValidation, handleValidationErrors, deleteTeam);
 
 export default router;

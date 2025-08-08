@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.0.0",
     "express-validator": "^7.2.1",
     "mongoose": "^8.16.5",

@@ -8,6 +8,7 @@ import announcementRoutes from './announcementRoutes.js';
 import exportRoutes from './exportRoutes.js';
 import teamRoutes from './teamRoutes.js';
 import voteRoutes from './voteRoutes.js';
+import configRoutes from './configRoutes.js';
 
 const router = express.Router();
 
@@ -30,7 +31,9 @@ router.use('/attendance', attendanceRoutes);
 router.use('/announcements', announcementRoutes);
 router.use('/export', exportRoutes);
 router.use('/teams', teamRoutes);
+
 router.use('/votes', voteRoutes);
+router.use('/config', configRoutes);
 
 // 404 handler for API routes
 router.use('*', (req, res) => {

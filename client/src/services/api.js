@@ -1,3 +1,16 @@
+// Config API
+export const configAPI = {
+  getConfig: () => api.get('/config/config'),
+  updateConfig: (data) => api.put('/config/config', data),
+};
+
+// Problem Statement API
+export const problemAPI = {
+  getAll: (params) => api.get('/config/problems', { params }),
+  getAllTitles: () => api.get('/config/problems/titles'),
+  create: (data) => api.post('/config/problems', data),
+  update: (id, data) => api.put(`/config/problems/${id}`, data),
+};
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9000/api';
@@ -163,7 +176,7 @@ export const teamAPI = {
   createTeam: (teamData) => api.post('/teams', teamData),
   updateTeam: (id, teamData) => api.put(`/teams/${id}`, teamData),
   joinTeam: (id) => api.post(`/teams/${id}/join`),
-  leaveTeam: (id) => api.post(`/teams/${id}/leave`),
+  leaveTeam: (id, data = {}) => api.post(`/teams/${id}/leave`, data),
   removeMember: (id, memberId) => api.delete(`/teams/${id}/members/${memberId}`),
   deleteTeam: (id) => api.delete(`/teams/${id}`),
 };

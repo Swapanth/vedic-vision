@@ -14,6 +14,11 @@ const teamSchema = new mongoose.Schema({
     trim: true,
     maxlength: 200
   },
+  problemStatement: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProblemStatement',
+    required: true
+  },
   leader: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
