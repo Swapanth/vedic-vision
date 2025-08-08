@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -14,50 +15,52 @@ import PhotoBooth from './components/photobooth/PhotoBooth';
 
 const App = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/photo-booth" element={<PhotoBooth />} />
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/swapanth/register" element={<Register />} />
-            
-            {/* Protected routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardWrapper />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/leaderboard"
-              element={
-                <ProtectedRoute>
-                  <Leaderboard />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/photo-booth" element={<PhotoBooth />} />
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/swapanth/register" element={<Register />} />
+              
+              {/* Protected routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper />
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route
+                path="/leaderboard"
+                element={
+                  <ProtectedRoute>
+                    <Leaderboard />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

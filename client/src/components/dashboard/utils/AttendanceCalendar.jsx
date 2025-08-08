@@ -11,9 +11,9 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
       attendance.forEach(record => {
         const dateKey = new Date(record.date).toISOString().split('T')[0];
         // Prioritize statuses: present > late > absent
-        if (!statusMap[dateKey] || 
-            (record.status === 'present' && statusMap[dateKey] !== 'present') ||
-            (record.status === 'late' && statusMap[dateKey] === 'absent')) {
+        if (!statusMap[dateKey] ||
+          (record.status === 'present' && statusMap[dateKey] !== 'present') ||
+          (record.status === 'late' && statusMap[dateKey] === 'absent')) {
           statusMap[dateKey] = record.status;
         }
       });
@@ -43,13 +43,14 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
 
   const getBlockStyle = (date, status) => {
     const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
-    const hasAttendance = statusByDate[date.toISOString().split('T')[0]];
-    
+    const dateKey = date.toISOString().split('T')[0];
+    const attendanceStatus = statusByDate[dateKey];
+
     // Check if this is August 2025 and date is between 4-15
     const isHighlightedDate = currentMonth.getMonth() === 7 && // August (0-indexed)
-                              currentMonth.getFullYear() === 2025 &&
-                              date.getDate() >= 4 && date.getDate() <= 15;
-    
+      currentMonth.getFullYear() === 2025 &&
+      date.getDate() >= 4 && date.getDate() <= 15;
+
     const baseStyle = {
       width: '100%',
       height: '50px',
@@ -70,6 +71,34 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
         ...baseStyle,
         backgroundColor: '#f3f4f6',
         color: '#9ca3af'
+      };
+    }
+
+    // Apply attendance status colors
+    if (attendanceStatus === 'present') {
+      return {
+        ...baseStyle,
+        backgroundColor: '#dcfce7', // Light green background
+        color: '#166534', // Dark green text
+        border: '2px solid #22c55e' // Green border
+      };
+    }
+
+    if (attendanceStatus === 'absent') {
+      return {
+        ...baseStyle,
+        backgroundColor: '#fef2f2', // Light red background
+        color: '#991b1b', // Dark red text
+        border: '2px solid #ef4444' // Red border
+      };
+    }
+
+    if (attendanceStatus === 'late') {
+      return {
+        ...baseStyle,
+        backgroundColor: '#fef3c7', // Light yellow background
+        color: '#92400e', // Dark yellow text
+        border: '2px solid #f59e0b' // Yellow border
       };
     }
 
@@ -99,16 +128,16 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
   const getDayLabel = (date) => {
     // Check if this is August 2025 and date is between 4-15
     const isHighlightedDate = currentMonth.getMonth() === 7 && // August (0-indexed)
-                              currentMonth.getFullYear() === 2025 &&
-                              date.getDate() >= 4 && date.getDate() <= 15;
-    
+      currentMonth.getFullYear() === 2025 &&
+      date.getDate() >= 4 && date.getDate() <= 15;
+
     if (isHighlightedDate) {
       // Return D1, D2, D3, etc. for August 4-15
       const dayNumber = date.getDate();
       const sessionNumber = dayNumber - 3; // August 4 = D1, August 5 = D2, etc.
       return `D${sessionNumber}`;
     }
-    
+
     return ''; // No label for other dates
   };
 
@@ -165,7 +194,7 @@ const AttendanceCalendar = ({ attendance, themeColors }) => {
           const dateKey = date.toISOString().split('T')[0];
           const status = statusByDate[dateKey];
           const dayLabel = getDayLabel(date);
-          
+
           return (
             <div
               key={index}

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, User, LogOut, Home, CheckCircle, Trophy, BookOpen, FileText } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
 import { taskAPI, attendanceAPI, submissionAPI, userAPI, teamAPI } from '../../../services/api';
 import Modal from '../../common/Modal';
+import ThemeToggle from '../../common/ThemeToggle';
 import ProfileView from './views/ProfileView';
 import { motion } from 'framer-motion';
 import HomeView from './views/HomeView';
@@ -13,6 +15,7 @@ import { PageLoader, ButtonLoader } from '../../common/LoadingSpinner';
 
 function ParticipantDashboard() {
   const { user, logout } = useAuth();
+  const { themeColors } = useTheme();
   const [activeTab, setActiveTab] = useState('home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -214,20 +217,7 @@ function ParticipantDashboard() {
   ];
 
 
-  const themeColors = {
-    background: '#ffffff',
-    backgroundSecondary: '#f8fafc',
-    cardBg: '#ffffff',
-    cardBgSecondary: '#f8fafc',
-    text: '#1f2937',
-    textSecondary: '#6b7280',
-    accent: '#3b82f6',
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    purple: '#8b5cf6',
-    border: '#e5e7eb'
-  };
+
 
   if (loading) {
     return <PageLoader />;
@@ -235,11 +225,14 @@ function ParticipantDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: themeColors.background }}
+      >
         <div className="text-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: themeColors.text }}>Error Loading Dashboard</h2>
+          <p className="mb-4" style={{ color: themeColors.textSecondary }}>{error}</p>
           <button
             onClick={loadDashboardData}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -252,71 +245,157 @@ function ParticipantDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+    <div 
+      className="min-h-screen animate-gradient"
+      style={{ backgroundColor: themeColors.background }}
+    >
+      <div 
+        className="shadow-sm border-b"
+        style={{ 
+          backgroundColor: themeColors.navbarBg,
+          borderColor: themeColors.navbarBorder
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-800">VEDIC VISION 2K25</h1>
+              <h1 className="text-xl font-bold" style={{ color: themeColors.text }}>VEDIC VISION 2K25</h1>
             </div>
 
             {/* Navigation Links */}
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden md:flex space-x-4 items-center">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'home'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{
+                  color: activeTab === 'home' ? themeColors.accent : themeColors.textSecondary,
+                  backgroundColor: activeTab === 'home' ? themeColors.blueBg : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'home') {
+                    e.target.style.backgroundColor = themeColors.hover;
+                    e.target.style.color = themeColors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'home') {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = themeColors.textSecondary;
+                  }
+                }}
               >
                 <Home className="w-4 h-4" />
                 <span>Home</span>
               </button>
               <button
                 onClick={() => setActiveTab('tasks')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'tasks'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{
+                  color: activeTab === 'tasks' ? themeColors.accent : themeColors.textSecondary,
+                  backgroundColor: activeTab === 'tasks' ? themeColors.blueBg : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'tasks') {
+                    e.target.style.backgroundColor = themeColors.hover;
+                    e.target.style.color = themeColors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'tasks') {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = themeColors.textSecondary;
+                  }
+                }}
               >
                 <CheckCircle className="w-4 h-4" />
                 <span>Tasks</span>
               </button>
               <button
                 onClick={() => setActiveTab('leaderboard')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'leaderboard'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{
+                  color: activeTab === 'leaderboard' ? themeColors.accent : themeColors.textSecondary,
+                  backgroundColor: activeTab === 'leaderboard' ? themeColors.blueBg : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'leaderboard') {
+                    e.target.style.backgroundColor = themeColors.hover;
+                    e.target.style.color = themeColors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'leaderboard') {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = themeColors.textSecondary;
+                  }
+                }}
               >
                 <Trophy className="w-4 h-4" />
                 <span>Leaderboard</span>
               </button>
               <button
                 onClick={() => setActiveTab('problems')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'problems'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{
+                  color: activeTab === 'problems' ? themeColors.accent : themeColors.textSecondary,
+                  backgroundColor: activeTab === 'problems' ? themeColors.blueBg : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'problems') {
+                    e.target.style.backgroundColor = themeColors.hover;
+                    e.target.style.color = themeColors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'problems') {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = themeColors.textSecondary;
+                  }
+                }}
               >
                 <FileText className="w-4 h-4" />
                 <span>Problems</span>
               </button>
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'profile'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{
+                  color: activeTab === 'profile' ? themeColors.accent : themeColors.textSecondary,
+                  backgroundColor: activeTab === 'profile' ? themeColors.blueBg : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'profile') {
+                    e.target.style.backgroundColor = themeColors.hover;
+                    e.target.style.color = themeColors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'profile') {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = themeColors.textSecondary;
+                  }
+                }}
               >
                 <User className="w-4 h-4" />
                 <span>Profile</span>
               </button>
+
+              {/* Theme Toggle */}
+              <div className="mx-2">
+                <ThemeToggle />
+              </div>
+
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{ color: themeColors.error }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = themeColors.errorBg;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                }}
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
@@ -324,12 +403,22 @@ function ParticipantDashboard() {
             </nav>
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center space-x-2">
+              <ThemeToggle />
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ 
+                  color: themeColors.textSecondary,
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = themeColors.hover;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                }}
               >
-                <Menu className="w-6 h-6 text-gray-600" />
+                <Menu className="w-6 h-6" />
               </button>
             </div>
           </div>
@@ -339,29 +428,41 @@ function ParticipantDashboard() {
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0  bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 z-40 md:hidden"
+          style={{ backgroundColor: themeColors.modalOverlay }}
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Mobile Sidebar */}
       <motion.div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 w-64 shadow-xl transform transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
+        style={{ backgroundColor: themeColors.sidebarBg }}
         initial={{ x: -256 }}
         animate={{ x: isSidebarOpen ? 0 : -256 }}
         transition={{ duration: 0.3 }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-gray-200">
+          <div 
+            className="p-6 border-b"
+            style={{ borderColor: themeColors.border }}
+          >
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-800">VEDIC VISION 2K25</h1>
+              <h1 className="text-xl font-bold" style={{ color: themeColors.text }}>VEDIC VISION 2K25</h1>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: themeColors.textSecondary }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = themeColors.hover;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                }}
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -370,6 +471,7 @@ function ParticipantDashboard() {
           <nav className="flex-1 p-4 space-y-2">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
+              const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
@@ -377,19 +479,40 @@ function ParticipantDashboard() {
                     setActiveTab(item.id);
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === item.id
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-500'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                    }`}
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200"
+                  style={{
+                    backgroundColor: isActive ? themeColors.blueBg : 'transparent',
+                    color: isActive ? themeColors.accent : themeColors.textSecondary,
+                    borderRight: isActive ? `2px solid ${themeColors.accent}` : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.target.style.backgroundColor = themeColors.sidebarHover;
+                      e.target.style.color = themeColors.text;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.color = themeColors.textSecondary;
+                    }
+                  }}
                 >
-                  <Icon className={`w-5 h-5 ${item.color}`} />
+                  <Icon className="w-5 h-5" style={{ color: themeColors.accent }} />
                   <span className="font-medium">{item.label}</span>
                 </button>
               );
             })}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors"
+              style={{ color: themeColors.error }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = themeColors.errorBg;
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+              }}
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
@@ -402,7 +525,7 @@ function ParticipantDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 text-gray-600">
+          <div className="flex items-center justify-center space-x-2" style={{ color: themeColors.textSecondary }}>
             <span>Welcome back, {user?.name || 'User'}! Track your progress and manage your tasks</span>
             <span className="text-red-500">🚀</span>
           </div>

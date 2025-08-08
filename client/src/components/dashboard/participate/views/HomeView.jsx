@@ -385,50 +385,66 @@ const HomeView = ({
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <motion.div
-          className="bg-blue-50 rounded-xl shadow-sm border border-blue-200 p-6"
+          className="rounded-xl shadow-sm  p-6"
+          style={{
+            backgroundColor: themeColors.blueBg,
+            borderColor: themeColors.blue
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold text-blue-900 mb-1">{activeTasks.length}</p>
-            <p className="text-sm font-medium text-blue-700">Active Tasks</p>
+            <p className="text-2xl font-bold mb-1" style={{ color: themeColors.blue }}>{activeTasks.length}</p>
+            <p className="text-sm font-medium" style={{ color: themeColors.blue }}>Active Tasks</p>
           </div>
         </motion.div>
 
         <motion.div
-          className="bg-green-50 rounded-xl shadow-sm border border-green-200 p-6"
+          className="rounded-xl shadow-sm  p-6"
+          style={{
+            backgroundColor: themeColors.greenBg,
+            borderColor: themeColors.green
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-900 mb-1">{attendancePercentage}%</p>
-            <p className="text-sm font-medium text-green-700">Attendance Rate</p>
+            <p className="text-2xl font-bold mb-1" style={{ color: themeColors.green }}>{attendancePercentage}%</p>
+            <p className="text-sm font-medium" style={{ color: themeColors.green }}>Attendance Rate</p>
           </div>
         </motion.div>
 
         <motion.div
-          className="bg-orange-50 rounded-xl shadow-sm border border-orange-200 p-6"
+          className="rounded-xl shadow-sm  p-6"
+          style={{
+            backgroundColor: themeColors.orangeBg,
+            borderColor: themeColors.orange
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold text-orange-900 mb-1">{pendingSubmissions.length}</p>
-            <p className="text-sm font-medium text-orange-700">Pending Submissions</p>
+            <p className="text-2xl font-bold mb-1" style={{ color: themeColors.orange }}>{pendingSubmissions.length}</p>
+            <p className="text-sm font-medium" style={{ color: themeColors.orange }}>Pending Submissions</p>
           </div>
         </motion.div>
 
         <motion.div
-          className="bg-purple-50 rounded-xl shadow-sm border border-purple-200 p-6"
+          className="rounded-xl shadow-sm  p-6"
+          style={{
+            backgroundColor: themeColors.purpleBg,
+            borderColor: themeColors.purple
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold text-purple-900 mb-1">{completedSubmissions.length}</p>
-            <p className="text-sm font-medium text-purple-700">Completed Tasks</p>
+            <p className="text-2xl font-bold mb-1" style={{ color: themeColors.purple }}>{completedSubmissions.length}</p>
+            <p className="text-sm font-medium" style={{ color: themeColors.purple }}>Completed Tasks</p>
           </div>
         </motion.div>
       </div>

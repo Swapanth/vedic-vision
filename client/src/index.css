@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Dark mode root styles */
+:root {
+  --transition-theme: all 0.3s ease;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease;
+}
+
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -49,4 +64,134 @@
   transform: translateY(0);
   position: relative;
   z-index: 10000;
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Light mode gradient */
+.animate-gradient {
+  background: linear-gradient(
+    -45deg,
+    #ffffff,
+    #ffffff,
+    #ffffff,
+    #ff9a9e,
+    #ffffff,
+    #ffffff,
+    #ffffff,
+    #a8edea,
+    #ffffff,
+    #ffffff,
+    #ffffff,
+    #fed6e3,
+    #ffffff,
+    #ffffff,
+    #ffffff,
+    #d4fc79,
+    #ffffff,
+    #ffffff,
+    #ffffff,
+    #c2e9fb,
+    #ffffff,
+    #ffffff,
+    #ffffff,
+    #ffdde1,
+    #ffffff
+  );
+  background-size: 800% 800%;
+  animation: gradientMove 55s ease infinite;
+}
+
+/* Dark mode gradient */
+.dark .animate-gradient {
+  background: linear-gradient(
+    -45deg,
+    #000000,
+    #000000,
+    #000000,
+    #1e1b4b,
+    #000000,
+    #000000,
+    #000000,
+    #164e63,
+    #000000,
+    #000000,
+    #000000,
+    #581c87,
+    #000000,
+    #000000,
+    #000000,
+    #365314,
+    #000000,
+    #000000,
+    #000000,
+    #1e3a8a,
+    #000000,
+    #000000,
+    #000000,
+    #7c2d12,
+    #000000
+  );
+  background-size: 800% 800%;
+  animation: gradientMove 55s ease infinite;
+}
+
+/* Theme toggle animation */
+@keyframes toggleSlide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.theme-toggle-slide {
+  animation: toggleSlide 0.3s ease-in-out;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Light mode scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
