@@ -150,7 +150,6 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
   }
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Team Formation" className="max-w-2xl">
-      {loading && <LoadingSpinner />}
       {mode === 'select' && (
         <div className="space-y-8" style={{ backgroundColor: '#f8fafc',borderRadius:'10px' }}>
           <div className="text-center py-8">

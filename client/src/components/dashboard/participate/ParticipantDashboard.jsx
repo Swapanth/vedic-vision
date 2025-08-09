@@ -12,6 +12,8 @@ import TasksView from './views/TasksView';
 import LeaderboardView from './views/LeaderboardView';
 import ProblemStatementsView from './views/ProblemStatementsView';
 import { PageLoader, ButtonLoader } from '../../common/LoadingSpinner';
+import QuickTour from '../../common/QuickTour';
+import { useTour, tourSteps } from '../../../hooks/useTour';
 
 function ParticipantDashboard() {
   const { user, logout } = useAuth();
@@ -43,6 +45,20 @@ function ParticipantDashboard() {
   const [totalDays, setTotalDays] = useState(0);
   const [attendanceStreak, setAttendanceStreak] = useState(0);
   const [participantPosition, setParticipantPosition] = useState(0);
+
+  // Tour functionality
+  const { isTourOpen, hasCompletedTour, startTour, closeTour, completeTour } = useTour('complete', tourSteps.complete);
+
+  // Auto-start tour for new users
+  useEffect(() => {
+    if (!hasCompletedTour && user) {
+      // Start tour after a short delay to let the page load
+      const timer = setTimeout(() => {
+        startTour();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasCompletedTour, user, startTour]);
 
   useEffect(() => {
     loadDashboardData();
@@ -524,7 +540,8 @@ function ParticipantDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8"           data-tour="completed-tasks-card"
+        >
           <div className="flex items-center justify-center space-x-2" style={{ color: themeColors.textSecondary }}>
             <span>Welcome back, {user?.name || 'User'}! Track your progress and manage your tasks</span>
             <span className="text-red-500">🚀</span>
@@ -553,6 +570,7 @@ function ParticipantDashboard() {
             setModalContent={setModalContent}
             setShowModal={setShowModal}
             user={user}
+            setActiveTab={setActiveTab}
           />
         )}
 
@@ -598,6 +616,24 @@ function ParticipantDashboard() {
             themeColors={themeColors}
           />
         )}
+      </div>
+
+      {/* Tour Help Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={startTour}
+          className="flex items-center space-x-2 px-4 py-3 rounded-full shadow-lg transition-all hover:scale-105"
+          style={{
+            backgroundColor: themeColors.accent,
+            color: '#ffffff'
+          }}
+          title="Take a quick tour"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="hidden sm:inline">Quick Tour</span>
+        </button>
       </div>
 
       {/* Modal */}
@@ -656,6 +692,17 @@ function ParticipantDashboard() {
           modalContent?.content
         )}
       </Modal>
+
+      {/* Quick Tour */}
+      <QuickTour
+        isOpen={isTourOpen}
+        onClose={closeTour}
+        onComplete={completeTour}
+        steps={tourSteps.complete}
+        themeColors={themeColors}
+        tourKey="complete"
+        setActiveTab={setActiveTab}
+      />
     </div>
   );
 }

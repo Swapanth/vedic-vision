@@ -17,6 +17,8 @@ const TasksView = ({
   const [selectedDay, setSelectedDay] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
 
+
+
   // Generate event days (August 4-15, 2025)
   const generateDays = () => {
     const days = [];
@@ -231,6 +233,7 @@ const TasksView = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        data-tour="day-selector"
       >
         <div className="p-4">
           <h3 className="text-lg font-bold mb-4 flex items-center" style={{ color: themeColors.text }}>
@@ -355,6 +358,7 @@ const TasksView = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
+        data-tour="tasks-list"
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -548,6 +552,8 @@ const TasksView = ({
           )}
         </div>
       </motion.div>
+
+
     </div>
   );
 };

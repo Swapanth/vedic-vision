@@ -7,12 +7,14 @@ import {
   ChevronRight,
   Filter,
   Users,
-  Plus
+  Plus,
+  HelpCircle
 } from 'lucide-react';
 import { problemAPI, teamAPI } from '../../../../services/api';
 import { useAuth } from '../../../../context/AuthContext';
 import TeamCreationModal from './TeamCreationModal';
 import CustomProblemModal from './CustomProblemModal';
+
 
 const ProblemStatementsView = ({ themeColors }) => {
   const { user } = useAuth();
@@ -39,6 +41,10 @@ const ProblemStatementsView = ({ themeColors }) => {
   // Custom problem modal state
   const [showCustomProblemModal, setShowCustomProblemModal] = useState(false);
   const [hasCustomProblem, setHasCustomProblem] = useState(false);
+
+
+
+
 
   // Debounce search query
   useEffect(() => {
@@ -205,6 +211,8 @@ const ProblemStatementsView = ({ themeColors }) => {
 
   return (
     <div className="space-y-6">
+
+
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
@@ -261,6 +269,7 @@ const ProblemStatementsView = ({ themeColors }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
+          data-tour="custom-problem-section"
         >
           <div className="p-6">
             <div className="flex items-center justify-between">
@@ -286,6 +295,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                     backgroundColor: themeColors.accent,
                     color: '#ffffff'
                   }}
+                  data-tour="custom-problem-btn"
                 >
                   <Plus className="w-4 h-4" />
                   Create Custom Problem
@@ -302,6 +312,8 @@ const ProblemStatementsView = ({ themeColors }) => {
       )}
 
       {/* Filter Tabs */}
+      <div         data-tour="filter-section"
+>
       <motion.div
         className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
         style={{
@@ -339,7 +351,7 @@ const ProblemStatementsView = ({ themeColors }) => {
         </div>
 
         {/* Search Bar */}
-        <div className="p-6 pt-0">
+        <div className="p-6 pt-0" data-tour="search-bar">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: themeColors.textSecondary }} />
             <input
@@ -358,6 +370,7 @@ const ProblemStatementsView = ({ themeColors }) => {
           </div>
         </div>
       </motion.div>
+      </div>
 
       {/* Problem Statements */}
       <motion.div
@@ -369,6 +382,7 @@ const ProblemStatementsView = ({ themeColors }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
+        data-tour="problem-list"
       >
         <div className="p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -409,6 +423,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                     whileHover={{
                       backgroundColor: `${themeColors.hover}50`
                     }}
+                    data-tour={index === 0 ? "problem-card" : undefined}
                   >
                     <div className="flex items-start gap-4">
                               
@@ -476,6 +491,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                                 backgroundColor: themeColors.accent,
                                 color: '#ffffff'
                               }}
+                              data-tour={index === 0 ? "select-problem-btn" : undefined}
                             >
                               <Plus className="w-4 h-4" />
                               Select Problem
@@ -490,7 +506,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                         </div>
                         
                         {problem.suggestedTechnologies && (
-                          <div className="mt-3">
+                          <div className="mt-3" data-tour={index === 0 ? "technology-tags" : undefined}>
                             <div className="flex flex-wrap gap-1">
                               {problem.suggestedTechnologies.split(',').map((tech, techIndex) => (
                                 <span
@@ -626,6 +642,8 @@ const ProblemStatementsView = ({ themeColors }) => {
         themeColors={themeColors}
         onSuccess={handleCustomProblemSuccess}
       />
+
+
     </div>
   );
 };

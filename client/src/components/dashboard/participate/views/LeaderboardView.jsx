@@ -534,11 +534,7 @@ const LeaderboardView = ({ themeColors }) => {
                       {/* Mentor Column */}
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-bold text-white">
-                              {user.name?.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
+                          
                           <div className="min-w-0 flex-1">
                             <h4 className="font-semibold truncate" style={{ color: themeColors.text }}>
                               {user.name}
@@ -656,12 +652,7 @@ const LeaderboardView = ({ themeColors }) => {
                         {/* Participant Column */}
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className={`h-10 w-10 bg-gradient-to-r ${getRankColor(globalRank)} rounded-full flex items-center justify-center flex-shrink-0`}>
-                              <span className="text-sm font-bold text-white">
-                                {user.name?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="min-w-0 flex-1">
+                                            <div className="min-w-0 flex-1">
                               <h4 className="font-semibold truncate" style={{ color: themeColors.text }}>
                                 {user.name}
                               </h4>
