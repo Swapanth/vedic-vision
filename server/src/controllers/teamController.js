@@ -95,10 +95,10 @@ export const getTeamById = async (req, res) => {
 // Create new team
 export const createTeam = async (req, res) => {
   try {
-    console.log('Create team request body:', req.body); // Debug log
+    console.log('Create team request body:', req.body);
     const { name, description, problemStatement } = req.body;
     const userId = req.user.id;
-    console.log('User ID:', userId); // Debug log
+    console.log('User ID:', userId);
 
     // Check if user is already in a team
     const user = await User.findById(userId);
@@ -133,7 +133,6 @@ export const createTeam = async (req, res) => {
       });
     }
 
-    // Validate that problemStatement is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(problemStatement)) {
       return res.status(400).json({
         success: false,
@@ -141,7 +140,7 @@ export const createTeam = async (req, res) => {
       });
     }
 
-    // Verify that the problem statement actually exists
+    // Verify that the problem statement exists and check selection limit
     const problemExists = await ProblemStatement.findById(problemStatement);
     if (!problemExists) {
       return res.status(400).json({
@@ -150,7 +149,15 @@ export const createTeam = async (req, res) => {
       });
     }
 
-    console.log('Creating team with data:', { name, description, problemStatement, leader: userId }); // Debug log
+    // Check if problem statement has reached selection limit
+    if (problemExists.selectionCount >= 4) {
+      return res.status(400).json({
+        success: false,
+        message: 'This problem statement has reached the maximum selection limit of 4 teams.'
+      });
+    }
+
+    console.log('Creating team with data:', { name, description, problemStatement, leader: userId });
 
     // Create new team
     const team = new Team({
@@ -161,12 +168,15 @@ export const createTeam = async (req, res) => {
     });
 
     await team.save();
-    console.log('Team saved successfully:', team._id); // Debug log
+
+    // Add team selection to problem statement
+    await problemExists.addTeamSelection(team._id);
+    console.log('Team saved successfully:', team._id);
 
     // Update user's team reference
     user.team = team._id;
     await user.save();
-    console.log('User team reference updated'); // Debug log
+    console.log('User team reference updated');
 
     // Populate team data for response
     await team.populate('leader', 'name email collegeName profilePicture');
@@ -179,7 +189,7 @@ export const createTeam = async (req, res) => {
       data: { team }
     });
   } catch (error) {
-    console.error('Create team error details:', error); // Enhanced error logging
+    console.error('Create team error details:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create team',
@@ -225,8 +235,8 @@ export const updateTeam = async (req, res) => {
       }
     }
 
-    // Validate problem statement if provided
-    if (problemStatement) {
+    // Handle problem statement change if provided
+    if (problemStatement && problemStatement !== team.problemStatement.toString()) {
       if (!mongoose.Types.ObjectId.isValid(problemStatement)) {
         return res.status(400).json({
           success: false,
@@ -234,20 +244,39 @@ export const updateTeam = async (req, res) => {
         });
       }
 
-      // Verify that the problem statement actually exists
-      const problemExists = await ProblemStatement.findById(problemStatement);
-      if (!problemExists) {
+      // Verify that the new problem statement exists and check selection limit
+      const newProblemExists = await ProblemStatement.findById(problemStatement);
+      if (!newProblemExists) {
         return res.status(400).json({
           success: false,
           message: 'Problem statement not found.'
         });
       }
+
+      // Check if new problem statement has reached selection limit
+      if (newProblemExists.selectionCount >= 4) {
+        return res.status(400).json({
+          success: false,
+          message: 'This problem statement has reached the maximum selection limit of 4 teams.'
+        });
+      }
+
+      // Remove team from old problem statement
+      const oldProblem = await ProblemStatement.findById(team.problemStatement);
+      if (oldProblem) {
+        await oldProblem.removeTeamSelection(team._id);
+      }
+
+      // Add team to new problem statement
+      await newProblemExists.addTeamSelection(team._id);
+      
+      // Update team's problem statement
+      team.problemStatement = problemStatement;
     }
 
-    // Update team
+    // Update other team fields
     if (name) team.name = name;
     if (description !== undefined) team.description = description;
-    if (problemStatement) team.problemStatement = problemStatement;
 
     await team.save();
     await team.populate('leader', 'name email collegeName profilePicture');
@@ -269,7 +298,7 @@ export const updateTeam = async (req, res) => {
   }
 };
 
-// Join team (for open teams or accepting invitation)
+// Join team
 export const joinTeam = async (req, res) => {
   try {
     const { id } = req.params;
@@ -338,7 +367,7 @@ export const leaveTeam = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const { transferToUserId } = req.body; // Optional: specific user to transfer leadership to
+    const { transferToUserId } = req.body;
 
     const team = await Team.findById(id);
     if (!team) {
@@ -361,6 +390,12 @@ export const leaveTeam = async (req, res) => {
 
     // Case 1: Leader is the only member - Delete the team
     if (isLeader && teamSize === 1) {
+      // Remove team selection from problem statement
+      const problem = await ProblemStatement.findById(team.problemStatement);
+      if (problem) {
+        await problem.removeTeamSelection(team._id);
+      }
+
       await Team.findByIdAndDelete(id);
       
       // Update user's team reference
@@ -378,7 +413,6 @@ export const leaveTeam = async (req, res) => {
     if (isLeader && teamSize > 1) {
       let newLeader;
 
-      // If specific user is provided for leadership transfer
       if (transferToUserId) {
         if (!team.isMember(transferToUserId)) {
           return res.status(400).json({
@@ -388,7 +422,6 @@ export const leaveTeam = async (req, res) => {
         }
         newLeader = transferToUserId;
       } else {
-        // Auto-select the first non-leader member as new leader
         const nonLeaderMembers = team.members.filter(member => 
           member.user.toString() !== userId.toString()
         );
@@ -625,6 +658,12 @@ export const deleteTeam = async (req, res) => {
         success: false,
         message: 'Only team leader can delete the team'
       });
+    }
+
+    // Remove team selection from problem statement
+    const problem = await ProblemStatement.findById(team.problemStatement);
+    if (problem) {
+      await problem.removeTeamSelection(team._id);
     }
 
     // Update all members' team reference to null

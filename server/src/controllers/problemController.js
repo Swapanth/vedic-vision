@@ -30,6 +30,7 @@ export const getAllProblemStatements = async (req, res) => {
     // Execute query with pagination
     const [problems, totalCount] = await Promise.all([
       ProblemStatement.find(query)
+        .select('csvId title description domain suggestedTechnologies topic selectionCount selectedByTeams createdAt updatedAt')
         .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
@@ -90,12 +91,14 @@ export const updateProblemStatement = async (req, res) => {
 
 export const getAllProblemTitles = async (req, res) => {
   try {
-    // Get all problem statements with only _id, title, and description fields
+    // Get all problem statements with only _id, title, description, domain, and selection count fields
     const problems = await ProblemStatement.find({}, {
       _id: 1,
       title: 1,
       description: 1,
-      domain: 1
+      domain: 1,
+      selectionCount: 1,
+      selectedByTeams: 1
     })
     .sort({ title: 1 }) // Sort alphabetically by title
     .lean();

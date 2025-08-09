@@ -85,7 +85,9 @@
     #ffffff,
     #ffffff,
     #ffffff,
+    #ffffff, /* extra white for 75% ratio */
     #ff9a9e,
+    #ffffff,
     #ffffff,
     #ffffff,
     #ffffff,
@@ -93,7 +95,9 @@
     #ffffff,
     #ffffff,
     #ffffff,
+    #ffffff,
     #fed6e3,
+    #ffffff,
     #ffffff,
     #ffffff,
     #ffffff,
@@ -101,15 +105,20 @@
     #ffffff,
     #ffffff,
     #ffffff,
+    #ffffff,
     #c2e9fb,
     #ffffff,
     #ffffff,
     #ffffff,
+    #ffffff,
     #ffdde1,
+    #ffffff,
+    #ffffff,
+    #ffffff,
     #ffffff
   );
   background-size: 800% 800%;
-  animation: gradientMove 55s ease infinite;
+  animation: gradientMove 40s ease infinite;
 }
 
 /* Dark mode gradient */
@@ -119,7 +128,9 @@
     #000000,
     #000000,
     #000000,
+    #000000, /* extra black for 75% ratio */
     #1e1b4b,
+    #000000,
     #000000,
     #000000,
     #000000,
@@ -127,7 +138,9 @@
     #000000,
     #000000,
     #000000,
+    #000000,
     #581c87,
+    #000000,
     #000000,
     #000000,
     #000000,
@@ -135,16 +148,22 @@
     #000000,
     #000000,
     #000000,
+    #000000,
     #1e3a8a,
     #000000,
     #000000,
     #000000,
+    #000000,
     #7c2d12,
+    #000000,
+    #000000,
+    #000000,
     #000000
   );
   background-size: 800% 800%;
-  animation: gradientMove 55s ease infinite;
+  animation: gradientMove 40s ease infinite;
 }
+
 
 /* Theme toggle animation */
 @keyframes toggleSlide {

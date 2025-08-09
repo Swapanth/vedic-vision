@@ -166,15 +166,106 @@ const ProblemStatementsView = ({ themeColors }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4" style={{ color: themeColors.textSecondary }}>Loading problem statements...</p>
+  // Table Skeleton Component
+  const TableSkeleton = () => (
+    <div className="space-y-6">
+      {/* Filter Tabs Skeleton */}
+      <motion.div
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="p-6">
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-10 w-20 rounded-xl animate-pulse"
+                style={{ backgroundColor: themeColors.backgroundSecondary }}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    );
+      </motion.div>
+
+      {/* Search Bar Skeleton */}
+      <motion.div
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
+        <div className="p-6">
+          <div
+            className="h-12 w-full rounded-xl animate-pulse"
+            style={{ backgroundColor: themeColors.backgroundSecondary }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Table Skeleton */}
+      <motion.div
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="p-6">
+          <div
+            className="h-7 w-48 mb-4 rounded animate-pulse"
+            style={{ backgroundColor: themeColors.backgroundSecondary }}
+          />
+
+          <div className="space-y-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl border"
+                style={{ borderColor: themeColors.border }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="h-10 w-10 rounded-full animate-pulse flex-shrink-0"
+                    style={{ backgroundColor: themeColors.backgroundSecondary }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="h-4 w-32 mb-2 rounded animate-pulse"
+                      style={{ backgroundColor: themeColors.backgroundSecondary }}
+                    />
+                    <div
+                      className="h-3 w-48 rounded animate-pulse"
+                      style={{ backgroundColor: themeColors.backgroundSecondary }}
+                    />
+                  </div>
+                  <div
+                    className="h-8 w-24 rounded animate-pulse"
+                    style={{ backgroundColor: themeColors.backgroundSecondary }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  if (loading) {
+    return <TableSkeleton />;
   }
 
   const domains = ['all', 'health', 'sports', 'agriculture', 'yoga', 'education', 'technology'];

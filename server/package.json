@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test-mentor": "node scripts/testMentorOperations.js"
+    "test-mentor": "node scripts/testMentorOperations.js",
+    "migrate-problems": "node scripts/migrateProblemStatements.js"
   },
   "author": "",
   "license": "ISC",

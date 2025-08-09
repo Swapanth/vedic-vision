@@ -676,7 +676,7 @@ const HomeView = ({
                                     <User className="w-3 h-3 text-white" />
                                   )}
                                 </div>
-                                <span className="text-sm font-medium" style={{ color: themeColors.text }}>
+                                <span className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>
                                   {member.user?.name || 'Unknown Member'}
                                   {member.user?._id === currentTeam.leader?._id && (
                                     <span className="ml-1 text-yellow-600">👑</span>
@@ -692,16 +692,7 @@ const HomeView = ({
                         )}
                       </div>
 
-                      {currentTeam.description && (
-                        <div>
-                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                            Team Description:
-                          </div>
-                          <div className="text-sm" style={{ color: themeColors.text }}>
-                            {currentTeam.description}
-                          </div>
-                        </div>
-                      )}
+                      
 
                       <div>
                         <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>

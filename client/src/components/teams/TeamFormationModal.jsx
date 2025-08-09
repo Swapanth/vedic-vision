@@ -257,28 +257,55 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
                           {problemSearchTerm ? 'No problem statements found' : 'No problem statements available'}
                         </div>
                       ) : (
-                        filteredProblemStatements.map((problem) => (
-                          <button
-                            key={problem._id}
-                            type="button"
-                            onClick={() => {
-                              setCreateForm({ ...createForm, problemStatement: problem._id });
-                              setIsProblemDropdownOpen(false);
-                              setProblemSearchTerm('');
-                            }}
-                            className={`w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-blue-50 last:border-b-0 ${createForm.problemStatement === problem._id ? 'bg-blue-100 text-blue-800' : 'text-gray-700'
+                        filteredProblemStatements.map((problem) => {
+                          const isAtLimit = (problem.selectionCount || 0) >= 4;
+                          return (
+                            <button
+                              key={problem._id}
+                              type="button"
+                              onClick={() => {
+                                if (!isAtLimit) {
+                                  setCreateForm({ ...createForm, problemStatement: problem._id });
+                                  setIsProblemDropdownOpen(false);
+                                  setProblemSearchTerm('');
+                                }
+                              }}
+                              disabled={isAtLimit}
+                              className={`w-full px-4 py-3 text-left transition-colors border-b border-blue-50 last:border-b-0 ${
+                                isAtLimit 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : createForm.problemStatement === problem._id 
+                                    ? 'bg-blue-100 text-blue-800 hover:bg-blue-50' 
+                                    : 'text-gray-700 hover:bg-blue-50'
                               }`}
-                          >
-                            <div className="font-medium text-sm mb-1">{problem.title}</div>
-                            {problem.description && (
-                              <div className="text-xs text-gray-500 line-clamp-2">
-                                {problem.description.length > 100
-                                  ? `${problem.description.substring(0, 100)}...`
-                                  : problem.description}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="font-medium text-sm">{problem.title}</div>
+                                <div className="flex items-center gap-2">
+                                  <span 
+                                    className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                      isAtLimit 
+                                        ? 'bg-red-100 text-red-800' 
+                                        : 'bg-green-100 text-green-800'
+                                    }`}
+                                  >
+                                    {problem.selectionCount || 0}/4 teams
+                                  </span>
+                                  {isAtLimit && (
+                                    <span className="text-xs text-red-600 font-medium">FULL</span>
+                                  )}
+                                </div>
                               </div>
-                            )}
-                          </button>
-                        ))
+                              {problem.description && (
+                                <div className="text-xs text-gray-500 line-clamp-2">
+                                  {problem.description.length > 100
+                                    ? `${problem.description.substring(0, 100)}...`
+                                    : problem.description}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
                       )}
                     </div>
                   </div>

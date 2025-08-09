@@ -62,14 +62,18 @@ export const ThemeProvider = ({ children }) => {
     errorBg: isDarkMode ? '#7f1d1d' : '#fef2f2',
     
     // UI colors
-    purple: isDarkMode ? '#8b5cf6' : '#8b5cf6',
-    purpleBg: isDarkMode ? '#f3e8ff' : '#f3e8ff',
-    blue: isDarkMode ? '#3b82f6' : '#3b82f6',
-    blueBg: isDarkMode ? '#1e3a8a' : '#eff6ff',
-    green: isDarkMode ? '#10b981' : '#10b981',
-    greenBg: isDarkMode ? '#064e3b' : '#ecfdf5',
-    orange: isDarkMode ? '#f97316' : '#f97316',
-    orangeBg: isDarkMode ? '#9a3412' : '#fff7ed',
+    purple: isDarkMode ? '#a78bfa' : '#7c3aed',      // brighter in dark mode, deeper in light
+    purpleBg: isDarkMode ? '#4c1d95' : '#f3e8ff',    // deep indigo for dark, soft lavender for light
+    
+    blue: isDarkMode ? '#60a5fa' : '#2563eb',        // lighter, vibrant blue in dark, bold blue in light
+    blueBg: isDarkMode ? '#1e3a8a' : '#eff6ff',      // keep deep navy in dark, airy blue in light
+    
+    green: isDarkMode ? '#34d399' : '#059669',       // fresh minty green in dark, rich emerald in light
+    greenBg: isDarkMode ? '#064e3b' : '#ecfdf5',     // forest green in dark, pale mint in light
+    
+    orange: isDarkMode ? '#fb923c' : '#ea580c',      // sunset orange in dark, bold pumpkin in light
+    orangeBg: isDarkMode ? '#7c2d12' : '#fff7ed',    // deep burnt orange in dark, warm cream in light
+    
     
     // Borders and dividers
     border: isDarkMode ? '#334155' : '#e5e7eb',

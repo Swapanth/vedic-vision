@@ -225,7 +225,7 @@ function ParticipantDashboard() {
 
   if (error) {
     return (
-      <div 
+      <div
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: themeColors.background }}
       >
@@ -245,14 +245,14 @@ function ParticipantDashboard() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen animate-gradient"
       style={{ backgroundColor: themeColors.background }}
     >
-      <div 
+      <div
         className="shadow-sm border-b"
-        style={{ 
-          backgroundColor: themeColors.navbarBg,
+        style={{
+          backgroundColor: themeColors.background,
           borderColor: themeColors.navbarBorder
         }}
       >
@@ -408,7 +408,7 @@ function ParticipantDashboard() {
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="p-2 rounded-lg transition-colors"
-                style={{ 
+                style={{
                   color: themeColors.textSecondary,
                 }}
                 onMouseEnter={(e) => {
@@ -445,7 +445,7 @@ function ParticipantDashboard() {
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div 
+          <div
             className="p-6 border-b"
             style={{ borderColor: themeColors.border }}
           >
