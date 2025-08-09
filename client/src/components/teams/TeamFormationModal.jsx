@@ -152,7 +152,7 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
     <Modal isOpen={isOpen} onClose={handleClose} title="Team Formation" className="max-w-2xl">
       {loading && <LoadingSpinner />}
       {mode === 'select' && (
-        <div className="space-y-8" style={{ backgroundColor: '#f8fafc' }}>
+        <div className="space-y-8" style={{ backgroundColor: '#f8fafc',borderRadius:'10px' }}>
           <div className="text-center py-8">
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Choose Your Action</h3>
             <p className="text-gray-600 text-sm">Create a new team or join an existing one</p>

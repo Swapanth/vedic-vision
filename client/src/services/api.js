@@ -10,6 +10,8 @@ export const problemAPI = {
   getAllTitles: () => api.get('/config/problems/titles'),
   create: (data) => api.post('/config/problems', data),
   update: (id, data) => api.put(`/config/problems/${id}`, data),
+  createCustom: (data) => api.post('/config/problems/custom', data),
+  getMyCustom: () => api.get('/config/problems/my-custom'),
 };
 import axios from 'axios';
 

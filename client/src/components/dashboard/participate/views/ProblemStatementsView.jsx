@@ -12,6 +12,7 @@ import {
 import { problemAPI, teamAPI } from '../../../../services/api';
 import { useAuth } from '../../../../context/AuthContext';
 import TeamCreationModal from './TeamCreationModal';
+import CustomProblemModal from './CustomProblemModal';
 
 const ProblemStatementsView = ({ themeColors }) => {
   const { user } = useAuth();
@@ -34,6 +35,10 @@ const ProblemStatementsView = ({ themeColors }) => {
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [userTeam, setUserTeam] = useState(null);
   const [toast, setToast] = useState(null);
+  
+  // Custom problem modal state
+  const [showCustomProblemModal, setShowCustomProblemModal] = useState(false);
+  const [hasCustomProblem, setHasCustomProblem] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -47,6 +52,7 @@ const ProblemStatementsView = ({ themeColors }) => {
   useEffect(() => {
     loadProblemStatements();
     checkUserTeam();
+    checkCustomProblem();
   }, [filter, currentPage, debouncedSearchQuery]);
 
   // Reset page when filter or search changes
@@ -61,6 +67,24 @@ const ProblemStatementsView = ({ themeColors }) => {
     } catch (error) {
       // User doesn't have a team, which is fine
       setUserTeam(null);
+    }
+  };
+
+  const checkCustomProblem = async () => {
+    try {
+      const response = await problemAPI.getMyCustom();
+      setHasCustomProblem(true);
+    } catch (error) {
+      // User doesn't have a custom problem, which is fine
+      setHasCustomProblem(false);
+    }
+  };
+
+  const handleCustomProblemSuccess = (message, type) => {
+    showToast(message, type);
+    if (type === 'success') {
+      setHasCustomProblem(true);
+      loadProblemStatements(); // Refresh to show the new custom problem
     }
   };
 
@@ -226,6 +250,57 @@ const ProblemStatementsView = ({ themeColors }) => {
         </motion.div>
       )}
 
+      {/* Custom Problem Statement Section */}
+      {!userTeam && (
+        <motion.div
+          className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Plus className="w-5 h-5" style={{ color: themeColors.accent }} />
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: themeColors.text }}>
+                    Create Your Own Problem Statement
+                  </h3>
+                  <p className="text-sm" style={{ color: themeColors.textSecondary }}>
+                    {hasCustomProblem 
+                      ? "You've already created a custom problem statement" 
+                      : "Can't find the perfect problem? Create your own custom problem statement that only you can use"
+                    }
+                  </p>
+                </div>
+              </div>
+              {!hasCustomProblem && (
+                <button
+                  onClick={() => setShowCustomProblemModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: themeColors.accent,
+                    color: '#ffffff'
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Custom Problem
+                </button>
+              )}
+              {hasCustomProblem && (
+                <span className="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">
+                  ✓ Custom Problem Created
+                </span>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Filter Tabs */}
       <motion.div
         className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
@@ -324,8 +399,9 @@ const ProblemStatementsView = ({ themeColors }) => {
                     key={problem._id}
                     className="p-4 rounded-xl border transition-all hover:shadow-md"
                     style={{
-                      borderColor: themeColors.border,
-                      backgroundColor: themeColors.backgroundSecondary
+                      borderColor: problem.isCustom ? themeColors.accent : themeColors.border,
+                      backgroundColor: themeColors.hoverbackgroundSecondary,
+                      borderWidth: problem.isCustom ? '2px' : '1px'
                     }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -335,17 +411,25 @@ const ProblemStatementsView = ({ themeColors }) => {
                     }}
                   >
                     <div className="flex items-start gap-4">
-                      <div className={`h-12 w-12 bg-gradient-to-r ${getDomainColor(problem.domain)} rounded-full flex items-center justify-center flex-shrink-0`}>
-                        <span className="text-xl">
-                          {getDomainIcon(problem.domain)}
-                        </span>
-                      </div>
-                      
+                              
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-semibold text-lg" style={{ color: themeColors.text }}>
-                            {problem.title}
-                          </h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-lg" style={{ color: themeColors.text }}>
+                              {problem.title}
+                            </h4>
+                            {problem.isCustom && (
+                              <span 
+                                className="px-2 py-1 text-xs rounded-full font-medium"
+                                style={{
+                                  backgroundColor: `${themeColors.accent}20`,
+                                  color: themeColors.accent
+                                }}
+                              >
+                                Custom
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2 ml-4">
                             <span 
                               className={`px-3 py-1 text-sm rounded-full font-medium ${
@@ -533,6 +617,14 @@ const ProblemStatementsView = ({ themeColors }) => {
         selectedProblem={selectedProblem}
         themeColors={themeColors}
         onSuccess={handleTeamCreated}
+      />
+
+      {/* Custom Problem Statement Modal */}
+      <CustomProblemModal
+        isOpen={showCustomProblemModal}
+        onClose={() => setShowCustomProblemModal(false)}
+        themeColors={themeColors}
+        onSuccess={handleCustomProblemSuccess}
       />
     </div>
   );

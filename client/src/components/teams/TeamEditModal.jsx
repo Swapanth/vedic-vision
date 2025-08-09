@@ -82,15 +82,15 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Team" className="max-w-md">
       {loading && <LoadingSpinner />}
       
-      <div className="space-y-6" style={{ backgroundColor: '#fdf2f8' }}>
+      <div className="space-y-6" style={{ backgroundColor: '#f2f3f3',borderRadius:'10px' }}>
         <div className="text-center p-6 border-b border-pink-100">
-          <h3 className="text-lg font-semibold text-pink-800 mb-2">Edit Team Details</h3>
-          <p className="text-sm text-pink-600">Update your team name and problem statement</p>
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">Edit Team Details</h3>
+          <p className="text-sm text-blue-600">Update your team name and problem statement</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div>
-            <label className="block text-sm font-medium text-pink-700 mb-3">
+            <label className="block text-sm font-medium text-blue-700 mb-3">
               Team Name *
             </label>
             <input
@@ -103,13 +103,13 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
               required
               maxLength={50}
             />
-            <p className="text-xs text-pink-500 mt-2">
+            <p className="text-xs text-blue-500 mt-2">
               3-50 characters, letters, numbers, spaces, hyphens, and underscores only
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-pink-700 mb-3">
+            <label className="block text-sm font-medium text-blue-700 mb-3">
               Problem Statement *
             </label>
             <div className="relative" ref={dropdownRef}>
@@ -124,7 +124,7 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
                   {selectedProblem ? selectedProblem.title : 'Select a problem statement...'}
                 </span>
                 <svg
-                  className={`w-5 h-5 text-pink-400 transition-transform ${isProblemDropdownOpen ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-blue-400 transition-transform ${isProblemDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -140,7 +140,7 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
                   <div className="p-3 border-b border-pink-100">
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                       </div>
@@ -154,7 +154,7 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
                       />
                     </div>
                     {problemSearchTerm && (
-                      <p className="text-xs text-pink-600 mt-1">
+                      <p className="text-xs text-blue-600 mt-1">
                         Found {filteredProblemStatements.length} statement{filteredProblemStatements.length !== 1 ? 's' : ''}
                       </p>
                     )}
@@ -177,7 +177,7 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
                             setProblemSearchTerm('');
                           }}
                           className={`w-full px-4 py-3 text-left hover:bg-pink-50 transition-colors border-b border-pink-50 last:border-b-0 ${
-                            formData.problemStatement === problem._id ? 'bg-pink-100 text-pink-800' : 'text-gray-700'
+                            formData.problemStatement === problem._id ? 'bg-pink-100 text-blue-800' : 'text-gray-700'
                           }`}
                         >
                           <div className="font-medium text-sm mb-1">{problem.title}</div>
@@ -195,14 +195,14 @@ const TeamEditModal = ({ isOpen, onClose, team, onTeamUpdate, onSuccess }) => {
                 </div>
               )}
             </div>
-            <p className="text-xs text-pink-500 mt-2">Search and select the problem statement your team will work on</p>
+            <p className="text-xs text-blue-500 mt-2">Search and select the problem statement your team will work on</p>
           </div>
 
           <div className="flex space-x-4 pt-4">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-600 disabled:opacity-50 transition-colors font-medium"
+              className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium"
             >
               {loading ? 'Updating...' : 'Update Team'}
             </button>

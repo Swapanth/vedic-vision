@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const problemStatementSchema = new mongoose.Schema({
-  csvId: { type: Number, unique: true },
+  csvId: { type: Number, unique: true, sparse: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
   domain: { type: String, required: true },
@@ -16,6 +16,17 @@ const problemStatementSchema = new mongoose.Schema({
     default: 0,
     min: 0,
     max: 4
+  },
+  isCustom: {
+    type: Boolean,
+    default: false
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: function() {
+      return this.isCustom;
+    }
   }
 }, { timestamps: true });
 

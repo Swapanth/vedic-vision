@@ -30,7 +30,8 @@ export const getAllProblemStatements = async (req, res) => {
     // Execute query with pagination
     const [problems, totalCount] = await Promise.all([
       ProblemStatement.find(query)
-        .select('csvId title description domain suggestedTechnologies topic selectionCount selectedByTeams createdAt updatedAt')
+        .select('csvId title description domain suggestedTechnologies topic selectionCount selectedByTeams isCustom createdBy createdAt updatedAt')
+        .populate('createdBy', 'name email')
         .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
@@ -70,6 +71,87 @@ export const createProblemStatement = async (req, res) => {
     res.status(201).json(problem);
   } catch (err) {
     res.status(500).json({ message: 'Error creating problem statement', error: err.message });
+  }
+};
+
+export const createCustomProblemStatement = async (req, res) => {
+  try {
+    const { title, description, domain, suggestedTechnologies, topic } = req.body;
+    const userId = req.user._id;
+
+    // Validate required fields
+    if (!title || !description || !domain) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title, description, and domain are required'
+      });
+    }
+
+    // Check if user already has a custom problem statement
+    const existingCustomProblem = await ProblemStatement.findOne({
+      createdBy: userId,
+      isCustom: true
+    });
+
+    if (existingCustomProblem) {
+      return res.status(400).json({
+        success: false,
+        message: 'You can only create one custom problem statement'
+      });
+    }
+
+    const problem = await ProblemStatement.create({ 
+      title, 
+      description, 
+      domain, 
+      suggestedTechnologies, 
+      topic,
+      isCustom: true,
+      createdBy: userId
+    });
+
+    await problem.populate('createdBy', 'name email');
+
+    res.status(201).json({
+      success: true,
+      data: problem,
+      message: 'Custom problem statement created successfully'
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error creating custom problem statement', 
+      error: err.message 
+    });
+  }
+};
+
+export const getMyCustomProblemStatement = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    const problem = await ProblemStatement.findOne({
+      createdBy: userId,
+      isCustom: true
+    }).populate('createdBy', 'name email');
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: 'No custom problem statement found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: problem
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching custom problem statement', 
+      error: err.message 
+    });
   }
 };
 

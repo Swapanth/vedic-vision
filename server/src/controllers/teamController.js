@@ -97,7 +97,7 @@ export const createTeam = async (req, res) => {
   try {
     console.log('Create team request body:', req.body);
     const { name, description, problemStatement } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
     console.log('User ID:', userId);
 
     // Check if user is already in a team
@@ -203,7 +203,7 @@ export const updateTeam = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, problemStatement } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const team = await Team.findById(id);
     if (!team) {
@@ -302,7 +302,7 @@ export const updateTeam = async (req, res) => {
 export const joinTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const team = await Team.findById(id);
     if (!team) {
@@ -366,7 +366,7 @@ export const joinTeam = async (req, res) => {
 export const leaveTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { transferToUserId } = req.body;
 
     const team = await Team.findById(id);
@@ -505,7 +505,7 @@ export const leaveTeam = async (req, res) => {
 export const removeMember = async (req, res) => {
   try {
     const { id, memberId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const team = await Team.findById(id);
     if (!team) {
@@ -570,7 +570,7 @@ export const removeMember = async (req, res) => {
 // Get user's team
 export const getMyTeam = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const user = await User.findById(userId).populate({
       path: 'team',
@@ -642,7 +642,7 @@ export const getAvailableUsers = async (req, res) => {
 export const deleteTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const team = await Team.findById(id);
     if (!team) {
@@ -694,7 +694,7 @@ export const transferLeadership = async (req, res) => {
   try {
     const { id } = req.params;
     const { newLeaderId } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!newLeaderId) {
       return res.status(400).json({ success: false, message: 'newLeaderId is required' });

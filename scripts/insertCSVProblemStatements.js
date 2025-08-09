@@ -46,7 +46,7 @@ const connectDB = async () => {
 const readCSVData = () => {
   return new Promise((resolve, reject) => {
     const results = [];
-    const csvPath = path.join(__dirname, 'problemstatments - Sheet1.csv');
+    const csvPath = path.join(__dirname, 'problemstatments.csv');
     
     console.log(`📖 Reading CSV file: ${csvPath}`);
     
