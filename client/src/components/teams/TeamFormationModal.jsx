@@ -3,12 +3,12 @@ import { teamAPI, problemAPI, configAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../common/Modal';
 import LoadingSpinner from '../common/LoadingSpinner';
-import CustomProblemModal from '../dashboard/hackathon/views/CustomProblemModal';
+
 
 const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState('select'); // 'select', 'create', 'join'
+  const [mode, setMode] = useState('select'); // 'select', 'create', 'join', 'createCustomProblem'
   const [teams, setTeams] = useState([]);
   const [problemStatements, setProblemStatements] = useState([]);
   const [teamFormationEnabled, setTeamFormationEnabled] = useState(true);
@@ -28,8 +28,15 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
   const [isProblemDropdownOpen, setIsProblemDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Custom problem modal state
-  const [isCustomProblemModalOpen, setIsCustomProblemModalOpen] = useState(false);
+  // Custom problem form state
+  const [customProblemForm, setCustomProblemForm] = useState({
+    title: '',
+    description: '',
+    domain: '',
+    suggestedTechnologies: '',
+    topic: ''
+  });
+  const [customProblemErrors, setCustomProblemErrors] = useState({});
 
   useEffect(() => {
     if (isOpen) {
@@ -127,8 +134,95 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
     };
   }, []);
 
+  const domains = ['health', 'sports', 'agriculture', 'yoga', 'education', 'technology'];
+
+  const handleCustomProblemInputChange = (e) => {
+    const { name, value } = e.target;
+    setCustomProblemForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear error when user starts typing
+    if (customProblemErrors[name]) {
+      setCustomProblemErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateCustomProblemForm = () => {
+    const newErrors = {};
+
+    if (!customProblemForm.title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (customProblemForm.title.length < 10) {
+      newErrors.title = 'Title must be at least 10 characters long';
+    }
+
+    if (!customProblemForm.description.trim()) {
+      newErrors.description = 'Description is required';
+    } else if (customProblemForm.description.length < 50) {
+      newErrors.description = 'Description must be at least 50 characters long';
+    }
+
+    if (!customProblemForm.domain) {
+      newErrors.domain = 'Domain is required';
+    }
+
+    setCustomProblemErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleCreateCustomProblem = async (e) => {
+    e.preventDefault();
+
+    if (!validateCustomProblemForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await problemAPI.createCustom(customProblemForm);
+
+      if (onSuccess) onSuccess('Custom problem statement created successfully!', 'success');
+
+      // Reset custom problem form
+      setCustomProblemForm({
+        title: '',
+        description: '',
+        domain: '',
+        suggestedTechnologies: '',
+        topic: ''
+      });
+      setCustomProblemErrors({});
+
+      // Reload problem statements to include the newly created one
+      await loadData();
+
+      // Go back to create team mode
+      setMode('create');
+
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to create custom problem statement';
+      if (onSuccess) onSuccess(errorMessage, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setCreateForm({ name: '', problemStatement: '' });
+    setCustomProblemForm({
+      title: '',
+      description: '',
+      domain: '',
+      suggestedTechnologies: '',
+      topic: ''
+    });
+    setCustomProblemErrors({});
     setSelectedTeam(null);
     setSearchTerm('');
     setProblemSearchTerm('');
@@ -155,7 +249,7 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Team Formation" className="max-w-2xl">
       {mode === 'select' && (
-        <div className="space-y-8" style={{ backgroundColor: '#f8fafc',borderRadius:'10px' }}>
+        <div className="space-y-8" style={{ backgroundColor: '#f8fafc', borderRadius: '10px' }}>
           <div className="text-center py-8">
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Choose Your Action</h3>
             <p className="text-gray-600 text-sm">Create a new team or join an existing one</p>
@@ -183,7 +277,7 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
         </div>
       )}
       {mode === 'create' && (
-        <div className="space-y-6" style={{ backgroundColor: '#dff1f8',borderRadius:'20px' }}>
+        <div className="space-y-6" style={{ backgroundColor: '#dff1f8', borderRadius: '20px' }}>
           <div className="flex items-center justify-between p-6 border-b border-blue-100 ">
             <h3 className="text-lg font-semibold text-blue-800">Create New Team</h3>
             <button onClick={() => setMode('select')} className="text-blue-600 hover:text-blue-800 text-sm">← Back</button>
@@ -258,7 +352,7 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
                       <button
                         type="button"
                         onClick={() => {
-                          setIsCustomProblemModalOpen(true);
+                          setMode('createCustomProblem');
                           setIsProblemDropdownOpen(false);
                         }}
                         className="w-full px-4 py-3 text-left transition-colors border-b border-blue-100 hover:bg-blue-50 flex items-center gap-3"
@@ -293,23 +387,21 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
                                 }
                               }}
                               disabled={isAtLimit}
-                              className={`w-full px-4 py-3 text-left transition-colors border-b border-blue-50 last:border-b-0 ${
-                                isAtLimit 
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                  : createForm.problemStatement === problem._id 
-                                    ? 'bg-blue-100 text-blue-800 hover:bg-blue-50' 
-                                    : 'text-gray-700 hover:bg-blue-50'
-                              }`}
+                              className={`w-full px-4 py-3 text-left transition-colors border-b border-blue-50 last:border-b-0 ${isAtLimit
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : createForm.problemStatement === problem._id
+                                  ? 'bg-blue-100 text-blue-800 hover:bg-blue-50'
+                                  : 'text-gray-700 hover:bg-blue-50'
+                                }`}
                             >
                               <div className="flex items-center justify-between mb-1">
                                 <div className="font-medium text-sm">{problem.title}</div>
                                 <div className="flex items-center gap-2">
-                                  <span 
-                                    className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                      isAtLimit 
-                                        ? 'bg-red-100 text-red-800' 
-                                        : 'bg-green-100 text-green-800'
-                                    }`}
+                                  <span
+                                    className={`px-2 py-1 text-xs rounded-full font-medium ${isAtLimit
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-green-100 text-green-800'
+                                      }`}
                                   >
                                     {problem.selectionCount || 0}/4 teams
                                   </span>
@@ -445,26 +537,176 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
         </div>
       )}
 
-      {/* Custom Problem Modal */}
-      <CustomProblemModal
-        isOpen={isCustomProblemModalOpen}
-        onClose={() => setIsCustomProblemModalOpen(false)}
-        onSuccess={(message, type) => {
-          if (onSuccess) onSuccess(message, type);
-          if (type === 'success') {
-            // Reload problem statements to include the newly created one
-            loadData();
-          }
-        }}
-        themeColors={{
-          cardBg: '#ffffff',
-          accent: '#3b82f6',
-          text: '#1f2937',
-          textSecondary: '#6b7280',
-          backgroundSecondary: '#f9fafb',
-          border: '#d1d5db'
-        }}
-      />
+      {mode === 'createCustomProblem' && (
+        <div className="space-y-6" style={{ backgroundColor: '#f0f9ff', borderRadius: '20px' }}>
+          <div className="flex items-center justify-between p-6 border-b border-blue-100">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-blue-800">Create Custom Problem Statement</h3>
+            </div>
+            <button onClick={() => setMode('create')} className="text-blue-600 hover:text-blue-800 text-sm">← Back</button>
+          </div>
+
+          {/* Info Banner */}
+          <div className="mx-6 p-4 rounded-lg border-l-4 border-blue-500" style={{ backgroundColor: '#dbeafe' }}>
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-blue-800">Create Your Own Problem Statement</p>
+                <p className="text-sm text-blue-600 mt-1">
+                  Design a unique challenge that only you can use. Provide detailed information to help your team understand the scope.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleCreateCustomProblem} className="space-y-6 p-6">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-blue-700 mb-3">Problem Title *</label>
+              <input
+                type="text"
+                name="title"
+                value={customProblemForm.title}
+                onChange={handleCustomProblemInputChange}
+                placeholder="Enter a clear and concise problem title"
+                className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                style={{
+                  backgroundColor: '#f8fafc',
+                  borderColor: customProblemErrors.title ? '#ef4444' : '#cbd5e1',
+                  color: '#1f2937'
+                }}
+                disabled={loading}
+              />
+              {customProblemErrors.title && (
+                <p className="text-red-500 text-sm mt-1">{customProblemErrors.title}</p>
+              )}
+            </div>
+
+            {/* Domain */}
+            <div>
+              <label className="block text-sm font-medium text-blue-700 mb-3">Domain *</label>
+              <select
+                name="domain"
+                value={customProblemForm.domain}
+                onChange={handleCustomProblemInputChange}
+                className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                style={{
+                  backgroundColor: '#f8fafc',
+                  borderColor: customProblemErrors.domain ? '#ef4444' : '#cbd5e1',
+                  color: '#1f2937'
+                }}
+                disabled={loading}
+              >
+                <option value="">Select a domain</option>
+                {domains.map(domain => (
+                  <option key={domain} value={domain}>
+                    {domain.charAt(0).toUpperCase() + domain.slice(1)}
+                  </option>
+                ))}
+              </select>
+              {customProblemErrors.domain && (
+                <p className="text-red-500 text-sm mt-1">{customProblemErrors.domain}</p>
+              )}
+            </div>
+
+            {/* Topic */}
+            <div>
+              <label className="block text-sm font-medium text-blue-700 mb-3">Topic (Optional)</label>
+              <input
+                type="text"
+                name="topic"
+                value={customProblemForm.topic}
+                onChange={handleCustomProblemInputChange}
+                placeholder="Specific topic or area within the domain"
+                className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                style={{
+                  backgroundColor: '#f8fafc',
+                  borderColor: '#cbd5e1',
+                  color: '#1f2937'
+                }}
+                disabled={loading}
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-blue-700 mb-3">Detailed Description *</label>
+              <textarea
+                name="description"
+                value={customProblemForm.description}
+                onChange={handleCustomProblemInputChange}
+                placeholder="Provide a comprehensive description of the problem, including background, challenges, and expected outcomes. Be as detailed as possible to help your team understand the scope."
+                rows={6}
+                className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
+                style={{
+                  backgroundColor: '#f8fafc',
+                  borderColor: customProblemErrors.description ? '#ef4444' : '#cbd5e1',
+                  color: '#1f2937'
+                }}
+                disabled={loading}
+              />
+              {customProblemErrors.description && (
+                <p className="text-red-500 text-sm mt-1">{customProblemErrors.description}</p>
+              )}
+              <p className="text-xs text-blue-600 mt-1">
+                {customProblemForm.description.length}/500 characters (minimum 50 required)
+              </p>
+            </div>
+
+            {/* Suggested Technologies */}
+            <div>
+              <label className="block text-sm font-medium text-blue-700 mb-3">Technologies Using (Optional)</label>
+              <input
+                type="text"
+                name="suggestedTechnologies"
+                value={customProblemForm.suggestedTechnologies}
+                onChange={handleCustomProblemInputChange}
+                placeholder="React, Node.js, Python, MongoDB, etc. (comma-separated)"
+                className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                style={{
+                  backgroundColor: '#f8fafc',
+                  borderColor: '#cbd5e1',
+                  color: '#1f2937'
+                }}
+                disabled={loading}
+              />
+              <p className="text-xs text-blue-600 mt-1">
+                Suggest technologies that would be suitable for solving this problem
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-4 pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                {loading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                )}
+                {loading ? 'Creating...' : 'Create Problem Statement'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('create')}
+                disabled={loading}
+                className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
     </Modal>
   );
 };

@@ -25,7 +25,7 @@ export const getAllProblemStatements = async (req, res) => {
     const [problems, totalCount] = await Promise.all([
       ProblemStatement.find(query)
         .select(
-          "csvId title description domain suggestedTechnologies topic selectionCount selectedByTeams isCustom createdBy createdAt updatedAt"
+          "title description domain suggestedTechnologies topic selectionCount selectedByTeams isCustom createdBy createdAt updatedAt"
         )
         .populate("createdBy", "name email")
         .sort(search ? { score: { $meta: "textScore" } } : { createdAt: -1 })
@@ -60,10 +60,9 @@ export const getAllProblemStatements = async (req, res) => {
 
 export const createProblemStatement = async (req, res) => {
   try {
-    const { csvId, title, description, domain, suggestedTechnologies, topic } =
+    const { title, description, domain, suggestedTechnologies, topic } =
       req.body;
     const problem = await ProblemStatement.create({
-      csvId,
       title,
       description,
       domain,
@@ -108,20 +107,33 @@ export const createCustomProblemStatement = async (req, res) => {
       });
     }
 
-    // Create problem statement without csvId to avoid unique constraint issues
+    // Create problem statement using insertOne to have more control over the document
     const problemData = {
       title,
       description,
       domain,
-      suggestedTechnologies,
-      topic,
       isCustom: true,
       createdBy: userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      selectedByTeams: [],
+      selectionCount: 0
     };
 
-    const problem = await ProblemStatement.create(problemData);
+    // Only add optional fields if they exist
+    if (suggestedTechnologies) {
+      problemData.suggestedTechnologies = suggestedTechnologies;
+    }
+    if (topic) {
+      problemData.topic = topic;
+    }
 
-    await problem.populate("createdBy", "name email");
+    // Use insertOne directly to avoid any schema defaults for csvId
+    const result = await ProblemStatement.collection.insertOne(problemData);
+    
+    // Fetch the created document with population
+    const problem = await ProblemStatement.findById(result.insertedId)
+      .populate("createdBy", "name email");
 
     res.status(201).json({
       success: true,
@@ -169,11 +181,11 @@ export const getMyCustomProblemStatement = async (req, res) => {
 export const updateProblemStatement = async (req, res) => {
   try {
     const { id } = req.params;
-    const { csvId, title, description, domain, suggestedTechnologies, topic } =
+    const { title, description, domain, suggestedTechnologies, topic } =
       req.body;
     const problem = await ProblemStatement.findByIdAndUpdate(
       id,
-      { csvId, title, description, domain, suggestedTechnologies, topic },
+      { title, description, domain, suggestedTechnologies, topic },
       { new: true }
     );
     if (!problem)

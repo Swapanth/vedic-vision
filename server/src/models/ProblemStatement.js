@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 const problemStatementSchema = new mongoose.Schema({
-  csvId: { type: Number, unique: true, sparse: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
   domain: { type: String, required: true },
