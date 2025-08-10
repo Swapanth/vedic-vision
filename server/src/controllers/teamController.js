@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 // Get all teams
 export const getAllTeams = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 60, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
 
     // Build query
     const query = { isActive: true };
