@@ -470,6 +470,183 @@ const HomeView = ({
           isVisible={toast.isVisible}
           onClose={() => setToast({ ...toast, isVisible: false })}
         />
+<div >
+          <motion.div
+            className="rounded-2xl shadow-xl backdrop-blur-sm border transition-all duration-300"
+            style={{
+              backgroundColor: themeColors.cardBg,
+              borderColor: themeColors.border
+            }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            data-tour="team-formation"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center" style={{ color: themeColors.text }}>
+                <Users className="w-5 h-5 mr-2" />
+                Team Management
+              </h3>
+
+
+              {/* Team Section */}
+              <div className="mb-3 border-t mt-3">
+                <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: themeColors.textSecondary }}>TEAM INFO</h4>
+                {!teamFormationEnabled ? (
+                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                    <div className="text-sm" style={{ color: themeColors.textSecondary }}>Team formation will be available soon</div>
+                  </div>
+                ) : currentTeam && currentTeam._id ? (
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                    {/* Team Details with Labels */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
+                            Team Name:
+                          </div>
+                          <div className="text-lg font-bold" style={{ color: themeColors.text }}>
+                            {currentTeam.name || 'Unnamed Team'}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          {/* Only show edit button for team leaders */}
+                          {user?._id === currentTeam.leader?._id && (
+                            <button
+                              onClick={() => setShowTeamEdit(true)}
+                              className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                              title="Edit Team"
+                            >
+                              <Edit className="w-4 h-4 inline mr-1" />
+                              Edit
+                            </button>
+                          )}
+                          <button
+                            onClick={handleLeaveTeam}
+                            className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                            title="Leave Team"
+                          >
+                            <LogOut className="w-4 h-4 inline mr-1" />
+                            Leave
+                          </button>
+                        </div>
+                      </div>
+
+                      {currentTeam.problemStatement && (
+                        <div>
+                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
+                            Problem Statement:
+                          </div>
+                          <div className="text-sm" style={{ color: themeColors.text }}>
+                            {currentTeam.problemStatement.title || 'No title'}
+                          </div>
+                          {currentTeam.problemStatement.description && (
+                            <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>
+                              {currentTeam.problemStatement.description.length > 100
+                                ? currentTeam.problemStatement.description.slice(0, 100) + "..."
+                                : currentTeam.problemStatement.description}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
+                          Team Members ({(currentTeam.members?.length || 0)}/6):
+                        </div>
+                        {currentTeam.members && currentTeam.members.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {currentTeam.members.map((member) => (
+                              <div
+                                key={member.user?._id || Math.random()}
+                                className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg"
+                              >
+                                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                  {member.user?.profilePicture ? (
+                                    <img
+                                      src={member.user.profilePicture}
+                                      alt={member.user.name || 'Member'}
+                                      className="w-6 h-6 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <User className="w-3 h-3 text-white" />
+                                  )}
+                                </div>
+                                <span className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>
+                                  {member.user?.name || 'Unknown Member'}
+                                  {member.user?._id === currentTeam.leader?._id && (
+                                    <span className="ml-1 text-yellow-600">👑</span>
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+                            No members yet
+                          </div>
+                        )}
+                      </div>
+
+
+
+                      <div>
+                        <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
+                          Team Status:
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${(currentTeam.members?.length || 0) >= 6 ? 'bg-red-100 text-red-800' :
+                            (currentTeam.members?.length || 0) >= 4 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {(currentTeam.members?.length || 0) >= 6 ? 'Team Full' :
+                              (currentTeam.members?.length || 0) >= 4 ? 'Well Balanced' : 'Looking for Members'}
+                          </span>
+                          <span className="text-xs" style={{ color: themeColors.textSecondary }}>
+                            ({(currentTeam.members?.length || 0)}/6 members)
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Voting Section */}
+                      {votingEnabled && currentTeam && currentTeam.leader && user && currentTeam.leader._id === user._id && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
+                            Team Voting:
+                          </div>
+                          {votingCompleted ? (
+                            <div className="flex items-center space-x-2">
+                              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                ✅ Completed Voting
+                              </span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setShowTeamVoting(true)}
+                              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                            >
+                              <Vote className="w-4 h-4" />
+                              <span>Vote for Teams ({votingProgress.voted}/{votingProgress.total})</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                    <div className="text-sm mb-3" style={{ color: themeColors.textSecondary }}>Not part of any team</div>
+                    <button
+                      onClick={() => setShowTeamFormation(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Join or Create Team
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Attendance Calendar */}
@@ -729,184 +906,7 @@ const HomeView = ({
           </div>
         </div>
 
-        <div >
-          <motion.div
-            className="rounded-2xl shadow-xl backdrop-blur-sm border transition-all duration-300"
-            style={{
-              backgroundColor: themeColors.cardBg,
-              borderColor: themeColors.border
-            }}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            data-tour="team-formation"
-          >
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center" style={{ color: themeColors.text }}>
-                <Users className="w-5 h-5 mr-2" />
-                Team Management
-              </h3>
-
-
-              {/* Team Section */}
-              <div className="mb-3 border-t mt-3">
-                <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: themeColors.textSecondary }}>TEAM INFO</h4>
-                {!teamFormationEnabled ? (
-                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                    <div className="text-sm" style={{ color: themeColors.textSecondary }}>Team formation will be available soon</div>
-                  </div>
-                ) : currentTeam && currentTeam._id ? (
-                  <div className="p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                    {/* Team Details with Labels */}
-                    <div className="space-y-3 mb-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                            Team Name:
-                          </div>
-                          <div className="text-lg font-bold" style={{ color: themeColors.text }}>
-                            {currentTeam.name || 'Unnamed Team'}
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          {/* Only show edit button for team leaders */}
-                          {user?._id === currentTeam.leader?._id && (
-                            <button
-                              onClick={() => setShowTeamEdit(true)}
-                              className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
-                              title="Edit Team"
-                            >
-                              <Edit className="w-4 h-4 inline mr-1" />
-                              Edit
-                            </button>
-                          )}
-                          <button
-                            onClick={handleLeaveTeam}
-                            className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-                            title="Leave Team"
-                          >
-                            <LogOut className="w-4 h-4 inline mr-1" />
-                            Leave
-                          </button>
-                        </div>
-                      </div>
-
-                      {currentTeam.problemStatement && (
-                        <div>
-                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                            Problem Statement:
-                          </div>
-                          <div className="text-sm" style={{ color: themeColors.text }}>
-                            {currentTeam.problemStatement.title || 'No title'}
-                          </div>
-                          {currentTeam.problemStatement.description && (
-                            <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>
-                              {currentTeam.problemStatement.description.length > 100
-                                ? currentTeam.problemStatement.description.slice(0, 100) + "..."
-                                : currentTeam.problemStatement.description}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div>
-                        <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
-                          Team Members ({(currentTeam.members?.length || 0)}/6):
-                        </div>
-                        {currentTeam.members && currentTeam.members.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {currentTeam.members.map((member) => (
-                              <div
-                                key={member.user?._id || Math.random()}
-                                className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg"
-                              >
-                                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                                  {member.user?.profilePicture ? (
-                                    <img
-                                      src={member.user.profilePicture}
-                                      alt={member.user.name || 'Member'}
-                                      className="w-6 h-6 rounded-full object-cover"
-                                    />
-                                  ) : (
-                                    <User className="w-3 h-3 text-white" />
-                                  )}
-                                </div>
-                                <span className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>
-                                  {member.user?.name || 'Unknown Member'}
-                                  {member.user?._id === currentTeam.leader?._id && (
-                                    <span className="ml-1 text-yellow-600">👑</span>
-                                  )}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
-                            No members yet
-                          </div>
-                        )}
-                      </div>
-
-
-
-                      <div>
-                        <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                          Team Status:
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${(currentTeam.members?.length || 0) >= 6 ? 'bg-red-100 text-red-800' :
-                            (currentTeam.members?.length || 0) >= 4 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                            {(currentTeam.members?.length || 0) >= 6 ? 'Team Full' :
-                              (currentTeam.members?.length || 0) >= 4 ? 'Well Balanced' : 'Looking for Members'}
-                          </span>
-                          <span className="text-xs" style={{ color: themeColors.textSecondary }}>
-                            ({(currentTeam.members?.length || 0)}/6 members)
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Voting Section */}
-                      {votingEnabled && currentTeam && currentTeam.leader && user && currentTeam.leader._id === user._id && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
-                            Team Voting:
-                          </div>
-                          {votingCompleted ? (
-                            <div className="flex items-center space-x-2">
-                              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                                ✅ Completed Voting
-                              </span>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setShowTeamVoting(true)}
-                              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                            >
-                              <Vote className="w-4 h-4" />
-                              <span>Vote for Teams ({votingProgress.voted}/{votingProgress.total})</span>
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                    <div className="text-sm mb-3" style={{ color: themeColors.textSecondary }}>Not part of any team</div>
-                    <button
-                      onClick={() => setShowTeamFormation(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      Join or Create Team
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
+        
         {/* Team Formation Modal */}
         <TeamFormationModal
           isOpen={showTeamFormation}

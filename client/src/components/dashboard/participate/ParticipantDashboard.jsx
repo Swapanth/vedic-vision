@@ -305,6 +305,29 @@ function ParticipantDashboard() {
                 <span>Home</span>
               </button>
               <button
+                onClick={() => setActiveTab('problems')}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                style={{
+                  color: activeTab === 'problems' ? themeColors.accent : themeColors.textSecondary,
+                  backgroundColor: activeTab === 'problems' ? themeColors.blueBg : 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== 'problems') {
+                    e.target.style.backgroundColor = themeColors.hover;
+                    e.target.style.color = themeColors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== 'problems') {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = themeColors.textSecondary;
+                  }
+                }}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Problems</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('tasks')}
                 className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 style={{
@@ -350,29 +373,7 @@ function ParticipantDashboard() {
                 <Trophy className="w-4 h-4" />
                 <span>Leaderboard</span>
               </button>
-              <button
-                onClick={() => setActiveTab('problems')}
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                style={{
-                  color: activeTab === 'problems' ? themeColors.accent : themeColors.textSecondary,
-                  backgroundColor: activeTab === 'problems' ? themeColors.blueBg : 'transparent'
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== 'problems') {
-                    e.target.style.backgroundColor = themeColors.hover;
-                    e.target.style.color = themeColors.text;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== 'problems') {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = themeColors.textSecondary;
-                  }
-                }}
-              >
-                <FileText className="w-4 h-4" />
-                <span>Problems</span>
-              </button>
+              
               <button
                 onClick={() => setActiveTab('profile')}
                 className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"

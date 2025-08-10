@@ -254,7 +254,7 @@ const CustomProblemModal = ({ isOpen, onClose, themeColors, onSuccess }) => {
                 {/* Suggested Technologies */}
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: themeColors.text }}>
-                    Suggested Technologies (Optional)
+                    Technologies Using (Optional)
                   </label>
                   <input
                     type="text"

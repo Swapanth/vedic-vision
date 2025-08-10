@@ -3,6 +3,7 @@ import { teamAPI, problemAPI, configAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../common/Modal';
 import LoadingSpinner from '../common/LoadingSpinner';
+import CustomProblemModal from '../dashboard/hackathon/views/CustomProblemModal';
 
 const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
   const { user } = useAuth();
@@ -26,6 +27,9 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
   const [problemSearchTerm, setProblemSearchTerm] = useState('');
   const [isProblemDropdownOpen, setIsProblemDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Custom problem modal state
+  const [isCustomProblemModalOpen, setIsCustomProblemModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -250,6 +254,26 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
 
                     {/* Options List */}
                     <div className="max-h-60 overflow-y-auto">
+                      {/* Create Custom Problem Statement Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomProblemModalOpen(true);
+                          setIsProblemDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-3 text-left transition-colors border-b border-blue-100 hover:bg-blue-50 flex items-center gap-3"
+                      >
+                        <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm text-blue-700">Create Custom Problem Statement</div>
+                          <div className="text-xs text-blue-500">Design your own unique challenge</div>
+                        </div>
+                      </button>
+
                       {filteredProblemStatements.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-gray-500 text-center">
                           {problemSearchTerm ? 'No problem statements found' : 'No problem statements available'}
@@ -420,6 +444,27 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
           )}
         </div>
       )}
+
+      {/* Custom Problem Modal */}
+      <CustomProblemModal
+        isOpen={isCustomProblemModalOpen}
+        onClose={() => setIsCustomProblemModalOpen(false)}
+        onSuccess={(message, type) => {
+          if (onSuccess) onSuccess(message, type);
+          if (type === 'success') {
+            // Reload problem statements to include the newly created one
+            loadData();
+          }
+        }}
+        themeColors={{
+          cardBg: '#ffffff',
+          accent: '#3b82f6',
+          text: '#1f2937',
+          textSecondary: '#6b7280',
+          backgroundSecondary: '#f9fafb',
+          border: '#d1d5db'
+        }}
+      />
     </Modal>
   );
 };
