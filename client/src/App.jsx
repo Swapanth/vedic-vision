@@ -6,6 +6,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ParticipantDashboard from './components/dashboard/participate/ParticipantDashboard';
+import HackathonDashboard from './components/dashboard/hackathon/HackathonDashboard';
 import AdminDashboard from './components/dashboard/admin/AdminDashboard';
 import MentorDashboard from './components/dashboard/mentor/MentorDashboard';
 import Profile from './components/profile/Profile';
@@ -73,7 +74,12 @@ const DashboardWrapper = () => {
   } else if (isMentor) {
     return <MentorDashboard />;
   } else if (isParticipant) {
-    return <ParticipantDashboard />;
+    // Check if participant is hackathon-only
+    if (user?.participantType === 'hackathon') {
+      return <HackathonDashboard />;
+    } else {
+      return <ParticipantDashboard />;
+    }
   } else {
     return <div>Error: Unknown user role: {user?.role}</div>;
   }

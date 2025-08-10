@@ -11,7 +11,7 @@ const generateToken = (userId) => {
 // Register new user
 export const register = async (req, res) => {
   try {
-    const { name, email, mobile, collegeName, password, role = 'participant' } = req.body;
+    const { name, email, mobile, collegeName, password, role = 'participant', participantType = 'bootcamp' } = req.body;
     console.log(req.body);
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -23,14 +23,21 @@ export const register = async (req, res) => {
     }
 
     // Create new user
-    const user = new User({
+    const userData = {
       name,
       email,
       mobile,
       collegeName,
       password,
       role
-    });
+    };
+
+    // Add participantType only if role is participant
+    if (role === 'participant') {
+      userData.participantType = participantType;
+    }
+
+    const user = new User(userData);
 
     await user.save();
 

@@ -9,7 +9,8 @@ const Register = () => {
     mobile: '',
     collegeName: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    participantType: 'bootcamp'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -206,6 +207,30 @@ const Register = () => {
                   value={formData.collegeName}
                   onChange={handleChange}
                 />
+              </div>
+
+              {/* Participant Type */}
+              <div>
+                <label htmlFor="participantType" className="block text-sm font-black text-gray-900 mb-2">
+                  Participation Type
+                </label>
+                <select
+                  id="participantType"
+                  name="participantType"
+                  required
+                  className="w-full px-4 py-3 border-2 border-gray-900 rounded-lg font-semibold text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-600 transition-all"
+                  value={formData.participantType}
+                  onChange={handleChange}
+                >
+                  <option value="bootcamp">🎓 Bootcamp + Hackathon (Full Program)</option>
+                  <option value="hackathon">🏆 Hackathon Only</option>
+                </select>
+                <p className="text-xs text-gray-600 mt-1 font-medium">
+                  {formData.participantType === 'bootcamp' 
+                    ? 'Access to tasks, leaderboards, teams, mentors, and problem statements'
+                    : 'Access to teams, mentors, and problem statements only'
+                  }
+                </p>
               </div>
 
               {/* Password */}

@@ -4,6 +4,7 @@ import {
   getUserById,
   updateUserStatus,
   updateUserRole,
+  updateParticipantType,
   deleteUser,
   getDashboardStats,
   getLeaderboard,
@@ -48,6 +49,7 @@ router.post('/remove-participants', superadminOnly, removeParticipantsFromMentor
 // Routes with parameters (more specific first)
 router.patch('/:id/status', adminOnly, validateMongoId('id'), handleValidationErrors, updateUserStatus);
 router.patch('/:id/role', adminOnly, validateMongoId('id'), handleValidationErrors, updateUserRole);
+router.patch('/:id/participant-type', adminOnly, validateMongoId('id'), handleValidationErrors, updateParticipantType);
 router.get('/:id', adminOnly, validateMongoId('id'), handleValidationErrors, getUserById);
 router.delete('/:id', adminOnly, validateMongoId('id'), handleValidationErrors, deleteUser);
 

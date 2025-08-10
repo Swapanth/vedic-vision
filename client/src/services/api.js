@@ -194,4 +194,12 @@ export const voteAPI = {
   deleteVote: (teamId) => api.delete(`/votes/teams/${teamId}/vote`),
 };
 
+// Hackathon API
+export const hackathonAPI = {
+  getDashboard: () => api.get('/hackathon/dashboard'),
+  getMentors: (params) => api.get('/hackathon/mentors', { params }),
+  getTeams: (params) => api.get('/hackathon/teams', { params }),
+  getProblemStatements: (params) => api.get('/config/problems', { params }),
+  };
+
 export default api; 

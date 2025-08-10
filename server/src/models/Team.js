@@ -148,8 +148,7 @@ teamSchema.pre('save', function(next) {
   next();
 });
 
-// Index for better performance
-teamSchema.index({ name: 1 });
+// Index for better performance (name index is auto-created by unique: true)
 teamSchema.index({ leader: 1 });
 teamSchema.index({ 'members.user': 1 });
 teamSchema.index({ isActive: 1 });

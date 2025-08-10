@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema({
     enum: ['participant', 'mentor', 'superadmin'],
     default: 'participant'
   },
+  participantType: {
+    type: String,
+    enum: ['bootcamp', 'hackathon'],
+    default: 'bootcamp',
+    required: function() {
+      return this.role === 'participant';
+    }
+  },
   profilePicture: {
     type: String,
     default: null
@@ -96,8 +104,15 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Method to update total score
+// Method to update total score (only for bootcamp participants)
 userSchema.methods.updateTotalScore = async function() {
+  // Only calculate scores for bootcamp participants
+  if (this.role !== 'participant' || this.participantType !== 'bootcamp') {
+    this.totalScore = 0;
+    await this.save();
+    return;
+  }
+
   const Submission = mongoose.model('Submission');
   const Attendance = mongoose.model('Attendance');
   

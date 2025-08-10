@@ -8,7 +8,15 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test-mentor": "node scripts/testMentorOperations.js",
-    "migrate-problems": "node scripts/migrateProblemStatements.js"
+    "migrate-problems": "node scripts/migrateProblemStatements.js",
+    "migrate": "node migrations/run-migrations.js",
+    "migrate:safe": "node migrations/safe-migrate.js",
+    "migrate:simple": "node migrations/simple-migrate.js",
+    "migrate:participant-type": "node migrations/001_add_participant_type.js",
+    "migrate:indexes": "node migrations/002_create_indexes.js",
+    "migrate:cleanup": "node migrations/003_data_validation_cleanup.js",
+    "backup": "node scripts/backup-database.js",
+    "restore": "node scripts/restore-database.js"
   },
   "author": "",
   "license": "ISC",
