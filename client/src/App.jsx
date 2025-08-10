@@ -68,10 +68,6 @@ const App = () => {
 const DashboardWrapper = () => {
   const { isSuperadmin, isMentor, isParticipant, user, loading } = useAuth();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   if (isSuperadmin) {
     return <AdminDashboard />;
   } else if (isMentor) {

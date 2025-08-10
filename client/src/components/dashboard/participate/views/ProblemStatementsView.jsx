@@ -31,13 +31,13 @@ const ProblemStatementsView = ({ themeColors }) => {
     hasPrevPage: false
   });
   const problemsPerPage = 10;
-  
+
   // Team creation modal state
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [userTeam, setUserTeam] = useState(null);
   const [toast, setToast] = useState(null);
-  
+
   // Custom problem modal state
   const [showCustomProblemModal, setShowCustomProblemModal] = useState(false);
   const [hasCustomProblem, setHasCustomProblem] = useState(false);
@@ -177,34 +177,183 @@ const ProblemStatementsView = ({ themeColors }) => {
     }
   };
 
-  const getDomainColor = (domain) => {
-    switch (domain?.toLowerCase()) {
-      case 'health':
-        return 'from-red-400 to-red-600';
-      case 'sports':
-        return 'from-green-400 to-green-600';
-      case 'agriculture':
-        return 'from-emerald-400 to-emerald-600';
-      case 'yoga':
-        return 'from-purple-400 to-purple-600';
-      case 'education':
-        return 'from-blue-400 to-blue-600';
-      case 'technology':
-        return 'from-gray-400 to-gray-600';
-      default:
-        return 'from-orange-400 to-orange-600';
-    }
-  };
+
+  // Problem Statements Skeleton Component
+  const ProblemStatementsSkeleton = () => (
+    <div className="space-y-6">
+      {/* Custom Problem Section Skeleton */}
+      <motion.div
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className="h-5 w-5 rounded animate-pulse"
+                style={{ backgroundColor: themeColors.backgroundSecondary }}
+              />
+              <div>
+                <div
+                  className="h-5 w-64 mb-2 rounded animate-pulse"
+                  style={{ backgroundColor: themeColors.backgroundSecondary }}
+                />
+                <div
+                  className="h-4 w-96 rounded animate-pulse"
+                  style={{ backgroundColor: themeColors.backgroundSecondary }}
+                />
+              </div>
+            </div>
+            <div
+              className="h-10 w-40 rounded-lg animate-pulse"
+              style={{ backgroundColor: themeColors.backgroundSecondary }}
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Filter Tabs Skeleton */}
+      <motion.div
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              className="h-5 w-5 rounded animate-pulse"
+              style={{ backgroundColor: themeColors.backgroundSecondary }}
+            />
+            <div
+              className="h-5 w-32 rounded animate-pulse"
+              style={{ backgroundColor: themeColors.backgroundSecondary }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {Array.from({ length: 7 }, (_, i) => (
+              <div
+                key={i}
+                className="h-10 w-24 rounded-xl animate-pulse"
+                style={{ backgroundColor: themeColors.backgroundSecondary }}
+              />
+            ))}
+          </div>
+          {/* Search Bar Skeleton */}
+          <div
+            className="h-12 w-full rounded-xl animate-pulse"
+            style={{ backgroundColor: themeColors.backgroundSecondary }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Problem Statements Skeleton */}
+      <motion.div
+        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+        style={{
+          backgroundColor: themeColors.cardBg,
+          borderColor: themeColors.border
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className="h-6 w-6 rounded animate-pulse"
+              style={{ backgroundColor: themeColors.backgroundSecondary }}
+            />
+            <div
+              className="h-6 w-40 rounded animate-pulse"
+              style={{ backgroundColor: themeColors.backgroundSecondary }}
+            />
+          </div>
+
+          <div className="space-y-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl border"
+                style={{
+                  borderColor: themeColors.border,
+                  backgroundColor: themeColors.hoverbackgroundSecondary
+                }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-6 w-48 rounded animate-pulse"
+                          style={{ backgroundColor: themeColors.backgroundSecondary }}
+                        />
+                      </div>
+                      <div
+                        className="h-6 w-20 rounded-full animate-pulse"
+                        style={{ backgroundColor: themeColors.backgroundSecondary }}
+                      />
+                    </div>
+
+                    <div className="space-y-2 mb-3">
+                      <div
+                        className="h-4 w-full rounded animate-pulse"
+                        style={{ backgroundColor: themeColors.backgroundSecondary }}
+                      />
+                      <div
+                        className="h-4 w-3/4 rounded animate-pulse"
+                        style={{ backgroundColor: themeColors.backgroundSecondary }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="h-6 w-20 rounded-lg animate-pulse"
+                          style={{ backgroundColor: themeColors.backgroundSecondary }}
+                        />
+                        <div
+                          className="h-4 w-24 rounded animate-pulse"
+                          style={{ backgroundColor: themeColors.backgroundSecondary }}
+                        />
+                      </div>
+                      <div
+                        className="h-10 w-32 rounded-lg animate-pulse"
+                        style={{ backgroundColor: themeColors.backgroundSecondary }}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from({ length: 4 }, (_, j) => (
+                        <div
+                          key={j}
+                          className="h-6 w-16 rounded-lg animate-pulse"
+                          style={{ backgroundColor: themeColors.backgroundSecondary }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4" style={{ color: themeColors.textSecondary }}>Loading problem statements...</p>
-        </div>
-      </div>
-    );
+    return <ProblemStatementsSkeleton />;
   }
 
   const domains = ['all', 'health', 'sports', 'agriculture', 'yoga', 'education', 'technology'];
@@ -215,9 +364,8 @@ const ProblemStatementsView = ({ themeColors }) => {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`}>
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}>
           {toast.message}
         </div>
       )}
@@ -280,8 +428,8 @@ const ProblemStatementsView = ({ themeColors }) => {
                     Create Your Own Problem Statement
                   </h3>
                   <p className="text-sm" style={{ color: themeColors.textSecondary }}>
-                    {hasCustomProblem 
-                      ? "You've already created a custom problem statement" 
+                    {hasCustomProblem
+                      ? "You've already created a custom problem statement"
                       : "Can't find the perfect problem? Create your own custom problem statement that only you can use"
                     }
                   </p>
@@ -312,64 +460,64 @@ const ProblemStatementsView = ({ themeColors }) => {
       )}
 
       {/* Filter Tabs */}
-      <div         data-tour="filter-section"
->
-      <motion.div
-        className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
-        style={{
-          backgroundColor: themeColors.cardBg,
-          borderColor: themeColors.border
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+      <div data-tour="filter-section"
       >
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Filter className="w-5 h-5" style={{ color: themeColors.text }} />
-            <h3 className="text-lg font-semibold" style={{ color: themeColors.text }}>
-              Filter by Domain
-            </h3>
+        <motion.div
+          className="rounded-2xl backdrop-blur-sm border-2 transition-all duration-300"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Filter className="w-5 h-5" style={{ color: themeColors.text }} />
+              <h3 className="text-lg font-semibold" style={{ color: themeColors.text }}>
+                Filter by Domain
+              </h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {domains.map((domain) => (
+                <button
+                  key={domain}
+                  onClick={() => setFilter(domain)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${filter === domain ? 'scale-105' : 'hover:scale-102'
+                    }`}
+                  style={{
+                    backgroundColor: filter === domain ? themeColors.accent : themeColors.backgroundSecondary,
+                    color: filter === domain ? '#ffffff' : themeColors.text
+                  }}
+                >
+                  <span>{domain === 'all' ? '🌐' : getDomainIcon(domain)}</span>
+                  <span className="capitalize">{domain}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {domains.map((domain) => (
-              <button
-                key={domain}
-                onClick={() => setFilter(domain)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${filter === domain ? 'scale-105' : 'hover:scale-102'
-                  }`}
-                style={{
-                  backgroundColor: filter === domain ? themeColors.accent : themeColors.backgroundSecondary,
-                  color: filter === domain ? '#ffffff' : themeColors.text
-                }}
-              >
-                <span>{domain === 'all' ? '🌐' : getDomainIcon(domain)}</span>
-                <span className="capitalize">{domain}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {/* Search Bar */}
-        <div className="p-6 pt-0" data-tour="search-bar">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: themeColors.textSecondary }} />
-            <input
-              type="text"
-              placeholder="Search problem statements by title, description, domain, or technologies..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 transition-all duration-200"
-              style={{
-                backgroundColor: themeColors.backgroundSecondary,
-                borderColor: themeColors.border,
-                color: themeColors.text,
-                fontSize: '16px'
-              }}
-            />
+          {/* Search Bar */}
+          <div className="p-6 pt-0" data-tour="search-bar">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: themeColors.textSecondary }} />
+              <input
+                type="text"
+                placeholder="Search problem statements by title, description, domain, or technologies..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 transition-all duration-200"
+                style={{
+                  backgroundColor: themeColors.backgroundSecondary,
+                  borderColor: themeColors.border,
+                  color: themeColors.text,
+                  fontSize: '16px'
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
       </div>
 
       {/* Problem Statements */}
@@ -407,7 +555,7 @@ const ProblemStatementsView = ({ themeColors }) => {
               {problems.map((problem, index) => {
                 const isAtLimit = (problem.selectionCount || 0) >= 4;
                 const canSelect = !userTeam && !isAtLimit;
-                
+
                 return (
                   <motion.div
                     key={problem._id}
@@ -426,7 +574,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                     data-tour={index === 0 ? "problem-card" : undefined}
                   >
                     <div className="flex items-start gap-4">
-                              
+
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -434,7 +582,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                               {problem.title}
                             </h4>
                             {problem.isCustom && (
-                              <span 
+                              <span
                                 className="px-2 py-1 text-xs rounded-full font-medium"
                                 style={{
                                   backgroundColor: `${themeColors.accent}20`,
@@ -446,12 +594,11 @@ const ProblemStatementsView = ({ themeColors }) => {
                             )}
                           </div>
                           <div className="flex items-center gap-2 ml-4">
-                            <span 
-                              className={`px-3 py-1 text-sm rounded-full font-medium ${
-                                isAtLimit 
-                                  ? 'bg-red-100 text-red-800' 
+                            <span
+                              className={`px-3 py-1 text-sm rounded-full font-medium ${isAtLimit
+                                  ? 'bg-red-100 text-red-800'
                                   : 'bg-green-100 text-green-800'
-                              }`}
+                                }`}
                             >
                               {problem.selectionCount || 0}/4 teams
                             </span>
@@ -460,11 +607,11 @@ const ProblemStatementsView = ({ themeColors }) => {
                             )}
                           </div>
                         </div>
-                        
+
                         <p className="text-sm mb-3 line-clamp-3" style={{ color: themeColors.textSecondary }}>
                           {problem.description}
                         </p>
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <span
@@ -482,7 +629,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                               </span>
                             )}
                           </div>
-                          
+
                           {canSelect && (
                             <button
                               onClick={() => handleSelectProblem(problem)}
@@ -497,14 +644,14 @@ const ProblemStatementsView = ({ themeColors }) => {
                               Select Problem
                             </button>
                           )}
-                          
+
                           {userTeam && (
                             <span className="text-sm px-3 py-1 rounded-lg bg-gray-100 text-gray-600">
                               Already in team
                             </span>
                           )}
                         </div>
-                        
+
                         {problem.suggestedTechnologies && (
                           <div className="mt-3" data-tour={index === 0 ? "technology-tags" : undefined}>
                             <div className="flex flex-wrap gap-1">

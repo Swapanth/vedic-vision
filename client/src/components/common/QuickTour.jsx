@@ -196,6 +196,7 @@ const QuickTour = ({
     const isMobile = viewportWidth < 768;
     const tooltipWidth = isMobile ? Math.min(280, viewportWidth - 40) : 320;
     const spacing = 20;
+    const minMargin = 20; // Minimum margin from viewport edges
 
     let position = 'fixed';
     let top, left, transform;
@@ -208,84 +209,89 @@ const QuickTour = ({
     const spaceTop = rect.top;
     const spaceBottom = viewportHeight - rect.bottom;
 
-    // Simplified positioning logic - prioritize readability and viewport bounds
-    const tooltipHeight = 280; // Approximate tooltip height
+    // Estimated tooltip height (more conservative)
+    const tooltipHeight = 320;
+
+    // Helper function to ensure tooltip stays within viewport bounds
+    const constrainToViewport = (calculatedTop, calculatedLeft, tooltipW = tooltipWidth) => {
+      // Constrain top position
+      const maxTop = viewportHeight - tooltipHeight - minMargin;
+      const minTop = minMargin;
+      const constrainedTop = Math.max(minTop, Math.min(maxTop, calculatedTop));
+      
+      // Constrain left position
+      const maxLeft = viewportWidth - tooltipW - minMargin;
+      const minLeft = minMargin;
+      const constrainedLeft = Math.max(minLeft, Math.min(maxLeft, calculatedLeft));
+      
+      return { top: constrainedTop, left: constrainedLeft };
+    };
 
     if (spaceBottom >= tooltipHeight + spacing) {
       // Below target (most readable)
-      top = `${rect.bottom + spacing}px`;
-
-      // Keep tooltip centered in viewport if possible
-      const idealLeft = rect.left + (rect.width / 2);
-      const tooltipHalfWidth = tooltipWidth / 2;
-
-      if (idealLeft - tooltipHalfWidth < 20) {
-        // Too far left, align to left edge
-        left = '20px';
-        transform = 'translateX(0)';
-      } else if (idealLeft + tooltipHalfWidth > viewportWidth - 20) {
-        // Too far right, align to right edge
-        left = `${viewportWidth - 20}px`;
-        transform = 'translateX(-100%)';
-      } else {
-        // Center on target
-        left = `${idealLeft}px`;
-        transform = 'translateX(-50%)';
-      }
+      const calculatedTop = rect.bottom + spacing;
+      const idealLeft = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+      
+      const constrained = constrainToViewport(calculatedTop, idealLeft);
+      top = `${constrained.top}px`;
+      left = `${constrained.left}px`;
+      transform = 'translateX(0)';
+      
     } else if (spaceTop >= tooltipHeight + spacing) {
       // Above target
-      top = `${rect.top - spacing}px`;
-      left = '50%';
-      transform = 'translate(-50%, -100%)';
-
-      const idealLeft = rect.left + (rect.width / 2);
-      const tooltipHalfWidth = tooltipWidth / 2;
-
-      if (idealLeft - tooltipHalfWidth < 20) {
-        left = '20px';
-        transform = 'translateY(-100%)';
-      } else if (idealLeft + tooltipHalfWidth > viewportWidth - 20) {
-        left = `${viewportWidth - 20}px`;
-        transform = 'translate(-100%, -100%)';
-      } else {
-        left = `${idealLeft}px`;
-        transform = 'translate(-50%, -100%)';
-      }
+      const calculatedTop = rect.top - spacing - tooltipHeight;
+      const idealLeft = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+      
+      const constrained = constrainToViewport(calculatedTop, idealLeft);
+      top = `${constrained.top}px`;
+      left = `${constrained.left}px`;
+      transform = 'translateX(0)';
+      
     } else if (!isMobile && spaceRight >= tooltipWidth + spacing) {
       // Right of target (desktop only)
-      top = `${Math.max(20, rect.top + (rect.height / 2) - (tooltipHeight / 2))}px`;
-      left = `${rect.right + spacing}px`;
-      transform = 'translateY(0)';
-
-      // Ensure tooltip doesn't go below viewport
       const calculatedTop = rect.top + (rect.height / 2) - (tooltipHeight / 2);
-      if (calculatedTop + tooltipHeight > viewportHeight - 20) {
-        top = `${viewportHeight - tooltipHeight - 20}px`;
-      }
+      const calculatedLeft = rect.right + spacing;
+      
+      const constrained = constrainToViewport(calculatedTop, calculatedLeft);
+      top = `${constrained.top}px`;
+      left = `${constrained.left}px`;
+      transform = 'translateX(0)';
+      
     } else if (!isMobile && spaceLeft >= tooltipWidth + spacing) {
       // Left of target (desktop only)
-      top = `${Math.max(20, rect.top + (rect.height / 2) - (tooltipHeight / 2))}px`;
-      left = `${rect.left - spacing}px`;
-      transform = 'translateX(-100%)';
-
-      // Ensure tooltip doesn't go below viewport
       const calculatedTop = rect.top + (rect.height / 2) - (tooltipHeight / 2);
-      if (calculatedTop + tooltipHeight > viewportHeight - 20) {
-        top = `${viewportHeight - tooltipHeight - 20}px`;
-      }
+      const calculatedLeft = rect.left - spacing - tooltipWidth;
+      
+      const constrained = constrainToViewport(calculatedTop, calculatedLeft);
+      top = `${constrained.top}px`;
+      left = `${constrained.left}px`;
+      transform = 'translateX(0)';
+      
     } else {
-      // Fallback: position to the right side of viewport for better readability
-      top = `${Math.max(20, rect.top)}px`;
-      left = `${Math.min(viewportWidth - tooltipWidth - 20, rect.right + spacing)}px`;
-      transform = 'translateY(0)';
+      // Fallback: Smart positioning within viewport
+      // Try to position near the target but ensure it's fully visible
+      const targetCenterX = rect.left + (rect.width / 2);
+      const targetCenterY = rect.top + (rect.height / 2);
+      
+      // Calculate ideal position near target
+      let calculatedTop = targetCenterY - (tooltipHeight / 2);
+      let calculatedLeft = targetCenterX - (tooltipWidth / 2);
+      
+      // If target is too close to edges, adjust positioning
+      if (targetCenterX < viewportWidth / 2) {
+        // Target is on left side, position tooltip to the right
+        calculatedLeft = Math.min(rect.right + spacing, viewportWidth - tooltipWidth - minMargin);
+      } else {
+        // Target is on right side, position tooltip to the left
+        calculatedLeft = Math.max(rect.left - tooltipWidth - spacing, minMargin);
+      }
+      
+      const constrained = constrainToViewport(calculatedTop, calculatedLeft);
+      top = `${constrained.top}px`;
+      left = `${constrained.left}px`;
+      transform = 'translateX(0)';
       maxWidth = '90vw';
       width = 'auto';
-
-      // If tooltip would go below viewport, move it up
-      const calculatedTop = rect.top;
-      if (calculatedTop + tooltipHeight > viewportHeight - 20) {
-        top = `${Math.max(20, viewportHeight - tooltipHeight - 20)}px`;
-      }
     }
 
     return {

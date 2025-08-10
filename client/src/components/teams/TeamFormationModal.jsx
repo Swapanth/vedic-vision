@@ -191,8 +191,7 @@ const TeamFormationModal = ({ isOpen, onClose, onTeamUpdate, onSuccess }) => {
                 type="text"
                 value={createForm.name}
                 onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                className="w-full px-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                style={{ backgroundColor: '#dff1f8' }}
+                className="w-full px-4 py-3 border border-blue-200 text-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Enter team name..."
                 required
                 maxLength={50}

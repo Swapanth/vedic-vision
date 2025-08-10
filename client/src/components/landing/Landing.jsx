@@ -1153,8 +1153,9 @@ export default function Landing() {
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
-                    className="px-6 sm:px-8 py-3 sm:py-4 font-medium transition-all duration-200 hover:scale-105 text-white bg-black rounded-full text-base sm:text-lg"
+                    className="px-6 sm:px-8 py-3 sm:py-4 font-medium transition-all duration-200 hover:scale-105 text-white bg-yellow rounded-full text-base sm:text-lg"
                     onClick={() => navigate("/login")}
+                    style={{color:'white',backgroundColor:'#3b82f6'}}
                   >
                     Let's Build
                   </button>

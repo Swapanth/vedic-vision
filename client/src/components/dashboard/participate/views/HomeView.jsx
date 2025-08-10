@@ -623,227 +623,288 @@ const HomeView = ({
               className="rounded-2xl shadow-xl backdrop-blur-sm border transition-all duration-300"
               style={{
                 backgroundColor: themeColors.cardBg,
-                borderColor: themeColors.border
+                borderColor: themeColors.border,
+                minHeight: '575px'
+
               }}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               data-tour="mentor-team-section"
+
             >
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center" style={{ color: themeColors.text }}>
                   <Users className="w-5 h-5 mr-2" />
-                  Mentor & Team
+                  Mentor Details
                 </h3>
 
                 {/* Mentor Section */}
-                <div className="mb-3">
-                  <h4 className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>MENTOR</h4>
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold mb-3" style={{ color: themeColors.textSecondary }}>MENTOR</h4>
                   {mentor ? (
-                    <div className="p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <div className="p-5 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                      <div className="flex items-start space-x-4 mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                           {mentor.profilePicture ? (
                             <img
                               src={mentor.profilePicture}
                               alt={mentor.name}
-                              className="w-10 h-10 rounded-full object-cover"
+                              className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <User className="w-5 h-5 text-white" />
+                            <User className="w-6 h-6 text-white" />
                           )}
                         </div>
-                        <div>
-                          <div className="font-bold" style={{ color: themeColors.text }}>{mentor.name}</div>
-                          <div className="text-sm" style={{ color: themeColors.textSecondary }}>{mentor.email}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-lg mb-1" style={{ color: themeColors.text }}>{mentor.name}</div>
+                          <div className="text-sm mb-2" style={{ color: themeColors.textSecondary }}>{mentor.email}</div>
+                          {mentor.mobile && (
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm flex items-center" style={{ color: themeColors.textSecondary }}>
+                                <span className="mr-2">📞</span>
+                                {mentor.mobile}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const message = `Hi, I'm ${user?.name || 'a participant'}`;
+                                  const whatsappUrl = `https://wa.me/${mentor.mobile.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                                  window.open(whatsappUrl, '_blank');
+                                }}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                                title="Chat on WhatsApp"
+                              >
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488" />
+                                </svg>
+                                <span>WhatsApp</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      {mentor.mobile && (
-                        <div className="mt-1 text-sm" style={{ color: themeColors.textSecondary }}>
-                          📞 {mentor.mobile}
-                        </div>
-                      )}
+
                       {mentor.description && (
-                        <div className="mt-2 text-sm" style={{ color: themeColors.textSecondary }}>
-                          {mentor.description}
+                        <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: themeColors.background, border: `1px solid ${themeColors.border}` }}>
+                          <div className="text-xs font-semibold mb-1" style={{ color: themeColors.textSecondary }}>ABOUT</div>
+                          <div className="text-sm leading-relaxed" style={{ color: themeColors.text }}>
+                            {mentor.description}
+                          </div>
                         </div>
                       )}
+
                       {mentor.skills?.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {mentor.skills.map((skill, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-700 rounded font-medium">
-                              {skill.replace(/"/g, '')}
-                            </span>
-                          ))}
+                        <div>
+                          <div className="text-xs font-semibold mb-2" style={{ color: themeColors.textSecondary }}>EXPERTISE</div>
+                          <div className="flex flex-wrap gap-2">
+                            {mentor.skills.map((skill, idx) => (
+                              <span key={idx} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                {skill.replace(/"/g, '')}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                      <div className="text-sm" style={{ color: themeColors.textSecondary }}>No mentor assigned yet</div>
-                    </div>
-                  )}
-                </div>
 
-                {/* Team Section */}
-                <div className="mb-3 border-t mt-3">
-                  <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: themeColors.textSecondary }}>TEAM INFO</h4>
-                  {!teamFormationEnabled ? (
-                    <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                      <div className="text-sm" style={{ color: themeColors.textSecondary }}>Team formation will be available soon</div>
-                    </div>
-                  ) : currentTeam && currentTeam._id ? (
-                    <div className="p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                      {/* Team Details with Labels */}
-                      <div className="space-y-3 mb-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                              Team Name:
-                            </div>
-                            <div className="text-lg font-bold" style={{ color: themeColors.text }}>
-                              {currentTeam.name || 'Unnamed Team'}
-                            </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            {/* Only show edit button for team leaders */}
-                            {user?._id === currentTeam.leader?._id && (
-                              <button
-                                onClick={() => setShowTeamEdit(true)}
-                                className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
-                                title="Edit Team"
-                              >
-                                <Edit className="w-4 h-4 inline mr-1" />
-                                Edit
-                              </button>
-                            )}
-                            <button
-                              onClick={handleLeaveTeam}
-                              className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-                              title="Leave Team"
-                            >
-                              <LogOut className="w-4 h-4 inline mr-1" />
-                              Leave
-                            </button>
-                          </div>
+                      {/* Add some helpful tips or contact guidelines */}
+                      <div className="mt-4 pt-3 border-t" style={{ borderColor: themeColors.border }}>
+                        <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                          💡 Feel free to reach out for guidance, feedback, or any questions about your project
                         </div>
-
-                        {currentTeam.problemStatement && (
-                          <div>
-                            <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                              Problem Statement:
-                            </div>
-                            <div className="text-sm" style={{ color: themeColors.text }}>
-                              {currentTeam.problemStatement.title || 'No title'}
-                            </div>
-                            {currentTeam.problemStatement.description && (
-                              <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>
-{currentTeam.problemStatement.description.length > 100
-  ? currentTeam.problemStatement.description.slice(0, 100) + "..."
-  : currentTeam.problemStatement.description}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        <div>
-                          <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
-                            Team Members ({(currentTeam.members?.length || 0)}/6):
-                          </div>
-                          {currentTeam.members && currentTeam.members.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {currentTeam.members.map((member) => (
-                                <div
-                                  key={member.user?._id || Math.random()}
-                                  className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg"
-                                >
-                                  <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                                    {member.user?.profilePicture ? (
-                                      <img
-                                        src={member.user.profilePicture}
-                                        alt={member.user.name || 'Member'}
-                                        className="w-6 h-6 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <User className="w-3 h-3 text-white" />
-                                    )}
-                                  </div>
-                                  <span className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>
-                                    {member.user?.name || 'Unknown Member'}
-                                    {member.user?._id === currentTeam.leader?._id && (
-                                      <span className="ml-1 text-yellow-600">👑</span>
-                                    )}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-sm" style={{ color: themeColors.textSecondary }}>
-                              No members yet
-                            </div>
-                          )}
-                        </div>
-
-
-
-                        <div>
-                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
-                            Team Status:
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${(currentTeam.members?.length || 0) >= 6 ? 'bg-red-100 text-red-800' :
-                              (currentTeam.members?.length || 0) >= 4 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                              {(currentTeam.members?.length || 0) >= 6 ? 'Team Full' :
-                                (currentTeam.members?.length || 0) >= 4 ? 'Well Balanced' : 'Looking for Members'}
-                            </span>
-                            <span className="text-xs" style={{ color: themeColors.textSecondary }}>
-                              ({(currentTeam.members?.length || 0)}/6 members)
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Voting Section */}
-                        {votingEnabled && currentTeam && currentTeam.leader && user && currentTeam.leader._id === user._id && (
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
-                              Team Voting:
-                            </div>
-                            {votingCompleted ? (
-                              <div className="flex items-center space-x-2">
-                                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                                  ✅ Completed Voting
-                                </span>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setShowTeamVoting(true)}
-                                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                              >
-                                <Vote className="w-4 h-4" />
-                                <span>Vote for Teams ({votingProgress.voted}/{votingProgress.total})</span>
-                              </button>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
-                      <div className="text-sm mb-3" style={{ color: themeColors.textSecondary }}>Not part of any team</div>
-                      <button
-                        onClick={() => setShowTeamFormation(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                        data-tour="team-formation-btn"
-                      >
-                        Join or Create Team
-                      </button>
+                    <div className="p-6 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <User className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <div className="text-sm font-medium mb-1" style={{ color: themeColors.text }}>No mentor assigned yet</div>
+                      <div className="text-xs" style={{ color: themeColors.textSecondary }}>You'll be assigned a mentor soon to guide you through your journey</div>
                     </div>
                   )}
                 </div>
+
               </div>
             </motion.div>
           </div>
+        </div>
+
+        <div >
+          <motion.div
+            className="rounded-2xl shadow-xl backdrop-blur-sm border transition-all duration-300"
+            style={{
+              backgroundColor: themeColors.cardBg,
+              borderColor: themeColors.border
+            }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            data-tour="team-formation"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center" style={{ color: themeColors.text }}>
+                <Users className="w-5 h-5 mr-2" />
+                Team Management
+              </h3>
+
+
+              {/* Team Section */}
+              <div className="mb-3 border-t mt-3">
+                <h4 className="text-sm font-semibold mt-4 mb-2" style={{ color: themeColors.textSecondary }}>TEAM INFO</h4>
+                {!teamFormationEnabled ? (
+                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                    <div className="text-sm" style={{ color: themeColors.textSecondary }}>Team formation will be available soon</div>
+                  </div>
+                ) : currentTeam && currentTeam._id ? (
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                    {/* Team Details with Labels */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
+                            Team Name:
+                          </div>
+                          <div className="text-lg font-bold" style={{ color: themeColors.text }}>
+                            {currentTeam.name || 'Unnamed Team'}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          {/* Only show edit button for team leaders */}
+                          {user?._id === currentTeam.leader?._id && (
+                            <button
+                              onClick={() => setShowTeamEdit(true)}
+                              className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                              title="Edit Team"
+                            >
+                              <Edit className="w-4 h-4 inline mr-1" />
+                              Edit
+                            </button>
+                          )}
+                          <button
+                            onClick={handleLeaveTeam}
+                            className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                            title="Leave Team"
+                          >
+                            <LogOut className="w-4 h-4 inline mr-1" />
+                            Leave
+                          </button>
+                        </div>
+                      </div>
+
+                      {currentTeam.problemStatement && (
+                        <div>
+                          <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
+                            Problem Statement:
+                          </div>
+                          <div className="text-sm" style={{ color: themeColors.text }}>
+                            {currentTeam.problemStatement.title || 'No title'}
+                          </div>
+                          {currentTeam.problemStatement.description && (
+                            <div className="text-xs mt-1" style={{ color: themeColors.textSecondary }}>
+                              {currentTeam.problemStatement.description.length > 100
+                                ? currentTeam.problemStatement.description.slice(0, 100) + "..."
+                                : currentTeam.problemStatement.description}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
+                          Team Members ({(currentTeam.members?.length || 0)}/6):
+                        </div>
+                        {currentTeam.members && currentTeam.members.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {currentTeam.members.map((member) => (
+                              <div
+                                key={member.user?._id || Math.random()}
+                                className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg"
+                              >
+                                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                  {member.user?.profilePicture ? (
+                                    <img
+                                      src={member.user.profilePicture}
+                                      alt={member.user.name || 'Member'}
+                                      className="w-6 h-6 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <User className="w-3 h-3 text-white" />
+                                  )}
+                                </div>
+                                <span className="text-sm font-medium" style={{ color: themeColors.textSecondary }}>
+                                  {member.user?.name || 'Unknown Member'}
+                                  {member.user?._id === currentTeam.leader?._id && (
+                                    <span className="ml-1 text-yellow-600">👑</span>
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+                            No members yet
+                          </div>
+                        )}
+                      </div>
+
+
+
+                      <div>
+                        <div className="text-sm font-semibold mb-1" style={{ color: themeColors.textSecondary }}>
+                          Team Status:
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${(currentTeam.members?.length || 0) >= 6 ? 'bg-red-100 text-red-800' :
+                            (currentTeam.members?.length || 0) >= 4 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {(currentTeam.members?.length || 0) >= 6 ? 'Team Full' :
+                              (currentTeam.members?.length || 0) >= 4 ? 'Well Balanced' : 'Looking for Members'}
+                          </span>
+                          <span className="text-xs" style={{ color: themeColors.textSecondary }}>
+                            ({(currentTeam.members?.length || 0)}/6 members)
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Voting Section */}
+                      {votingEnabled && currentTeam && currentTeam.leader && user && currentTeam.leader._id === user._id && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="text-sm font-semibold mb-2" style={{ color: themeColors.textSecondary }}>
+                            Team Voting:
+                          </div>
+                          {votingCompleted ? (
+                            <div className="flex items-center space-x-2">
+                              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                ✅ Completed Voting
+                              </span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setShowTeamVoting(true)}
+                              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                            >
+                              <Vote className="w-4 h-4" />
+                              <span>Vote for Teams ({votingProgress.voted}/{votingProgress.total})</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                    <div className="text-sm mb-3" style={{ color: themeColors.textSecondary }}>Not part of any team</div>
+                    <button
+                      onClick={() => setShowTeamFormation(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Join or Create Team
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Team Formation Modal */}
