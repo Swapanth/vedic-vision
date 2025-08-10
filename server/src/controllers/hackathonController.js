@@ -168,7 +168,7 @@ export const getHackathonMentors = async (req, res) => {
 // Get hackathon teams with filtering
 export const getHackathonTeams = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, problemStatementId } = req.query;
+    const { page = 1, limit = 70, search, problemStatementId } = req.query;
 
     // Verify user is a hackathon participant
     if (req.user.role !== 'participant' || req.user.participantType !== 'hackathon') {
