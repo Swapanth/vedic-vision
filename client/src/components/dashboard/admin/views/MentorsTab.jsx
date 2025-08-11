@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { userAPI, authAPI } from '../../../services/api';
+import { userAPI, authAPI } from '../../../../services/api';
 
 const MentorsTab = ({ mentors, onLoadMentors }) => {
   const [showAddMentorModal, setShowAddMentorModal] = useState(false);

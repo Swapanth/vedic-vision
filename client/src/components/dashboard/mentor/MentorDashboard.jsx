@@ -156,12 +156,12 @@ const MentorDashboard = () => {
       let hasNextPage = true;
 
       while (hasNextPage) {
-        const taskSubmissionsRes = await submissionAPI.getAllSubmissions({ 
-          taskId, 
-          page: currentPage, 
-          limit: 100 
+        const taskSubmissionsRes = await submissionAPI.getAllSubmissions({
+          taskId,
+          page: currentPage,
+          limit: 100
         });
-        
+
         const { submissions, pagination } = taskSubmissionsRes.data.data;
         allSubmissions = [...allSubmissions, ...submissions];
 
@@ -263,109 +263,202 @@ const MentorDashboard = () => {
       return date.toISOString().split('T')[0];
     });
 
+    // Debug logging
+    console.log('Bootcamp days:', bootcampDays);
+    console.log('Participants:', participants);
+    console.log('Attendance records:', attendance);
+
     if (bulkMarkingMode) {
       return (
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold">Bulk Mark Attendance</h3>
+        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+                <svg className="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                Bulk Mark Attendance
+              </h3>
+              <p className="text-gray-600 mt-1">Select participants and mark their attendance for a specific date</p>
+            </div>
             <button
               onClick={toggleBulkMarkingMode}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center shadow-lg"
             >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
               Cancel Bulk Mode
             </button>
           </div>
 
           {/* Bulk marking controls */}
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+              </svg>
+              Attendance Settings
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Date
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  📅 Select Date
                 </label>
                 <select
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-700 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                 >
-                  <option value="">Choose a date...</option>
+                  <option value="" className="text-gray-500">Choose a date...</option>
                   {bootcampDays.map((date, index) => (
-                    <option key={date} value={date}>
+                    <option key={date} value={date} className="text-gray-700">
                       Day {index + 1} - {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </option>
                   ))}
                 </select>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attendance Status
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  📊 Attendance Status
                 </label>
                 <select
                   value={bulkStatus}
                   onChange={(e) => setBulkStatus(e.target.value)}
-                  className="w-full border rounded px-3 py-2"
+                  className={`w-full border-2 rounded-lg px-4 py-3 font-medium focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${bulkStatus === 'present'
+                      ? 'border-green-300 bg-green-50 text-green-800'
+                      : 'border-red-300 bg-red-50 text-red-800'
+                    }`}
                 >
-                  <option value="present">Present</option>
-                  <option value="absent">Absent</option>
+                  <option value="present" className="text-green-700">✓ Present</option>
+                  <option value="absent" className="text-red-700">✗ Absent</option>
                 </select>
               </div>
+
               <div className="flex items-end">
                 <button
                   onClick={handleBulkMarkAttendance}
                   disabled={!selectedDate || selectedParticipants.length === 0 || bulkMarkingLoading}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 shadow-lg transform hover:scale-105 disabled:transform-none"
                 >
                   {bulkMarkingLoading ? (
                     <ButtonLoader text="Processing..." />
                   ) : (
-                    `Mark Attendance (${selectedParticipants.length})`
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Mark Attendance ({selectedParticipants.length})
+                    </>
                   )}
                 </button>
               </div>
             </div>
 
-            <div className="flex space-x-2">
-              <button
-                onClick={selectAllParticipants}
-                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-              >
-                Select All
-              </button>
-              <button
-                onClick={deselectAllParticipants}
-                className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
-              >
-                Deselect All
-              </button>
+            {/* Selection Controls */}
+            <div className="flex flex-wrap gap-3 items-center justify-between border-t border-gray-200 pt-4">
+              <div className="flex space-x-3">
+                <button
+                  onClick={selectAllParticipants}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center shadow-md"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Select All
+                </button>
+                <button
+                  onClick={deselectAllParticipants}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center shadow-md"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Deselect All
+                </button>
+              </div>
+              <div className="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
+                <span className="font-semibold text-blue-600">{selectedParticipants.length}</span> of <span className="font-semibold">{participants.length}</span> participants selected
+              </div>
             </div>
           </div>
 
           {/* Participant selection list */}
-          <div className="grid gap-2">
-            {participants.map(participant => (
-              <div
-                key={participant._id}
-                className={`border rounded-lg p-3 cursor-pointer transition-colors ${selectedParticipants.includes(participant._id)
-                  ? 'bg-blue-50 border-blue-300'
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
-                  }`}
-                onClick={() => toggleParticipantSelection(participant._id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{participant.name}</div>
-                    <div className="text-sm text-gray-500">{participant.email}</div>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+            <div className="p-4 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                Select Participants
+              </h4>
+              <p className="text-sm text-gray-600 mt-1">Click on participants to select/deselect them for attendance marking</p>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              <div className="grid gap-1 p-2">
+                {participants.map((participant, index) => (
+                  <div
+                    key={participant._id}
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${selectedParticipants.includes(participant._id)
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 shadow-md'
+                        : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                    onClick={() => toggleParticipantSelection(participant._id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedParticipants.includes(participant._id)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-600'
+                          }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{participant.name}</div>
+                          <div className="text-xs text-gray-500 flex items-center">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                            </svg>
+                            {participant.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {selectedParticipants.includes(participant._id) ? (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                              Selected
+                            </span>
+                            <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-gray-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    {selectedParticipants.includes(participant._id) && (
-                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {participants.length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                <p className="text-lg font-medium">No participants found</p>
+                <p className="text-sm">There are no participants assigned to you.</p>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -386,23 +479,23 @@ const MentorDashboard = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto" style={{ minHeight: '400px' }}>
+          <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '1200px' }}>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10" style={{ minWidth: '200px' }}>
                   Participant
                 </th>
-                {bootcampDays.map(date => (
-                  <th key={date} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Day {bootcampDays.indexOf(date) + 1}
+                {bootcampDays.map((date, index) => (
+                  <th key={date} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ minWidth: '100px' }}>
+                    Day {index + 1}
                     <br />
                     <span className="text-xs text-gray-400">
                       {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                     <br />
                     <span className="text-xs text-gray-400">
-                      {bootcampDays.indexOf(date) >= 10 ? 'Hackathon' : 'Bootcamp'}
+                      {index >= 10 ? 'Hackathon' : 'Bootcamp'}
                     </span>
                   </th>
                 ))}
@@ -422,7 +515,7 @@ const MentorDashboard = () => {
                     );
 
                     return (
-                      <td key={date} className="px-3 py-4 text-center">
+                      <td key={date} className="px-2 py-3 text-center bg-gray-50">
                         <select
                           key={`${participant._id}-${date}-${attendanceRecord?._id || 'none'}`}
                           value={attendanceRecord?.status || ''}
@@ -433,13 +526,18 @@ const MentorDashboard = () => {
                               markAttendance(participant._id, date, e.target.value);
                             }
                           }}
-                          className="text-xs border rounded px-2 py-1"
+                          className={`text-xs border-2 rounded-md px-2 py-1 font-medium min-w-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500 ${attendanceRecord?.status === 'present'
+                            ? 'bg-green-100 border-green-300 text-green-800'
+                            : attendanceRecord?.status === 'absent'
+                              ? 'bg-red-100 border-red-300 text-red-800'
+                              : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                            }`}
                         >
-                          <option value="">-</option>
-                          <option value="present">Present</option>
-                          <option value="absent">Absent</option>
+                          <option value="" className="text-gray-500">-</option>
+                          <option value="present" className="text-green-700 bg-green-50">✓ Present</option>
+                          <option value="absent" className="text-red-700 bg-red-50">✗ Absent</option>
                           {attendanceRecord && (
-                            <option value="remove">Remove</option>
+                            <option value="remove" className="text-orange-700 bg-orange-50">🗑 Remove</option>
                           )}
                         </select>
                       </td>
@@ -769,6 +867,12 @@ const MentorDashboard = () => {
   if (loading) {
     return <PageLoader text="Loading mentor dashboard..." />;
   }
+
+  // Debug logging
+  console.log('MentorDashboard render - participants:', participants.length, participants);
+  console.log('MentorDashboard render - attendance:', attendance.length, attendance);
+  console.log('MentorDashboard render - activeTab:', activeTab);
+  console.log('MentorDashboard render - bulkMarkingMode:', bulkMarkingMode);
 
   return (
     <div className="min-h-screen bg-gray-50">

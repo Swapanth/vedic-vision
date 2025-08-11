@@ -5,14 +5,13 @@ import Modal from '../../common/Modal';
 import LoadingSpinner from '../../common/LoadingSpinner';
 
 // Import tab components
-import OverviewTab from '../utils/OverviewTab';
-import UsersTab from '../utils/UsersTab';
-import TasksTab from '../utils/TasksTab';
-import AttendanceTab from '../utils/AttendanceTab';
-import MentorsTab from '../utils/MentorsTab';
-import MentorAssignmentTab from '../utils/MentorAssignmentTab';
-import AnnouncementsTab from '../utils/AnnouncementsTab';
-import ExportsTab from '../utils/ExportsTab';
+import OverviewTab from './views/OverviewTab';
+import UsersTab from './views/UsersTab';
+import TasksTab from './views/TasksTab';
+import MentorsTab from './views/MentorsTab';
+import MentorAssignmentTab from './views/MentorAssignmentTab';
+import TeamsTab from './views/TeamsTab';
+import AnnouncementsTab from './views/AnnouncementsTab';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -218,14 +217,13 @@ const AdminDashboard = () => {
   }
 
   const tabs = [
-    { id: 'overview', name: 'Overview', icon: '📊' },
-    { id: 'users', name: 'Users', icon: '👥' },
-    { id: 'mentors', name: 'Mentors', icon: '👨‍🏫' },
-    { id: 'mentor-assignment', name: 'Assign Mentors', icon: '🔗' },
-    { id: 'tasks', name: 'Tasks', icon: '📝' },
-    { id: 'attendance', name: 'Attendance', icon: '✅' },
-    { id: 'announcements', name: 'Announcements', icon: '📢' },
-    { id: 'exports', name: 'Exports', icon: '📥' },
+    { id: 'overview', name: 'Overview'},
+    { id: 'users', name: 'Users',  },
+    { id: 'mentors', name: 'Mentors' },
+    { id: 'mentor-assignment', name: 'Mentors Assigning ' },
+    { id: 'teams', name: 'Teams' },
+    { id: 'tasks', name: 'Tasks' },
+    { id: 'announcements', name: 'Announcements' },
   ];
 
   const renderTabContent = () => {
@@ -238,14 +236,12 @@ const AdminDashboard = () => {
         return <MentorsTab mentors={mentors} onLoadMentors={handleLoadMentors} />;
       case 'mentor-assignment':
         return <MentorAssignmentTab onShowModal={showSuccessModal} />;
+      case 'teams':
+        return <TeamsTab onShowModal={showSuccessModal} />;
       case 'tasks':
         return <TasksTab tasks={tasks} onCreateTask={handleCreateTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onToggleTaskStatus={handleToggleTaskStatus} taskLoading={taskLoading} />;
-      case 'attendance':
-        return <AttendanceTab attendance={attendance} onMarkAttendance={loadDashboardData} />;
       case 'announcements':
         return <AnnouncementsTab announcements={announcements} onCreateAnnouncement={handleCreateAnnouncement} onDeleteAnnouncement={handleDeleteAnnouncement} />;
-      case 'exports':
-        return <ExportsTab onExportData={handleExportData} />;
       default:
         return <OverviewTab users={users} tasks={tasks} attendance={attendance} mentors={mentors} />;
     }

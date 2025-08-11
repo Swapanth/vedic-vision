@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { userAPI } from '../../../services/api';
-import LoadingSpinner from '../../common/LoadingSpinner';
+import { userAPI } from '../../../../services/api';
+import LoadingSpinner from '../../../common/LoadingSpinner';
 
 const MentorAssignmentTab = ({ onShowModal }) => {
   const [mentors, setMentors] = useState([]);
