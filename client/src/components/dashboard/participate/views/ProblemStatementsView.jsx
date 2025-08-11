@@ -596,8 +596,8 @@ const ProblemStatementsView = ({ themeColors }) => {
                           <div className="flex items-center gap-2 ml-4">
                             <span
                               className={`px-3 py-1 text-sm rounded-full font-medium ${isAtLimit
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-green-100 text-green-800'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-green-100 text-green-800'
                                 }`}
                             >
                               {problem.selectionCount || 0}/4 teams
@@ -608,7 +608,7 @@ const ProblemStatementsView = ({ themeColors }) => {
                           </div>
                         </div>
 
-                        <p className="text-sm mb-3 line-clamp-3" style={{ color: themeColors.textSecondary }}>
+                        <p className="text-sm mb-3" style={{ color: themeColors.textSecondary }}>
                           {problem.description}
                         </p>
 
