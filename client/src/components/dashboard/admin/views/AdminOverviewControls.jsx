@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { configAPI, problemAPI } from '../../../../services/api';
+import { useAuth } from '../../../../context/AuthContext';
 
 const ToggleSwitch = ({ checked, onChange, label, enabledMsg, disabledMsg }) => (
   <div className="flex items-center gap-2">
@@ -18,15 +19,26 @@ const ToggleSwitch = ({ checked, onChange, label, enabledMsg, disabledMsg }) => 
 
 const AdminOverviewControls = () => {
   const [config, setConfig] = useState({ teamFormationEnabled: true, votingEnabled: false });
+  const { isSuperadmin, isAdmin } = useAuth();
+  const [error, setError] = useState('');
+
   useEffect(() => {
     configAPI.getConfig().then(res => setConfig(res.data));
   }, []);
 
   const handleToggle = async (key) => {
-    const updated = { ...config, [key]: !config[key] };
-    await configAPI.updateConfig({ [key]: updated[key] });
-    setConfig(updated);
+    setError('');
+    try {
+      const updatedValue = !config[key];
+      await configAPI.updateConfig({ [key]: updatedValue });
+      const res = await configAPI.getConfig();
+      setConfig(res.data);
+    } catch (err) {
+      setError('You do not have permission to toggle this setting.');
+    }
   };
+
+  const canToggle = isSuperadmin || isAdmin;
 
   return (
     <div className="my-8">
@@ -38,16 +50,17 @@ const AdminOverviewControls = () => {
           enabledMsg="Enabled: Participants can create/join teams"
           disabledMsg="Disabled: Team formation will be available soon"
         />
-        <ToggleSwitch
-          checked={config.votingEnabled}
-          onChange={() => handleToggle('votingEnabled')}
-          label="Voting"
-          enabledMsg="Enabled: Voting is open"
-          disabledMsg="Disabled: Voting is closed"
-        />
-       
+        <div title={canToggle ? '' : 'Only admin or superadmin can toggle voting.'}>
+          <ToggleSwitch
+            checked={config.votingEnabled}
+            onChange={canToggle ? () => handleToggle('votingEnabled') : undefined}
+            label="Voting"
+            enabledMsg="Enabled: Voting is open"
+            disabledMsg="Disabled: Voting is closed"
+          />
+        </div>
       </div>
-      
+      {error && <div className="text-red-600 font-medium mt-2">{error}</div>}
     </div>
   );
 };

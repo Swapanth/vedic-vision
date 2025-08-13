@@ -67,9 +67,9 @@ const App = () => {
 
 // Component to render appropriate dashboard based on user role
 const DashboardWrapper = () => {
-  const { isSuperadmin, isMentor, isParticipant, user, loading } = useAuth();
+  const { isSuperadmin, isAdmin, isMentor, isParticipant, user, loading } = useAuth();
 
-  if (isSuperadmin) {
+  if (isSuperadmin || isAdmin) {
     return <AdminDashboard />;
   } else if (isMentor) {
     return <MentorDashboard />;

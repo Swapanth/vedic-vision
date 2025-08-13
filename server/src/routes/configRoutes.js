@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Config routes
 router.get("/config", getConfig);
-router.put("/config", adminOnly, updateConfig);
+router.put("/config", authenticateToken, adminOnly, updateConfig);
 
 // Problem statement routes (public access for viewing)
 router.get("/problems", getAllProblemStatements);

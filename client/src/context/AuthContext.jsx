@@ -169,6 +169,7 @@ export const AuthProvider = ({ children }) => {
     clearError,
     isAuthenticated: !!user,
     isSuperadmin: user?.role === 'superadmin',
+    isAdmin: user?.role === 'admin',
     isMentor: user?.role === 'mentor',
     isParticipant: user?.role === 'participant',
   };

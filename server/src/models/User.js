@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['participant', 'mentor', 'superadmin'],
+    enum: ['participant', 'mentor', 'admin', 'superadmin'],
     default: 'participant'
   },
   participantType: {
