@@ -183,7 +183,7 @@ const TeamVotingModal = ({ isOpen, onClose, user, myTeamId, onVoted, onVotingCom
                      hasVoted ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
                    }`}>
                      <div className="flex-1">
-                       <div className="font-semibold text-lg flex items-center mb-2">
+<div className="font-semibold text-lg flex items-center mb-2 text-gray-900 dark:text-gray-1000">
                          {team.name}
                          {hasVoted && (
                            <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
