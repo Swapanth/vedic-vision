@@ -316,6 +316,7 @@ const TeamVotingModal = ({ isOpen, onClose, user, myTeamId, onVoted, onVotingCom
               className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 resize-none font-medium"
               rows={4}
               maxLength={500}
+              color='blue'
             />
             <div className="flex justify-between items-center mt-2">
               <p className="text-xs text-gray-600">
