@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 import Submission from "../models/Submission.js";
 import Attendance from "../models/Attendance.js";
+import Team from "../models/Team.js";
 
 // Get all users (Admin only)
 export const getAllUsers = async (req, res) => {
@@ -647,7 +648,6 @@ export const assignTeamsToJudge = async (req, res) => {
     }
 
     // Validate teams exist
-    const Team = (await import('../models/Team.js')).default;
     const teams = await Team.find({ _id: { $in: teamIds } }).select('_id');
     if (teams.length !== teamIds.length) {
       return res.status(400).json({ success: false, message: 'One or more team IDs are invalid' });

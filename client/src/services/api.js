@@ -135,6 +135,9 @@ export const userAPI = {
   removeParticipantsFromMentor: (data) => api.post('/users/remove-participants', data),
   getAllMentorsWithParticipants: () => api.get('/users/mentors'),
   getMentorParticipants: () => api.get('/users/my-participants'),
+  // Judge assignment methods
+  assignTeamsToJudge: (data) => api.post('/users/assign-teams-to-judge', data),
+  removeTeamsFromJudge: (data) => api.post('/users/remove-teams-from-judge', data),
   // Helper method to get all participants (handles pagination internally)
   getAllParticipants: async () => {
     let allParticipants = [];
