@@ -102,7 +102,7 @@ const DashboardWrapper = () => {
   } else if (isMentor) {
     return <MentorDashboard />;
   } else if (isJudge) {
-    return <JudgeOverviewPage />;
+    return <HackathonEvaluationPage />;
   } else if (isParticipant) {
     // Check if participant is hackathon-only
     if (user?.participantType === 'hackathon') {

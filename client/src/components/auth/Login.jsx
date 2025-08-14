@@ -86,7 +86,7 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
       if (result.success) {
         if (result.user?.role === 'judge') {
-          navigate('/judge/overview');
+          navigate('/evaluation/judge');
         } else {
           navigate('/dashboard');
         }

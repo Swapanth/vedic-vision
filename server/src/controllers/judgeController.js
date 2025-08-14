@@ -18,28 +18,26 @@ export const getJudgeOverview = async (req, res) => {
 
     const teamIds = teams.map(t => t._id);
     const evaluations = await Evaluation.find({ judgeId: judge._id, teamId: { $in: teamIds } })
-      .select('teamId round');
+      .select('teamId round score');
 
     const evalMap = new Map();
     evaluations.forEach(e => {
       const key = e.teamId.toString();
-      if (!evalMap.has(key)) evalMap.set(key, { 1: false, 2: false, 3: false });
-      evalMap.get(key)[e.round] = true;
+      if (!evalMap.has(key)) evalMap.set(key, { 1: null, 2: null, 3: null });
+      evalMap.get(key)[e.round] = e.score;
     });
 
     const overview = teams.map(team => {
       const key = team._id.toString();
-      const rounds = evalMap.get(key) || { 1: false, 2: false, 3: false };
+      const rounds = evalMap.get(key) || { 1: null, 2: null, 3: null };
       const mappedTeam = {
         teamId: key,
         teamName: team.name,
         teamNumber: team.teamNumber || '',
         problemStatement: team.problemStatement?.title || '',
-        rounds: {
-          round1: !!rounds[1],
-          round2: !!rounds[2],
-          round3: !!rounds[3],
-        }
+        round1: rounds[1],
+        round2: rounds[2],
+        round3: rounds[3],
       };
       console.log('Mapped team:', mappedTeam); // Debug log
       return mappedTeam;
