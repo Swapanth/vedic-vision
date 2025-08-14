@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathon Evaluation Sheets</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: #ffffff;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .page {
+            background: white;
+            margin: 0 auto 15px auto;
+            padding: 20px;
+            width: 210mm;
+            min-height: 297mm;
+            border: 2px solid #000;
+            page-break-after: always;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #000;
+            margin: 0 0 3px 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header h2 {
+            color: #000;
+            margin: 0;
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        .panel-info {
+            margin-bottom: 15px;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #000;
+            min-width: 120px;
+        }
+
+        .info-value {
+            color: #000;
+            border-bottom: 1px solid #000;
+            flex-grow: 1;
+            margin-left: 10px;
+            padding-bottom: 2px;
+            min-height: 16px;
+        }
+
+        .teams-section {
+            margin-bottom: 15px;
+        }
+
+        .team-header {
+            font-weight: bold;
+            font-size: 12px;
+            margin: 15px 0 10px 0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+        }
+
+        .team-info {
+            margin-bottom: 12px;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        .team-name {
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-total {
+            font-weight: normal;
+            font-size: 10px;
+        }
+
+        .team-total-input {
+            width: 35px;
+            padding: 2px;
+            text-align: center;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 10px;
+            margin: 0 3px;
+        }
+
+        .problem-statement {
+            margin-bottom: 10px;
+            font-style: italic;
+            color: #333;
+            font-size: 10px;
+        }
+
+        .rounds-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .round-box {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .round-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .score-section {
+            margin-bottom: 5px;
+        }
+
+        .score-input {
+            width: 35px;
+            padding: 2px;
+            text-align: center;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .max-score {
+            font-size: 9px;
+            color: #666;
+            margin-left: 3px;
+        }
+
+        .description-box {
+            margin-top: 5px;
+            border: none;
+        }
+
+        .description-input {
+            width: 100%;
+            height: 45px;
+            border: 1px solid #000;
+            padding: 3px;
+            font-size: 9px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+
+
+        .criteria-section {
+            margin-top: 10px;
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 8px;
+            background-color: #fafafa;
+        }
+
+        .criteria-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+
+        .criteria-grid {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .criteria-column {
+            flex: 1;
+        }
+
+        .criteria-column h4 {
+            margin: 0 0 3px 0;
+            font-weight: bold;
+            text-decoration: underline;
+            font-size: 8px;
+        }
+
+        .criteria-column ul {
+            margin: 0;
+            padding-left: 10px;
+            list-style-type: none;
+        }
+
+        .criteria-column li {
+            margin-bottom: 1px;
+            font-size: 7px;
+            line-height: 1.2;
+        }
+
+        .criteria-column li:before {
+            content: "• ";
+            font-weight: bold;
+        }
+
+        .signature-section {
+            position: absolute;
+            bottom: 20px;
+            left: 25px;
+            right: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            border-top: 1px solid #000;
+            padding-top: 15px;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 30px;
+            margin-bottom: 5px;
+        }
+
+        .signature-label {
+            font-weight: bold;
+            color: #000;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: #000;
+            color: white;
+            border: 2px solid #000;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 10px;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: white;
+            color: #000;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            .page {
+                margin: 0;
+                page-break-after: always;
+                border: none;
+            }
+
+            .page:last-child {
+                page-break-after: avoid;
+            }
+        }
+
+        .no-print {
+            display: block;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls no-print">
+        <h2>Hackathon Evaluation Sheets Generator</h2>
+        <p>Classic format - Individual evaluation sheets for all evaluators (Total: 100 points)</p>
+        <button class="btn" onclick="generateAllSheets()">Generate All Evaluation Sheets</button>
+        <button class="btn" onclick="window.print()">Print All Sheets</button>
+    </div>
+
+    <div id="evaluationSheets"></div>
+
+    <script>
+        const panelData = {
+            panel1: {
+                evaluators: [
+                    { name: "Dr. K. Srinivas Rao", dept: "CSD", phone: "9866901020" },
+                    { name: "Dr. G. Tej Varma", dept: "IT", phone: "9959123344" },
+                    { name: "M. Jeevana Sujitha", dept: "CSE", phone: "9573548460" }
+                ],
+                coordinator: { name: "Vamsi", phone: "9494410554" },
+                teams: [
+                    { name: "Avengers", problem: "Inter-Department Sports Tournament Manager" },
+                    { name: "Vision Hackers", problem: "Sports Scholarship Application Portal" },
+                    { name: "CODERS CREW", problem: "Sports Equipment Booking Portal" },
+                    { name: "Error 404", problem: "Community Sports Event and WorkOut Coordination Platform" },
+                    { name: "Hackie Chans", problem: "Medical Risk Finder" },
+                    { name: "Surfers", problem: "AI Soil Health Tester" },
+                    { name: "SHADOW ARMY", problem: "A platform to engage individuals and improve their health habits" },
+                    { name: "EAGLES", problem: "AI Sports & Health Companion – Train Smarter, Eat Better, Stay Ahead" },
+                    { name: "ECLIPSE", problem: "lack of motivation and consistancy, people are unable to focus on their physical and mental health." },
+                    { name: "PSP", problem: "AI Crop Disease Detector" },
+                    { name: "Harmony Hackers", problem: "Smart Elderly Health Tracker" },
+                    { name: "TROJAN", problem: "AI Sports & Health Companion – Train Smarter, Eat Better, Stay Ahead" }
+                ]
+            },
+            panel2: {
+                evaluators: [
+                    { name: "Sri K. Pavan Kumar", dept: "EEE", phone: "7382182962" },
+                    { name: "Dr. K. Pavan Raju", dept: "IT", phone: "9704196789" }
+                ],
+                coordinator: { name: "Lakshman", phone: "8712131582" },
+                teams: [
+                    { name: "BYTE BEGINNERS", problem: "Health Risk Predictor for Street Food Lovers" },
+                    { name: "Tech Troupe", problem: "A platform to engage individuals and improve their health habits" },
+                    { name: "Vortex Vision", problem: "A platform to engage individuals and improve their health habits" },
+                    { name: "TEAM PERSONA", problem: "LifeSprint" },
+                    { name: "DEV SQUAD", problem: "Community Sports Event and WorkOut Coordination Platform" },
+                    { name: "lightning squad", problem: "A platform to engage individuals and improve their health habits" },
+                    { name: "Team OJAS", problem: "Post-Hospital Care & Medication Adherence Platform" },
+                    { name: "SYNTAX ERROR", problem: "Fitness Guidence" },
+                    { name: "OP MINDS", problem: "Sports Equipment Booking Portal" },
+                    { name: "ZEN CODERS", problem: "THE AYURCURE" },
+                    { name: "High Five", problem: "Fitness Guidence" }
+                ]
+            },
+            panel3: {
+                evaluators: [
+                    { name: "N. Aneela", dept: "CSD", phone: "7330603668" },
+                    { name: "Dr. J.M.S.V. Ravi Kumar", dept: "IT", phone: "9490503985" },
+                    { name: "Dr. K.V. Nagendra", dept: "CSE", phone: "6281537006" }
+                ],
+                coordinator: { name: "Swapanth", phone: "7794022444" },
+                teams: [
+                    { name: "HEXACODERS", problem: "Patient Health Portal" },
+                    { name: "PRIME PLAY", problem: "Community Sports Event and WorkOut Coordination Platform" },
+                    { name: "Code Warriors", problem: "Cricket Talent Finder" },
+                    { name: "TEAM TECHNO", problem: "AI Sports & Health Companion – Train Smarter, Eat Better, Stay Ahead" },
+                    { name: "CODERS OF THE GALAXY", problem: "Virtual Farming Advisor" },
+                    { name: "CODELETICS", problem: "Fitness Guidence" },
+                    { name: "NULL TERMINATORS", problem: "Tournment Management System" },
+                    { name: "Team Krishna", problem: "Tournment Management System" },
+                    { name: "Digital Mavericks", problem: "HeartGuard AI : Real time cardiac risk monitor" },
+                    { name: "NEXUS", problem: "Yoga Pose Feedback Web Tool" },
+                    { name: "EXCEPTIONALS", problem: "SportSphere" },
+                    { name: "CodeStrom", problem: "AI-Powered Grassroots Sports Talent Scout" },
+                    { name: "JAATHI RATNALU", problem: "My CareMate" },
+                    { name: "SANKALP", problem: "Sports Equipment Booking Portal" },
+                    { name: "Bro Code", problem: "Sports Certificate Generator" },
+                    { name: "NextGen coders", problem: "Yoga Progress Visualizer" }
+                ]
+            },
+            panel4: {
+                evaluators: [
+                    { name: "P. Mouna", dept: "CSD", phone: "9494275116" },
+                    { name: "Mr. M. Srikanth", dept: "IT", phone: "8686866306" },
+                    { name: "V. Anjani Kranthi", dept: "CSE", phone: "9491391396" }
+                ],
+                coordinator: { name: "Yeswanth", phone: "9676608446" },
+                teams: [
+                    { name: "The Choosen", problem: "Sports Career Awareness & Learning Hub" },
+                    { name: "COFFEE CODERS", problem: "Personalized Yoga Routine Generator" },
+                    { name: "Cult Coders", problem: "Medical Risk Finder" },
+                    { name: "ALPHA CODERS", problem: "Fitness Guidence" },
+                    { name: "BYTE HEALERS", problem: "HEAL VERSE" },
+                    { name: "BUG MAVERICKS", problem: "YogaVerse – Learn, Practice, and Connect" },
+                    { name: "FITFUSION", problem: "Fitness Challenge Platform for Students" },
+                    { name: "TECH TITANS", problem: "Sports Career Awareness & Learning Hub" },
+                    { name: "KRYPTON", problem: "Patient Health Portal" },
+                    { name: "VISION-BUSTERS", problem: "Health Risk Detector Based On Body Symptoms" },
+                    { name: "CodeNest", problem: "Fitness Challenge Platform for Students" },
+                    { name: "Code Busters", problem: "Sports Scholarship Application Portal" },
+                    { name: "codeHex", problem: "Patient Health Portal" }
+                ]
+            }
+        };
+
+        function generateAllSheets() {
+            const container = document.getElementById('evaluationSheets');
+            container.innerHTML = '';
+
+            Object.keys(panelData).forEach(panelKey => {
+                const panel = panelData[panelKey];
+                const panelNumber = panelKey.replace('panel', '');
+
+                panel.evaluators.forEach(evaluator => {
+                    const teams = panel.teams;
+                    const teamsPerPage = 4;
+                    const totalPages = Math.ceil(teams.length / teamsPerPage);
+
+                    for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                        const startIndex = pageIndex * teamsPerPage;
+                        const endIndex = Math.min(startIndex + teamsPerPage, teams.length);
+                        const teamsForPage = teams.slice(startIndex, endIndex);
+
+                        const sheet = createEvaluationSheet(panelNumber, evaluator, panel.coordinator, teamsForPage, pageIndex + 1, totalPages);
+                        container.appendChild(sheet);
+                    }
+                });
+            });
+        }
+
+        function createEvaluationSheet(panelNumber, evaluator, coordinator, teams, pageNumber = 1, totalPages = 1) {
+            const page = document.createElement('div');
+            page.className = 'page';
+
+            const teamsHtml = teams.map(team => `
+                <div class="team-info">
+                    <div class="team-name">
+                        <span>Team: ${team.name}</span>
+                        <span class="team-total">Total: <input type="number" class="team-total-input" readonly>/100</span>
+                    </div>
+                    <div class="problem-statement">Problem Statement: ${team.problem}</div>
+                    
+                    <div class="rounds-container">
+                        <div class="round-box">
+                            <div class="round-title">Round 1</div>
+                            <div class="score-section">
+                                Score: <input type="number" class="score-input" min="0" max="30" onchange="calculateRowTotal(this)"> <span class="max-score">/30</span>
+                            </div>
+                            <div class="description-box">
+                                <textarea class="description-input" placeholder="" style="border: none;"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="round-box">
+                            <div class="round-title">Round 2</div>
+                            <div class="score-section">
+                                Score: <input type="number" class="score-input" min="0" max="40" onchange="calculateRowTotal(this)"> <span class="max-score">/40</span>
+                            </div>
+                            <div class="description-box">
+                                <textarea class="description-input" placeholder="" style="border: none;"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="round-box">
+                            <div class="round-title">Round 3</div>
+                            <div class="score-section">
+                                Score: <input type="number" class="score-input" min="0" max="30" onchange="calculateRowTotal(this)"> <span class="max-score">/30</span>
+                            </div>
+                            <div class="description-box">
+                                <textarea class="description-input" placeholder="" style="border: none;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Show panel info only on first page
+            const panelInfoHtml = pageNumber === 1 ? `
+                <div class="panel-info">
+                    <div class="info-row">
+                        <span class="info-label">Panel Number:</span>
+                        <span class="info-value">PANEL ${panelNumber}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Evaluator Name:</span>
+                        <span class="info-value">${evaluator.name} (${evaluator.dept})</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Coordinator:</span>
+                        <span class="info-value">${coordinator.name} (${coordinator.phone})</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date:</span>
+                        <span class="info-value">____________________</span>
+                    </div>
+                </div>
+            ` : '';
+
+            // Show evaluation criteria only on last page
+            const criteriaHtml = pageNumber === totalPages ? `
+                <div class="criteria-section">
+                    <div class="criteria-title">Evaluation Criteria</div>
+                    <div class="criteria-grid">
+                        <div class="criteria-column">
+                            <h4>Round 1 (30 Points)</h4>
+                            <ul>
+                                <li>Innovation & Creativity (10)</li>
+                                <li>Problem Understanding (10)</li>
+                                <li>Solution Approach (10)</li>
+                            </ul>
+                        </div>
+                        <div class="criteria-column">
+                            <h4>Round 2 (40 Points)</h4>
+                            <ul>
+                                <li>Technical Implementation (15)</li>
+                                <li>Code Quality (10)</li>
+                                <li>Functionality (10)</li>
+                                <li>User Experience (5)</li>
+                            </ul>
+                        </div>
+                        <div class="criteria-column">
+                            <h4>Round 3 (30 Points)</h4>
+                            <ul>
+                                <li>Final Presentation (10)</li>
+                                <li>Demo Quality (10)</li>
+                                <li>Q&A Performance (10)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+
+            // Show signature section only on last page
+            const signatureHtml = pageNumber === totalPages ? `
+                <div class="signature-section">
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <div class="signature-label">Evaluator Signature</div>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <div class="signature-label">Date & Time</div>
+                    </div>
+                </div>
+            ` : '';
+
+            page.innerHTML = `
+                <div class="header">
+                    <h1>VEDIC VISION HACKATHON</h1>
+                    <h2>Individual Team Assessment</h2>
+                </div>
+
+                ${panelInfoHtml}
+
+                <div class="teams-section">
+                    <div class="team-header">Team Evaluations ${totalPages > 1 ? `(Page ${pageNumber} of ${totalPages})` : ''}</div>
+                    ${teamsHtml}
+                </div>
+
+                ${criteriaHtml}
+                ${signatureHtml}
+            `;
+
+            return page;
+        }
+
+        function calculateRowTotal(input) {
+            const teamInfo = input.closest('.team-info');
+            const scoreInputs = teamInfo.querySelectorAll('.score-input');
+            const totalInput = teamInfo.querySelector('.team-total-input');
+
+            let total = 0;
+            scoreInputs.forEach(scoreInput => {
+                const value = parseInt(scoreInput.value) || 0;
+                total += value;
+            });
+
+            totalInput.value = total;
+        }
+
+        // Generate all sheets on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            generateAllSheets();
+        });
+    </script>
+</body>
+
+</html>

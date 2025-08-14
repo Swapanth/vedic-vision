@@ -200,6 +200,14 @@ export const hackathonAPI = {
   getMentors: (params) => api.get('/hackathon/mentors', { params }),
   getTeams: (params) => api.get('/hackathon/teams', { params }),
   getProblemStatements: (params) => api.get('/config/problems', { params }),
-  };
+};
+
+// Evaluation API
+export const evaluationAPI = {
+  getTeamEvaluationOverview: () => api.get('/judge/overview'),
+  getEvaluation: (teamId, round) => api.get(`/judge/evaluations/${teamId}/${round}`),
+  submitEvaluation: (teamId, round, data) => api.post(`/judge/evaluations/${teamId}/${round}`, data),
+  getAllEvaluations: () => api.get('/evaluations/all'),
+};
 
 export default api; 

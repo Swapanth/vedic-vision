@@ -10,6 +10,7 @@ import UsersTab from './views/UsersTab';
 import TasksTab from './views/TasksTab';
 import MentorsTab from './views/MentorsTab';
 import MentorAssignmentTab from './views/MentorAssignmentTab';
+import JudgeAssignmentTab from './views/JudgeAssignmentTab';
 import TeamsTab from './views/TeamsTab';
 import AnnouncementsTab from './views/AnnouncementsTab';
 
@@ -221,6 +222,7 @@ const AdminDashboard = () => {
     { id: 'users', name: 'Users',  },
     { id: 'mentors', name: 'Mentors' },
     { id: 'mentor-assignment', name: 'Mentors Assigning ' },
+    { id: 'judge-assignment', name: 'Judges Assigning ' },
     { id: 'teams', name: 'Teams' },
     { id: 'tasks', name: 'Tasks' },
     { id: 'announcements', name: 'Announcements' },
@@ -236,6 +238,8 @@ const AdminDashboard = () => {
         return <MentorsTab mentors={mentors} onLoadMentors={handleLoadMentors} />;
       case 'mentor-assignment':
         return <MentorAssignmentTab onShowModal={showSuccessModal} />;
+      case 'judge-assignment':
+        return <JudgeAssignmentTab onShowModal={showSuccessModal} />;
       case 'teams':
         return <TeamsTab onShowModal={showSuccessModal} />;
       case 'tasks':

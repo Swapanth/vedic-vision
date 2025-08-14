@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['participant', 'mentor', 'admin', 'superadmin'],
+    enum: ['participant', 'mentor', 'judge', 'superadmin'],
     default: 'participant'
   },
   participantType: {
@@ -68,6 +68,11 @@ const userSchema = new mongoose.Schema({
   assignedParticipants: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  }],
+  // Judge-Team relationship
+  assignedTeams: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
   }],
   description: {
     type: String,

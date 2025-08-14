@@ -85,7 +85,11 @@ const Login = () => {
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        navigate('/dashboard');
+        if (result.user?.role === 'judge') {
+          navigate('/judge/overview');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(result.error || 'Login failed. Please check your credentials.');
       }

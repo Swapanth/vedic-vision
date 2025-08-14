@@ -9,6 +9,11 @@ const teamSchema = new mongoose.Schema({
     minlength: 3,
     maxlength: 50
   },
+  teamNumber: {
+    type: String,
+    trim: true,
+    unique: true
+  },
   description: {
     type: String,
     trim: true,

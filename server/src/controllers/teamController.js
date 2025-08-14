@@ -69,7 +69,8 @@ export const getTeamById = async (req, res) => {
       .populate('leader', 'name email collegeName profilePicture')
       .populate('members.user', 'name email collegeName profilePicture')
       .populate('invitations.user', 'name email collegeName')
-      .populate('invitations.invitedBy', 'name email collegeName');
+      .populate('invitations.invitedBy', 'name email collegeName')
+      .populate('problemStatement', 'title description');
 
     if (!team) {
       return res.status(404).json({

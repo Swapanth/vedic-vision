@@ -69,8 +69,8 @@ export const authorizeRoles = (...roles) => {
   };
 };
 
-// Admin only middleware (now allows admin and superadmin)
-export const adminOnly = authorizeRoles('admin', 'superadmin');
+// Admin only middleware (now superadmin only)
+export const adminOnly = authorizeRoles('superadmin');
 
 // Participant only middleware  
 export const participantOnly = authorizeRoles('participant');
@@ -79,10 +79,10 @@ export const participantOnly = authorizeRoles('participant');
 export const mentorOnly = authorizeRoles('mentor');
 
 // All authenticated users middleware
-export const authenticatedUsers = authorizeRoles('participant', 'mentor', 'admin', 'superadmin'); 
+export const authenticatedUsers = authorizeRoles('participant', 'mentor', 'judge', 'superadmin'); 
 
 // Mentor and admin access middleware
-export const mentorOrAdmin = authorizeRoles('mentor', 'admin', 'superadmin');
+export const mentorOrAdmin = authorizeRoles('mentor', 'superadmin');
 
 export const superadminOnly = (req, res, next) => {
   if (req.user && req.user.role === 'superadmin') {
@@ -90,3 +90,6 @@ export const superadminOnly = (req, res, next) => {
   }
   return res.status(403).json({ success: false, message: 'Superadmin access required' });
 }; 
+
+// Judge only middleware
+export const judgeOnly = authorizeRoles('judge');

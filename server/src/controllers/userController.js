@@ -174,10 +174,10 @@ export const updateUserRole = async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
 
-    if (!["participant", "mentor"].includes(role)) {
+    if (!["participant", "mentor", "judge"].includes(role)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role. Must be participant or mentor",
+        message: "Invalid role. Must be participant, mentor, or judge",
       });
     }
 
@@ -633,6 +633,49 @@ export const removeParticipantsFromMentor = async (req, res) => {
       message: "Failed to remove participants from mentor",
       error: error.message,
     });
+  }
+};
+
+// Assign teams to judge (Superadmin only)
+export const assignTeamsToJudge = async (req, res) => {
+  try {
+    const { judgeId, teamIds } = req.body;
+
+    const judge = await User.findById(judgeId);
+    if (!judge || judge.role !== 'judge') {
+      return res.status(400).json({ success: false, message: 'Invalid judge ID or user is not a judge' });
+    }
+
+    // Validate teams exist
+    const Team = (await import('../models/Team.js')).default;
+    const teams = await Team.find({ _id: { $in: teamIds } }).select('_id');
+    if (teams.length !== teamIds.length) {
+      return res.status(400).json({ success: false, message: 'One or more team IDs are invalid' });
+    }
+
+    await User.findByIdAndUpdate(judgeId, { $addToSet: { assignedTeams: { $each: teamIds } } });
+
+    return res.json({ success: true, message: 'Teams assigned to judge successfully', data: { judge: judge.name, assignedCount: teamIds.length } });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to assign teams to judge', error: error.message });
+  }
+};
+
+// Remove teams from judge (Superadmin only)
+export const removeTeamsFromJudge = async (req, res) => {
+  try {
+    const { judgeId, teamIds } = req.body;
+
+    const judge = await User.findById(judgeId);
+    if (!judge || judge.role !== 'judge') {
+      return res.status(400).json({ success: false, message: 'Invalid judge ID or user is not a judge' });
+    }
+
+    await User.findByIdAndUpdate(judgeId, { $pull: { assignedTeams: { $in: teamIds } } });
+
+    return res.json({ success: true, message: 'Teams removed from judge successfully' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to remove teams from judge', error: error.message });
   }
 };
 

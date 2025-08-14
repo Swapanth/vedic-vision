@@ -10,6 +10,8 @@ import teamRoutes from './teamRoutes.js';
 import voteRoutes from './voteRoutes.js';
 import configRoutes from './configRoutes.js';
 import hackathonRoutes from './hackathonRoutes.js';
+import evaluationRoutes from './evaluationRoutes.js';
+import judgeRoutes from './judgeRoutes.js';
 
 const router = express.Router();
 
@@ -33,6 +35,8 @@ router.use('/announcements', announcementRoutes);
 router.use('/export', exportRoutes);
 router.use('/teams', teamRoutes);
 router.use('/hackathon', hackathonRoutes);
+router.use('/judge', judgeRoutes);
+router.use('/evaluations', evaluationRoutes);
 router.use('/votes', voteRoutes);
 router.use('/config', configRoutes);
 

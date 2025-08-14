@@ -6,6 +6,9 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ParticipantDashboard from './components/dashboard/participate/ParticipantDashboard';
+import JudgeOverviewPage from './components/dashboard/judge/JudgeOverviewPage';
+import HackathonEvaluationPage from './components/judge/HackathonEvaluationPage';
+import JudgeEvaluate from './components/dashboard/judge/JudgeEvaluate';
 import HackathonDashboard from './components/dashboard/hackathon/HackathonDashboard';
 import AdminDashboard from './components/dashboard/admin/AdminDashboard';
 import MentorDashboard from './components/dashboard/mentor/MentorDashboard';
@@ -33,6 +36,31 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <DashboardWrapper />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Judge flow */}
+              <Route
+                path="/evaluation/judge"
+                element={
+                  <ProtectedRoute requiredRole="judge">
+                    <HackathonEvaluationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/judge/overview"
+                element={
+                  <ProtectedRoute requiredRole="judge">
+                    <JudgeOverviewPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/judge/evaluate/:teamId"
+                element={
+                  <ProtectedRoute requiredRole="judge">
+                    <JudgeEvaluate />
                   </ProtectedRoute>
                 }
               />
@@ -67,12 +95,14 @@ const App = () => {
 
 // Component to render appropriate dashboard based on user role
 const DashboardWrapper = () => {
-  const { isSuperadmin, isAdmin, isMentor, isParticipant, user, loading } = useAuth();
+  const { isSuperadmin, isMentor, isJudge, isParticipant, user, loading } = useAuth();
 
-  if (isSuperadmin || isAdmin) {
+  if (isSuperadmin) {
     return <AdminDashboard />;
   } else if (isMentor) {
     return <MentorDashboard />;
+  } else if (isJudge) {
+    return <JudgeOverviewPage />;
   } else if (isParticipant) {
     // Check if participant is hackathon-only
     if (user?.participantType === 'hackathon') {

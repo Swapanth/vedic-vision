@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       
-      return { success: true };
+      return { success: true, user };
     } catch (error) {
       console.error('AuthContext login error:', error);
       
@@ -169,8 +169,8 @@ export const AuthProvider = ({ children }) => {
     clearError,
     isAuthenticated: !!user,
     isSuperadmin: user?.role === 'superadmin',
-    isAdmin: user?.role === 'admin',
     isMentor: user?.role === 'mentor',
+    isJudge: user?.role === 'judge',
     isParticipant: user?.role === 'participant',
   };
 

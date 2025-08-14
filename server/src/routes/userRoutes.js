@@ -17,7 +17,9 @@ import {
   getAllMentors,
   getMentorById,
   updateMentor,
-  deleteMentor
+  deleteMentor,
+  assignTeamsToJudge,
+  removeTeamsFromJudge
 } from '../controllers/userController.js';
 import { authenticateToken, adminOnly, superadminOnly, mentorOnly, participantOnly } from '../middleware/auth.js';
 import { validateMongoId, validatePagination, handleValidationErrors } from '../middleware/validation.js';
@@ -45,6 +47,9 @@ router.delete('/mentors/:id', adminOnly, validateMongoId('id'), handleValidation
 // Mentor assignment routes (Superadmin only)
 router.post('/assign-participants', superadminOnly, assignParticipantsToMentor);
 router.post('/remove-participants', superadminOnly, removeParticipantsFromMentor);
+// Judge assignment routes (Superadmin only)
+router.post('/assign-teams-to-judge', superadminOnly, assignTeamsToJudge);
+router.post('/remove-teams-from-judge', superadminOnly, removeTeamsFromJudge);
 
 // Routes with parameters (more specific first)
 router.patch('/:id/status', adminOnly, validateMongoId('id'), handleValidationErrors, updateUserStatus);
