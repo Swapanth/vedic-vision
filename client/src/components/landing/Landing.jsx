@@ -6,15 +6,17 @@ import {
   Menu,
   X,
   Users,
+  User,
   Zap,
   MapPin,
   Mail,
   Phone,
   Instagram,
-  Linkedin,
-  MessageCircle,
-  Rocket,
+  LinkedinIcon,
   ChevronDown,
+  ChevronLeft,
+  GithubIcon,
+  ChevronRight,
 } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import "./Landing.css";
@@ -40,6 +42,14 @@ import track17 from "../../assets/17.jpeg";
 import track18 from "../../assets/18.jpeg";
 import track19 from "../../assets/19.jpg";
 import track20 from "../../assets/20.jpeg";
+import img1 from "../../assets/image1.png";
+import img2 from "../../assets/image2.png";
+import img3 from "../../assets/image3.png";
+import img4 from "../../assets/image4.jpg";
+import img5 from "../../assets/image5.png";
+import shirtimg from "../../assets/shirt.png";
+
+
 
 // Holi Color Drop Effect
 function RainbowCursorTrail() {
@@ -438,9 +448,9 @@ const bootcampJourney = [
 function SwagCarousel() {
   const swagItems = [
     {
-      image: "https://wow.vizag.dev/swags/tshirt.png",
+      image: shirtimg,
     },
-    
+
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -621,6 +631,1471 @@ function EventImagesCarousel() {
   );
 }
 
+// Attendance Calendar Preview Component - Exact UI from AttendanceCalendar
+function AttendanceCalendarPreview({ attendance, themeColors }) {
+  const [currentMonth, setCurrentMonth] = React.useState(new Date());
+
+  // Calculate status by date from attendance data
+  const statusByDate = React.useMemo(() => {
+    const statusMap = {};
+    if (attendance && attendance.length > 0) {
+      attendance.forEach(record => {
+        const dateKey = new Date(record.date).toISOString().split('T')[0];
+        // Prioritize statuses: present > late > absent
+        if (!statusMap[dateKey] ||
+          (record.status === 'present' && statusMap[dateKey] !== 'present') ||
+          (record.status === 'late' && statusMap[dateKey] === 'absent')) {
+          statusMap[dateKey] = record.status;
+        }
+      });
+    }
+    return statusMap;
+  }, [attendance]);
+
+  // Generate calendar days for current month
+  const days = React.useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+
+    const calendarDays = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= lastDay || calendarDays.length < 42) { // 6 weeks max
+      calendarDays.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return calendarDays;
+  }, [currentMonth]);
+
+  const getBlockStyle = (date) => {
+    const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+    const dateKey = date.toISOString().split('T')[0];
+    const attendanceStatus = statusByDate[dateKey];
+
+    // Check if this is August 2025 and date is between 4-15
+    const isHighlightedDate = currentMonth.getMonth() === 7 && // August (0-indexed)
+      currentMonth.getFullYear() === 2025 &&
+      date.getDate() >= 4 && date.getDate() <= 15;
+
+    const baseStyle = {
+      width: '100%',
+      height: '50px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '8px',
+      fontSize: '12px',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      border: '2px solid transparent'
+    };
+
+    if (!isCurrentMonth) {
+      return {
+        ...baseStyle,
+        backgroundColor: '#f3f4f6',
+        color: '#9ca3af'
+      };
+    }
+
+    // Apply attendance status colors
+    if (attendanceStatus === 'present') {
+      return {
+        ...baseStyle,
+        backgroundColor: '#dcfce7', // Light green background
+        color: '#166534', // Dark green text
+        border: '2px solid #22c55e' // Green border
+      };
+    }
+
+    if (attendanceStatus === 'absent') {
+      return {
+        ...baseStyle,
+        backgroundColor: '#fef2f2', // Light red background
+        color: '#991b1b', // Dark red text
+        border: '2px solid #ef4444' // Red border
+      };
+    }
+
+    if (attendanceStatus === 'late') {
+      return {
+        ...baseStyle,
+        backgroundColor: '#fef3c7', // Light yellow background
+        color: '#92400e', // Dark yellow text
+        border: '2px solid #f59e0b' // Yellow border
+      };
+    }
+
+    // If it's a highlighted date (August 4-15, 2025), add light gray border
+    if (isHighlightedDate) {
+      return {
+        ...baseStyle,
+        backgroundColor: '#ffffff',
+        color: '#374151',
+        border: '2px solid #e5e7eb' // Light gray border like in the image
+      };
+    }
+
+    // Default style for current month dates without attendance
+    return {
+      ...baseStyle,
+      backgroundColor: '#f9fafb',
+      color: '#6b7280',
+      border: '2px solid transparent'
+    };
+  };
+
+  const formatDate = (date) => {
+    return date.getDate();
+  };
+
+  const getDayLabel = (date) => {
+    // Check if this is August 2025 and date is between 4-15
+    const isHighlightedDate = currentMonth.getMonth() === 7 && // August (0-indexed)
+      currentMonth.getFullYear() === 2025 &&
+      date.getDate() >= 4 && date.getDate() <= 15;
+
+    if (isHighlightedDate) {
+      // Return D1, D2, D3, etc. for August 4-15
+      const dayNumber = date.getDate();
+      const sessionNumber = dayNumber - 3; // August 4 = D1, August 5 = D2, etc.
+      return `D${sessionNumber}`;
+    }
+
+    return ''; // No label for other dates
+  };
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const navigateMonth = (direction) => {
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev);
+      newMonth.setMonth(newMonth.getMonth() + direction);
+      return newMonth;
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigateMonth(-1)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" style={{ color: themeColors.textSecondary }} />
+        </button>
+        <h4 className="text-lg font-semibold" style={{ color: themeColors.text }}>
+          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </h4>
+        <button
+          onClick={() => navigateMonth(1)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" style={{ color: themeColors.textSecondary }} />
+        </button>
+      </div>
+
+      {/* Days of Week Header */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div
+            key={day}
+            className="text-center text-sm font-medium py-2"
+            style={{ color: themeColors.textSecondary }}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((date, index) => {
+          const dateKey = date.toISOString().split('T')[0];
+          const dayLabel = getDayLabel(date);
+
+          return (
+            <div
+              key={index}
+              style={getBlockStyle(date)}
+              className="hover:scale-105 transition-transform"
+            >
+              <div className="text-xs font-bold">{formatDate(date)}</div>
+              {dayLabel && (
+                <div className="text-xs text-blue-400 font-medium">{dayLabel}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-center space-x-4 mt-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-green-100 border-2 border-green-500 rounded"></div>
+          <span className="text-sm" style={{ color: themeColors.textSecondary }}>Present</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-red-100 border-2 border-red-500 rounded"></div>
+          <span className="text-sm" style={{ color: themeColors.textSecondary }}>Absent</span>
+        </div>
+      </div>
+
+      {/* Debug Info */}
+      <div className="text-xs text-gray-500 mt-2">
+        Loaded {attendance?.length || 0} attendance records
+      </div>
+    </div>
+  );
+}
+
+// Tasks Section Component with expandable task details
+function TasksSection({ mockData, themeColors }) {
+  const [selectedTask, setSelectedTask] = useState(mockData.activeTasks[0] || null);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const handleTaskClick = (task) => {
+    setSelectedTask(selectedTask?._id === task._id ? null : task);
+    setUploadedFile(null); // Reset file when switching tasks
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    setUploadedFile(file);
+  };
+
+  const handleSubmitTask = () => {
+    if (uploadedFile) {
+      alert(`Task "${selectedTask.title}" submitted with file: ${uploadedFile.name}`);
+      setUploadedFile(null);
+      setSelectedTask(null);
+    } else {
+      alert('Please upload a file before submitting.');
+    }
+  };
+
+  return (
+    <motion.div
+      className="rounded-xl border-2 p-6 shadow-lg"
+      style={{
+        backgroundColor: themeColors.cardBg,
+        borderColor: themeColors.border
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.4 }}
+      viewport={{ once: true }}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+          Recent Tasks
+        </h3>
+        <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-600">
+          {mockData.activeTasks.length} active
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        {mockData.activeTasks.slice(0, 3).map((task, index) => {
+          const isCompleted = mockData.completedSubmissions.some(sub => sub.taskId === task._id);
+          const isPending = mockData.pendingSubmissions.some(sub => sub.taskId === task._id);
+          const isSelected = selectedTask?._id === task._id;
+
+          return (
+            <div key={task._id} className="space-y-3">
+              {/* Task Header */}
+              <div
+                onClick={() => handleTaskClick(task)}
+                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                style={{
+                  backgroundColor: themeColors.cardBgSecondary,
+                  borderColor: themeColors.border
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${isCompleted ? 'bg-green-500' : isPending ? 'bg-yellow-500' : 'bg-gray-300'
+                    }`} />
+                  <div>
+                    <div className="font-medium" style={{ color: themeColors.text }}>
+                      {task.title}
+                    </div>
+                    <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+                      Due: {new Date(task.dueDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${isCompleted ? 'bg-green-100 text-green-600' :
+                    isPending ? 'bg-yellow-100 text-yellow-600' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                    {isCompleted ? 'Completed' : isPending ? 'Pending' : 'Not Started'}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${isSelected ? 'rotate-180' : ''
+                      }`}
+                    style={{ color: themeColors.textSecondary }}
+                  />
+                </div>
+              </div>
+
+              {/* Expanded Task Details */}
+              {isSelected && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    className="p-4 rounded-lg border-2 border-dashed space-y-4"
+                    style={{
+                      backgroundColor: themeColors.background,
+                      borderColor: themeColors.border
+                    }}
+                  >
+                    {/* Task Description */}
+                    <div>
+                      <h4 className="font-semibold mb-2" style={{ color: themeColors.text }}>
+                        Task Description
+                      </h4>
+
+                    </div>
+
+                    {/* Requirements */}
+                    <div>
+
+                      <ul className="text-sm space-y-1" style={{ color: themeColors.textSecondary }}>
+                        <li>• Complete the assigned coding exercise</li>
+                        <li>• Include proper documentation and comments</li>
+                        <li>• Test your solution thoroughly</li>
+                        <li>• Submit as a ZIP file or GitHub repository link</li>
+                      </ul>
+                    </div>
+
+                    {/* File Upload Section */}
+                    {!isCompleted && (
+                      <div>
+                        <h4 className="font-semibold mb-3" style={{ color: themeColors.text }}>
+                          Submit Your Work
+                        </h4>
+
+                        <div className="space-y-3">
+                          {/* File Upload Input */}
+                          <div
+                            className="border-2 border-dashed rounded-lg p-4 text-center transition-colors hover:border-blue-400"
+                            style={{ borderColor: themeColors.border }}
+                          >
+                            <input
+                              type="file"
+                              id={`file-upload-${task._id}`}
+                              className="hidden"
+                              onChange={handleFileUpload}
+                              accept=".zip,.rar,.pdf,.doc,.docx,.txt,.js,.html,.css,.py,.java"
+                            />
+                            <label
+                              htmlFor={`file-upload-${task._id}`}
+                              className="cursor-pointer"
+                            >
+                              <div className="space-y-2">
+                                <div className="text-2xl">📁</div>
+                                <div className="text-sm font-medium" style={{ color: themeColors.text }}>
+                                  {uploadedFile ? uploadedFile.name : 'Click to upload file'}
+                                </div>
+                                <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                                  Supported: ZIP, PDF, DOC, TXT, Code files
+                                </div>
+                              </div>
+                            </label>
+                          </div>
+
+                          {/* Upload Status */}
+                          {uploadedFile && (
+                            <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-sm text-green-700">
+                                File ready: {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(1)} KB)
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Submit Button */}
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => setSelectedTask(null)}
+                              className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                              style={{
+                                color: themeColors.textSecondary,
+                                borderColor: themeColors.border,
+                                backgroundColor: themeColors.background
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleSubmitTask}
+                              disabled={!uploadedFile}
+                              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${uploadedFile
+                                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                              Submit Task
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Completed Task Info */}
+                    {isCompleted && (
+                      <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                          <span className="text-sm font-medium text-green-700">
+                            Task completed successfully!
+                          </span>
+                        </div>
+                        <div className="text-xs text-green-600 mt-1">
+                          Score: {mockData.completedSubmissions.find(sub => sub.taskId === task._id)?.score || 'N/A'}/100
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+// Mentor Dashboard Preview Component
+function MentorDashboardPreview({ themeColors }) {
+  const mockMentorData = {
+    assignedParticipants: [
+      { _id: '1', name: 'Shyamala', email: 'shyamala@gmail.com', progress: 85, lastActive: '2025-08-18', team: 'Code Warriors' },
+      { _id: '2', name: 'Rajesh Kumar', email: 'rajesh@gmail.com', progress: 92, lastActive: '2025-08-18', team: 'Tech Titans' },
+      { _id: '3', name: 'Priya Singh', email: 'priya@gmail.com', progress: 78, lastActive: '2025-08-17', team: 'Innovation Hub' },
+      { _id: '4', name: 'Arjun Reddy', email: 'arjun@gmail.com', progress: 88, lastActive: '2025-08-18', team: 'Code Warriors' }
+    ],
+    pendingReviews: [
+      { _id: '1', participant: 'Shyamala', task: 'Java Basics Assignment', submittedAt: '2025-08-17', priority: 'high' },
+      { _id: '2', participant: 'Rajesh Kumar', task: 'REST API Project', submittedAt: '2025-08-18', priority: 'medium' },
+      { _id: '3', participant: 'Priya Singh', task: 'Frontend Integration', submittedAt: '2025-08-16', priority: 'high' }
+    ],
+    mentorStats: {
+      totalParticipants: 15,
+      activeParticipants: 12,
+      avgProgress: 84,
+      pendingReviews: 8,
+      completedReviews: 45
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Mentor Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              My Participants
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockMentorData.mentorStats.totalParticipants}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            {mockMentorData.mentorStats.activeParticipants} active today
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <span className="text-green-600 text-lg">📈</span>
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Avg Progress
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockMentorData.mentorStats.avgProgress}%
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Across all participants
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+              <span className="text-orange-600 text-lg">⏳</span>
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Pending Reviews
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockMentorData.mentorStats.pendingReviews}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Awaiting feedback
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+              <span className="text-purple-600 text-lg">✅</span>
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Completed Reviews
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockMentorData.mentorStats.completedReviews}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            This bootcamp
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Mentor Detailed Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* My Participants */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              My Participants
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-600">
+              {mockMentorData.assignedParticipants.length} assigned
+            </span>
+          </div>
+          <div className="space-y-4">
+            {mockMentorData.assignedParticipants.slice(0, 4).map((participant) => (
+              <div
+                key={participant._id}
+                className="flex items-center justify-between p-3 rounded-lg border"
+                style={{ backgroundColor: themeColors.cardBgSecondary, borderColor: themeColors.border }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">
+                      {participant.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-medium" style={{ color: themeColors.text }}>
+                      {participant.name}
+                    </div>
+                    <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+                      {participant.team}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold" style={{ color: themeColors.text }}>
+                    {participant.progress}%
+                  </div>
+                  <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                    Progress
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Pending Reviews */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              Pending Reviews
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-600">
+              {mockMentorData.pendingReviews.length} pending
+            </span>
+          </div>
+          <div className="space-y-4">
+            {mockMentorData.pendingReviews.map((review) => (
+              <div
+                key={review._id}
+                className="p-3 rounded-lg border"
+                style={{ backgroundColor: themeColors.cardBgSecondary, borderColor: themeColors.border }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-medium" style={{ color: themeColors.text }}>
+                    {review.participant}
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${review.priority === 'high' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
+                    }`}>
+                    {review.priority} priority
+                  </span>
+                </div>
+                <div className="text-sm mb-2" style={{ color: themeColors.textSecondary }}>
+                  {review.task}
+                </div>
+                <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                  Submitted: {new Date(review.submittedAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// Admin Dashboard Preview Component
+function AdminDashboardPreview({ themeColors }) {
+  const mockAdminData = {
+    overallStats: {
+      totalParticipants: 250,
+      activeMentors: 20,
+      completedTasks: 1250,
+      avgAttendance: 87,
+      totalTeams: 50
+    },
+    recentActivity: [
+      { type: 'registration', user: 'New participant registered', time: '2 mins ago', status: 'success' },
+      { type: 'submission', user: 'Task submitted by Shyamala', time: '5 mins ago', status: 'pending' },
+      { type: 'mentor', user: 'Mentor assigned to Team Alpha', time: '10 mins ago', status: 'success' },
+      { type: 'alert', user: 'Low attendance alert for Day 7', time: '15 mins ago', status: 'warning' }
+    ],
+    topPerformers: [
+      { name: 'Rajesh Kumar', score: 950, team: 'Tech Titans', rank: 1 },
+      { name: 'Priya Singh', score: 920, team: 'Innovation Hub', rank: 2 },
+      { name: 'Arjun Reddy', score: 895, team: 'Code Warriors', rank: 3 },
+      { name: 'Shyamala', score: 850, team: 'Code Warriors', rank: 4 }
+    ],
+    systemHealth: {
+      serverStatus: 'healthy',
+      dbConnections: 45,
+      activeUsers: 180,
+      responseTime: '120ms'
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Admin Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Total Participants
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockAdminData.overallStats.totalParticipants}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Registered users
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <User className="w-5 h-5 text-green-600" />
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Active Mentors
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockAdminData.overallStats.activeMentors}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Guiding participants
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+              <span className="text-purple-600 text-lg">📋</span>
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Tasks Completed
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockAdminData.overallStats.completedTasks}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Across all participants
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+              <span className="text-orange-600 text-lg">📅</span>
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Avg Attendance
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockAdminData.overallStats.avgAttendance}%
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Bootcamp average
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
+              <span className="text-yellow-600 text-lg">👥</span>
+            </div>
+            <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+              Total Teams
+            </h3>
+          </div>
+          <div className="text-3xl font-bold mb-2" style={{ color: themeColors.text }}>
+            {mockAdminData.overallStats.totalTeams}
+          </div>
+          <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+            Formed teams
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Admin Detailed Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activity */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              Recent Activity
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-600">
+              Live
+            </span>
+          </div>
+          <div className="space-y-4">
+            {mockAdminData.recentActivity.map((activity, index) => (
+              <div
+                key={index}
+                className="flex items-start space-x-3 p-3 rounded-lg"
+                style={{ backgroundColor: themeColors.cardBgSecondary }}
+              >
+                <div className={`w-2 h-2 rounded-full mt-2 ${activity.status === 'success' ? 'bg-green-500' :
+                  activity.status === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                  }`} />
+                <div className="flex-1">
+                  <div className="text-sm font-medium" style={{ color: themeColors.text }}>
+                    {activity.user}
+                  </div>
+                  <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                    {activity.time}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Top Performers */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              Top Performers
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-600">
+              Leaderboard
+            </span>
+          </div>
+          <div className="space-y-4">
+            {mockAdminData.topPerformers.map((performer) => (
+              <div
+                key={performer.rank}
+                className="flex items-center justify-between p-3 rounded-lg"
+                style={{ backgroundColor: themeColors.cardBgSecondary }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${performer.rank === 1 ? 'bg-yellow-500' :
+                    performer.rank === 2 ? 'bg-gray-400' :
+                      performer.rank === 3 ? 'bg-orange-600' : 'bg-blue-500'
+                    }`}>
+                    {performer.rank}
+                  </div>
+                  <div>
+                    <div className="font-medium" style={{ color: themeColors.text }}>
+                      {performer.name}
+                    </div>
+                    <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+                      {performer.team}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold" style={{ color: themeColors.text }}>
+                    {performer.score}
+                  </div>
+                  <div className="text-xs" style={{ color: themeColors.textSecondary }}>
+                    points
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* System Health */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{ backgroundColor: themeColors.cardBg, borderColor: themeColors.border }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              System Health
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-green-100 text-green-600">
+              All Systems Operational
+            </span>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: themeColors.cardBgSecondary }}>
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <span className="text-sm font-medium" style={{ color: themeColors.text }}>Server Status</span>
+              </div>
+              <span className="text-sm" style={{ color: themeColors.textSecondary }}>Healthy</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: themeColors.cardBgSecondary }}>
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                <span className="text-sm font-medium" style={{ color: themeColors.text }}>Active Users</span>
+              </div>
+              <span className="text-sm" style={{ color: themeColors.textSecondary }}>{mockAdminData.systemHealth.activeUsers}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: themeColors.cardBgSecondary }}>
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-purple-500 rounded-full" />
+                <span className="text-sm font-medium" style={{ color: themeColors.text }}>DB Connections</span>
+              </div>
+              <span className="text-sm" style={{ color: themeColors.textSecondary }}>{mockAdminData.systemHealth.dbConnections}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: themeColors.cardBgSecondary }}>
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <span className="text-sm font-medium" style={{ color: themeColors.text }}>Response Time</span>
+              </div>
+              <span className="text-sm" style={{ color: themeColors.textSecondary }}>{mockAdminData.systemHealth.responseTime}</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// Dashboard Tabs Component
+function DashboardTabs({ themeColors }) {
+  const [activeTab, setActiveTab] = useState('participant');
+
+  const tabs = [
+    { id: 'participant', label: 'Participant View', icon: '👨‍🎓' },
+    { id: 'mentor', label: 'Mentor View', icon: '👨‍🏫' },
+    { id: 'admin', label: 'Admin View', icon: '👨‍💼' }
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Tab Navigation */}
+      <div className="flex justify-center">
+        <div
+          className="flex rounded-xl border-2 p-2"
+          style={{
+            backgroundColor: themeColors.cardBgSecondary,
+            borderColor: themeColors.border
+          }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${activeTab === tab.id ? 'shadow-md' : 'hover:opacity-70'
+                }`}
+              style={{
+                backgroundColor: activeTab === tab.id ? themeColors.cardBg : 'transparent',
+                color: activeTab === tab.id ? themeColors.text : themeColors.textSecondary,
+                border: activeTab === tab.id ? `2px solid ${themeColors.border}` : '2px solid transparent'
+              }}
+            >
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {activeTab === 'participant' && <DashboardPreview themeColors={themeColors} />}
+        {activeTab === 'mentor' && <MentorDashboardPreview themeColors={themeColors} />}
+        {activeTab === 'admin' && <AdminDashboardPreview themeColors={themeColors} />}
+      </motion.div>
+    </div>
+  );
+}
+
+// Dashboard Preview Component - Using actual dashboard UI
+function DashboardPreview({ themeColors }) {
+  // Mock data similar to the actual dashboard
+  const mockData = {
+    activeTasks: [
+      { _id: '1', title: 'Complete Java Basics', description: 'Learn Java fundamentals', dueDate: '2025-08-10', isActive: true },
+      { _id: '2', title: 'Build REST API', description: 'Create a Spring Boot API', dueDate: '2025-08-12', isActive: true },
+      { _id: '3', title: 'Frontend Integration', description: 'Connect React with API', dueDate: '2025-08-14', isActive: true }
+    ],
+    attendance: [
+      { date: '2025-08-04', status: 'present' },
+      { date: '2025-08-05', status: 'present' },
+      { date: '2025-08-06', status: 'present' },
+      { date: '2025-08-07', status: 'absent' },
+      { date: '2025-08-08', status: 'present' },
+      { date: '2025-08-09', status: 'present' },
+      { date: '2025-08-10', status: 'present' },
+      { date: '2025-08-11', status: 'present' },
+      { date: '2025-08-12', status: 'absent' },
+      { date: '2025-08-13', status: 'present' },
+      { date: '2025-08-14', status: 'present' },
+      { date: '2025-08-15', status: 'present' },
+      { date: '2025-08-16', status: 'present' },
+      { date: '2025-08-17', status: 'absent' },
+      { date: '2025-08-18', status: 'present' },
+      { date: '2025-08-19', status: 'present' },
+      { date: '2025-08-20', status: 'present' },
+      { date: '2025-08-21', status: 'present' },
+      { date: '2025-08-22', status: 'present' },
+      { date: '2025-08-23', status: 'absent' },
+      { date: '2025-08-24', status: 'present' },
+      { date: '2025-08-25', status: 'present' },
+      { date: '2025-08-26', status: 'present' },
+      { date: '2025-08-27', status: 'present' },
+      { date: '2025-08-28', status: 'present' },
+      { date: '2025-08-29', status: 'present' },
+
+    ],
+    completedSubmissions: [
+      { taskId: '1', status: 'completed', score: 95 },
+      { taskId: '2', status: 'completed', score: 88 }
+    ],
+    pendingSubmissions: [
+      { taskId: '3', status: 'pending' }
+    ],
+    team: {
+      name: 'Code Warriors',
+      members: ['John Doe', 'Jane Smith', 'Mike Johnson']
+    },
+    mentor: {
+      name: 'Swapanth Vakapalli',
+      mobile: '+1234567890',
+      skills: ['Nodejs', 'React', 'System Architecture'],
+      profilePicture: null
+    }
+  };
+
+  const presentDays = mockData.attendance.filter(a => a.status === 'present').length;
+  const totalDays = mockData.attendance.length;
+  const attendancePercentage = Math.round((presentDays / totalDays) * 100);
+  const attendanceStreak = 3;
+  const overviewScore = 850;
+  const mentor = mockData.mentor;
+  const user = { name: 'Syamala' }; // Mock user for preview
+
+  return (
+    <div className="space-y-8">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Overview Score Card */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <span className="text-blue-600 text-lg">📊</span>
+              </div>
+              <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+                Overall Score
+              </h3>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-3xl font-bold" style={{ color: themeColors.text }}>
+              {overviewScore}
+            </div>
+            <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+              Points earned
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Attendance Card */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          viewport={{ once: true }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                <span className="text-green-600 text-lg">📅</span>
+              </div>
+              <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+                Attendance
+              </h3>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-3xl font-bold" style={{ color: themeColors.text }}>
+              {attendancePercentage}%
+            </div>
+            <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+              {presentDays}/{totalDays} days present
+            </div>
+            <div className="flex items-center space-x-1">
+              <span className="text-xs" style={{ color: themeColors.textSecondary }}>Streak:</span>
+              <span className="text-xs font-semibold text-orange-600">{attendanceStreak} days 🔥</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Mentor Card */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          viewport={{ once: true }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="">
+            <p className=" mb-4 flex items-center" style={{ color: themeColors.text }}>
+              <Users className="w-5 h-5 mr-2" />
+              Mentor Details
+            </p>
+
+            {/* Mentor Section */}
+            <div className="mb-4">
+              {mentor ? (
+                <div>
+                  <div className="flex items-start space-x-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      {mentor.profilePicture ? (
+                        <img
+                          src={mentor.profilePicture}
+                          alt={mentor.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-6 h-6 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-lg mb-1" style={{ color: themeColors.text }}>{mentor.name}</div>
+                      <div className="text-sm mb-2" style={{ color: themeColors.textSecondary }}>{mentor.email}</div>
+                      {mentor.mobile && (
+                        <div className="flex items-center justify-between">
+
+                          <button
+                            onClick={() => {
+                              const message = `Hi, I'm ${user?.name || 'a participant'}`;
+                              const whatsappUrl = `https://wa.me/${mentor.mobile.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                              window.open(whatsappUrl, '_blank');
+                            }}
+                            className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                            title="Chat on WhatsApp"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488" />
+                            </svg>
+                            <span>WhatsApp</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {mentor.skills?.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold mb-2" style={{ color: themeColors.textSecondary }}>EXPERTISE</div>
+                      <div className="flex flex-wrap gap-1">
+                        {mentor.skills.map((skill, idx) => (
+                          <span key={idx} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                            {skill.replace(/"/g, '')}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+
+                </div>
+              ) : (
+                <div className="p-6 rounded-xl text-center" style={{ backgroundColor: themeColors.backgroundSecondary }}>
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <User className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <div className="text-sm font-medium mb-1" style={{ color: themeColors.text }}>No mentor assigned yet</div>
+                  <div className="text-xs" style={{ color: themeColors.textSecondary }}>You'll be assigned a mentor soon to guide you through your journey</div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </motion.div>
+
+
+        {/* Team Card */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          viewport={{ once: true }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
+                <span className="text-yellow-600 text-lg">👥</span>
+              </div>
+              <h3 className="text-sm font-semibold" style={{ color: themeColors.textSecondary }}>
+                Team
+              </h3>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-lg font-bold" style={{ color: themeColors.text }}>
+              {mockData.team.name}
+            </div>
+            <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+              {mockData.team.members.length} members
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Participant Overview Section */}
+
+
+      {/* Detailed Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Tasks */}
+        <TasksSection mockData={mockData} themeColors={themeColors} />
+
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              Participant Overview
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-600">
+              Active Participant
+            </span>
+          </div>
+
+          <div className="">
+            {/* Profile Section */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                  <span className="text-white text-xl font-bold">JD</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-lg" style={{ color: themeColors.text }}>
+                    Shyamala
+                  </h4>
+                  <p className="text-sm" style={{ color: themeColors.textSecondary }}>
+                    Shyamala@gmail.com
+                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded-full">
+                      Verified
+                    </span>
+                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
+                      Bootcamp Participant
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: themeColors.textSecondary }}>Registration:</span>
+                  <span className="text-sm font-medium" style={{ color: themeColors.text }}>Aug 1, 2025</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: themeColors.textSecondary }}>Track:</span>
+                  <span className="text-sm font-medium" style={{ color: themeColors.text }}>Full Stack Development</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: themeColors.textSecondary }}>Experience:</span>
+                  <span className="text-sm font-medium" style={{ color: themeColors.text }}>Beginner</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Metrics */}
+            <div className="space-y-4">
+              <h5 className="font-semibold" style={{ color: themeColors.text }}>Progress Metrics</h5>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm" style={{ color: themeColors.textSecondary }}>Bootcamp Progress</span>
+                    <span className="text-sm font-medium" style={{ color: themeColors.text }}>Day 8/10</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '80%' }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm" style={{ color: themeColors.textSecondary }}>Task Completion</span>
+                    <span className="text-sm font-medium" style={{ color: themeColors.text }}>{mockData.completedSubmissions.length}/{mockData.activeTasks.length}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${(mockData.completedSubmissions.length / mockData.activeTasks.length) * 100}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Achievements & Stats */}
+            <div className="space-y-4">
+              <h5 className="font-semibold" style={{ color: themeColors.text }}>Achievements</h5>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                  <div className="text-2xl mb-1">🏆</div>
+                  <div className="text-xs font-medium text-yellow-800">Top Performer</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-green-50 border border-green-200">
+                  <div className="text-2xl mb-1">🔥</div>
+                  <div className="text-xs font-medium text-green-800">{attendanceStreak} Day Streak</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
+                  <div className="text-2xl mb-1">⚡</div>
+                  <div className="text-xs font-medium text-blue-800">Fast Learner</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-200">
+                  <div className="text-2xl mb-1">🎯</div>
+                  <div className="text-xs font-medium text-purple-800">Goal Oriented</div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-gray-200">
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: themeColors.textSecondary }}>Rank:</span>
+                  <span className="text-sm font-bold text-orange-600">#12 of 250</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: themeColors.textSecondary }}>Points Earned:</span>
+                  <span className="text-sm font-bold text-blue-600">{overviewScore}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: themeColors.textSecondary }}>Team:</span>
+                  <span className="text-sm font-medium" style={{ color: themeColors.text }}>{mockData.team.name}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Attendance Calendar */}
+        <motion.div
+          className="rounded-xl border-2 p-6 shadow-lg"
+          style={{
+            backgroundColor: themeColors.cardBg,
+            borderColor: themeColors.border
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold" style={{ color: themeColors.text }}>
+              Attendance Overview
+            </h3>
+            <span className="text-sm px-3 py-1 rounded-full bg-green-100 text-green-600">
+              {attendancePercentage}% present
+            </span>
+          </div>
+          <AttendanceCalendarPreview attendance={mockData.attendance} themeColors={themeColors} />
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
 // Tech Marquee Component
 function TechMarquee() {
   const hackathonTechs = [
@@ -685,7 +2160,7 @@ function TechMarquee() {
         {/* Mobile: Horizontal scrolling */}
         <div className="block sm:hidden h-full w-full">
           <motion.div
-            className="flex gap-4 h-full items-center"
+            className="flex gap-2 h-full items-center"
             animate={{
               x: [0, -48 * hackathonTechs.length]
             }}
@@ -701,13 +2176,13 @@ function TechMarquee() {
                 key={`${tech.name}-${index}`}
                 className="flex items-center justify-center flex-shrink-0"
                 style={{
-                  width: "44px",
-                  height: "44px",
-                  minWidth: "44px",
-                  minHeight: "44px"
+                  width: "54px",
+                  height: "54px",
+                  minWidth: "54px",
+                  minHeight: "54px"
                 }}
               >
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-sm">
+                <div className="w-30 h-30 rounded-lg flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-sm">
                   <img
                     src={tech.icon}
                     alt={tech.name}
@@ -1155,7 +2630,7 @@ export default function Landing() {
                   <button
                     className="px-6 sm:px-8 py-3 sm:py-4 font-medium transition-all duration-200 hover:scale-105 text-white bg-yellow rounded-full text-base sm:text-lg"
                     onClick={() => navigate("/login")}
-                    style={{color:'white',backgroundColor:'#3b82f6'}}
+                    style={{ color: 'white', backgroundColor: '#3b82f6' }}
                   >
                     Let's Build
                   </button>
@@ -1180,14 +2655,14 @@ export default function Landing() {
                   <p className="text-white font-semibold text-lg sm:text-xl lg:text-2xl mb-1 sm:mb-3">
                     Bag your <br /> swags
                   </p>
-                  <div className="flex-1 min-h-[80px] sm:min-h-[100px]">
+                  <div className="flex-1 min-h-[100px] sm:min-h-[100px]">
                     <SwagCarousel />
                   </div>
                 </div>
 
                 {/* Tech Marquee Card */}
                 <div
-                  className="w-full sm:w-[28%] p-3 sm:p-6 rounded-xl border-2 shadow-md relative overflow-hidden h-[120px] sm:h-[300px]"
+                  className="w-full sm:w-[28%] rounded-xl border-2 shadow-md relative overflow-hidden h-[120px] sm:h-[300px]"
                   style={{
                     backgroundColor: '#D1EED8',
                     borderColor: themeColors.border,
@@ -1311,9 +2786,31 @@ export default function Landing() {
       </section>
 
 
+      {/* Dashboard Preview Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: themeColors.cardBg }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2
+              className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4"
+              style={{ color: themeColors.text }}
+            >
+              Track Your Progress
+            </h2>
+            <p
+              className="text-lg sm:text-xl max-w-3xl mx-auto"
+              style={{ color: themeColors.textSecondary }}
+            >
+              Stay organized and motivated with our comprehensive dashboard featuring calendar, leaderboards, task tracking, and attendance monitoring
+            </p>
+          </div>
 
-      {/* Tracks Section */}
-      <section
+          <DashboardTabs themeColors={themeColors} />
+        </div>
+      </section>
+
+
+{/* Tracks Section */}
+<section
         id="tracks"
         className="py-12 sm:py-20 px-4 sm:px-6 lg:px-12"
         style={{ backgroundColor: themeColors.cardBg }}
@@ -1394,9 +2891,6 @@ export default function Landing() {
 
         </div>
       </section>
-
-
-
 
 
       {/* Bootcamp Journey Section with Scroll-Triggered Horizontal Movement */}
@@ -1657,6 +3151,133 @@ export default function Landing() {
         </div>
       </section>
 
+      <div className="mb-8 justify-items-center">
+            <h3 className="text-2xl font-bold text-center mb-6" style={{ color: themeColors.text }}>
+              Meet the Developers
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center" >
+              {[
+                {
+                  name: "Swapanth Vakapalli",
+                  role: "Full Stack Developer & UI/UX",
+                  email: "swapanthvakapalli@gmail.com",
+                  linkedin: "https://linkedin.com/in/swapanth-vakapalli",
+                  github: "https://github.com/swapanth",
+                  avatar: img1,
+                  experience: "2+ years"
+                },
+                {
+                  name: "Syamal Chintapalli",
+                  role: "Full Stack Developer",
+                  email: "syamalachintapalli@gmail.com",
+                  linkedin: "https://www.linkedin.com/in/naga-syamala-chintapalli-0507122bb/",
+                  github: "https://github.com/Syamala4747",
+                  avatar: img2,
+                  experience: "1+ years"
+                },
+                {
+                  name: "Teressa borra",
+                  role: "Full Stack Developer",
+                  email: "teressaborra@gmail.com",
+                  linkedin: "http://www.linkedin.com/in/teressa-borra",
+                  github: "https://github.com/teressaborra",
+                  avatar: img3,
+                  experience: "1+ years"
+                },
+                {
+                  name: "Ramtej Telagarapu",
+                  role: "Full Stack Developer",
+                  email: "vignaramtej46@gmail.com",
+                  linkedin: "https://linkedin.com/in/vignaramtej",
+                  github: "https://github.com/ramtejvigna",
+                  avatar: img5,
+                  experience: "2+ years"
+                },
+                 {
+                  name: "Avinasha Ryali",
+                  role: "Full Stack Developer",
+                  email: "ssriavinasha5599@gmail.com",
+                  linkedin: "https://www.linkedin.com/in/tejassriavinasha/",
+                  github: "https://github.com/tejassriavinasha",
+                  avatar: img4,
+                  experience: "2+ years"
+                },
+                
+              ].map((dev, index) => (
+                <motion.div
+                  key={index}
+                  className="group relative flex items-center gap-4 rounded-xl border p-4 hover:shadow-md transition-all duration-300 justify-items-center"
+                  style={{
+                    backgroundColor: themeColors.cardBgSecondary,
+                    borderColor: themeColors.border,
+                    height: "100px", // keeps under 200px
+                  }}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm">
+                      <img
+                        src={dev.avatar}
+                        alt={dev.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-hidden">
+                    <h4
+                      className="font-semibold text-lg mb-1 truncate"
+                      style={{ color: themeColors.text }}
+                    >
+                      {dev.name}
+                    </h4>
+                    <p className="text-sm text-blue-600 font-medium mb-2">{dev.role}</p>
+
+                    <div className="flex gap-3" style={{ marginTop: '-5px' }}>
+
+                      <p className="text-xs text-gray-500 mb-3">{dev.experience} experience</p>
+
+                      {/* Social Links */}
+                      <div className="flex gap-3">
+                        <a
+                          href={`mailto:${dev.email}`}
+                          className="p-1.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </a>
+                        <a
+                          href={dev.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition"
+                        >
+                          <LinkedinIcon className="w-4 h-4" />
+                        </a>
+                        <a
+                          href={dev.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition"
+                        >
+
+                          <GithubIcon className="w-4 h-4" />
+
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+              ))}
+            </div>
+          </div>
+
       {/* FAQ Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto ">
@@ -1685,40 +3306,46 @@ export default function Landing() {
 
       {/* Footer - Super Simple */}
       <footer
-        className="py-8 px-4 border-t"
+        className="py-12 px-4 border-t "
         style={{
           backgroundColor: themeColors.cardBg,
           borderColor: themeColors.border
         }}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Brand */}
-            <div className="text-lg font-bold" style={{ color: themeColors.text }}>
-              VEDIC VISION<span style={{ color: themeColors.accent }}> 2K25</span>
-            </div>
+        <div className="max-w-6xl mx-auto " >
+          {/* Developers Section */}
+          
 
-            {/* Social Links */}
-            <div className="flex space-x-3">
-              {[
-                { icon: Instagram, href: "#" },
-                { icon: Linkedin, href: "#" },
-                { icon: Mail, href: "mailto:contact@vedicvision.com" }
-              ].map((social, index) => (
-                <a
-                  key={index}
-                  href={social.href}
-                  className="p-2 rounded-full hover:opacity-70 transition-opacity"
-                  style={{ color: themeColors.textSecondary }}
-                >
-                  <social.icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
+          {/* Footer Bottom */}
+          <div className="border-t pt-8" style={{ borderColor: themeColors.border }}>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Brand */}
+              <div className="text-lg font-bold" style={{ color: themeColors.text }}>
+                VEDIC VISION<span style={{ color: themeColors.accent }}> 2K25</span>
+              </div>
 
-            {/* Copyright */}
-            <div className="text-sm" style={{ color: themeColors.textSecondary }}>
-              © 2025 All rights reserved
+              {/* Social Links */}
+              <div className="flex space-x-3">
+                {[
+                  { icon: Instagram, href: "#" },
+                  { icon: LinkedinIcon, href: "#" },
+                  { icon: Mail, href: "mailto:contact@vedicvision.com" }
+                ].map((social, index) => (
+                  <a
+                    key={index}
+                    href={social.href}
+                    className="p-2 rounded-full hover:opacity-70 transition-opacity"
+                    style={{ color: themeColors.textSecondary }}
+                  >
+                    <social.icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+
+              {/* Copyright */}
+              <div className="text-sm" style={{ color: themeColors.textSecondary }}>
+                © 2025 All rights reserved
+              </div>
             </div>
           </div>
         </div>
