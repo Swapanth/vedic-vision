@@ -195,6 +195,8 @@ export const voteAPI = {
   getUserVotingHistory: () => api.get('/votes/my-votes'),
   updateVote: (teamId, voteData) => api.put(`/votes/teams/${teamId}/vote`, voteData),
   deleteVote: (teamId) => api.delete(`/votes/teams/${teamId}/vote`),
+  // Admin: Get all votes organized by team
+  getAllVotesByTeam: () => api.get('/votes/admin/all-votes-by-team'),
 };
 
 // Hackathon API

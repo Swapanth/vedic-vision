@@ -13,6 +13,7 @@ import MentorAssignmentTab from './views/MentorAssignmentTab';
 import JudgeAssignmentTab from './views/JudgeAssignmentTab';
 import TeamsTab from './views/TeamsTab';
 import AnnouncementsTab from './views/AnnouncementsTab';
+import VotesTab from './views/VotesTab';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -224,6 +225,7 @@ const AdminDashboard = () => {
     { id: 'mentor-assignment', name: 'Mentors Assigning ' },
     { id: 'judge-assignment', name: 'Judges Assigning ' },
     { id: 'teams', name: 'Teams' },
+    { id: 'votes', name: 'Votes' },
     { id: 'tasks', name: 'Tasks' },
     { id: 'announcements', name: 'Announcements' },
   ];
@@ -242,6 +244,8 @@ const AdminDashboard = () => {
         return <JudgeAssignmentTab onShowModal={showSuccessModal} />;
       case 'teams':
         return <TeamsTab onShowModal={showSuccessModal} />;
+      case 'votes':
+        return <VotesTab onShowModal={showSuccessModal} />;
       case 'tasks':
         return <TasksTab tasks={tasks} onCreateTask={handleCreateTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onToggleTaskStatus={handleToggleTaskStatus} taskLoading={taskLoading} />;
       case 'announcements':

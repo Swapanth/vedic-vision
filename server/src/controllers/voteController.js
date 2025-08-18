@@ -315,3 +315,142 @@ export const deleteVote = async (req, res) => {
     });
   }
 };
+
+// Admin: Get all votes organized by team
+export const getAllVotesByTeam = async (req, res) => {
+  try {
+    // Get all teams with their votes
+    const teamsWithVotes = await Team.aggregate([
+      {
+        $lookup: {
+          from: 'votes',
+          localField: '_id',
+          foreignField: 'team',
+          as: 'votes'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'leader',
+          foreignField: '_id',
+          as: 'leaderInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'members.user',
+          foreignField: '_id',
+          as: 'memberInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'votes.voter',
+          foreignField: '_id',
+          as: 'voterInfo'
+        }
+      },
+      {
+        $addFields: {
+          // Calculate average rating
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: '$votes' }, 0] },
+              then: { $avg: '$votes.rating' },
+              else: 0
+            }
+          },
+          totalVotes: { $size: '$votes' },
+          // Map voter info to votes
+          votesWithVoters: {
+            $map: {
+              input: '$votes',
+              as: 'vote',
+              in: {
+                _id: '$$vote._id',
+                rating: '$$vote.rating',
+                comment: '$$vote.comment',
+                createdAt: '$$vote.createdAt',
+                voter: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: '$voterInfo',
+                        cond: { $eq: ['$$this._id', '$$vote.voter'] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          teamNumber: 1,
+          description: 1,
+          leader: { $arrayElemAt: ['$leaderInfo', 0] },
+          members: {
+            $map: {
+              input: '$members',
+              as: 'member',
+              in: {
+                role: '$$member.role',
+                joinedAt: '$$member.joinedAt',
+                user: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: '$memberInfo',
+                        cond: { $eq: ['$$this._id', '$$member.user'] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            }
+          },
+          votes: '$votesWithVoters',
+          averageRating: { $round: ['$averageRating', 1] },
+          totalVotes: 1,
+          createdAt: 1
+        }
+      },
+      {
+        $sort: { totalVotes: -1, averageRating: -1 }
+      }
+    ]);
+
+    // Get overall voting statistics
+    const totalVotesCount = await Vote.countDocuments();
+    const totalTeamsCount = await Team.countDocuments();
+    const teamsWithVotesCount = teamsWithVotes.filter(team => team.totalVotes > 0).length;
+
+    res.json({
+      success: true,
+      data: {
+        teams: teamsWithVotes,
+        statistics: {
+          totalVotes: totalVotesCount,
+          totalTeams: totalTeamsCount,
+          teamsWithVotes: teamsWithVotesCount,
+          teamsWithoutVotes: totalTeamsCount - teamsWithVotesCount
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting all votes by team:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get votes by team',
+      error: error.message
+    });
+  }
+};

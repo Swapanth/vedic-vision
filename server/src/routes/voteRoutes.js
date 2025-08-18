@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, adminOnly } from '../middleware/auth.js';
 import {
   submitVote,
   getAllTeamsWithRatings,
@@ -7,7 +7,8 @@ import {
   checkUserVote,
   getUserVotingHistory,
   updateVote,
-  deleteVote
+  deleteVote,
+  getAllVotesByTeam
 } from '../controllers/voteController.js';
 
 const router = express.Router();
@@ -35,5 +36,8 @@ router.put('/teams/:teamId/vote', updateVote);
 
 // Delete user's vote for a team
 router.delete('/teams/:teamId/vote', deleteVote);
+
+// Admin: Get all votes organized by team
+router.get('/admin/all-votes-by-team', adminOnly, getAllVotesByTeam);
 
 export default router; 
