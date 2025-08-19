@@ -3172,7 +3172,7 @@ export default function Landing() {
                   email: "syamalachintapalli@gmail.com",
                   linkedin: "https://www.linkedin.com/in/naga-syamala-chintapalli-0507122bb/",
                   github: "https://github.com/Syamala4747",
-                  avatar: img2,
+                  avatar: img3,
                   experience: "1+ years"
                 },
                 {
@@ -3181,7 +3181,7 @@ export default function Landing() {
                   email: "teressaborra@gmail.com",
                   linkedin: "http://www.linkedin.com/in/teressa-borra",
                   github: "https://github.com/teressaborra",
-                  avatar: img3,
+                  avatar: img2,
                   experience: "1+ years"
                 },
                 {
@@ -3190,7 +3190,7 @@ export default function Landing() {
                   email: "vignaramtej46@gmail.com",
                   linkedin: "https://linkedin.com/in/vignaramtej",
                   github: "https://github.com/ramtejvigna",
-                  avatar: img5,
+                  avatar: img4,
                   experience: "2+ years"
                 },
                  {
@@ -3199,7 +3199,7 @@ export default function Landing() {
                   email: "ssriavinasha5599@gmail.com",
                   linkedin: "https://www.linkedin.com/in/tejassriavinasha/",
                   github: "https://github.com/tejassriavinasha",
-                  avatar: img4,
+                  avatar: img5,
                   experience: "2+ years"
                 },
                 
