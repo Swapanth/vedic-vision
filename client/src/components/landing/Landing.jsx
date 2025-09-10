@@ -3218,7 +3218,6 @@ export default function Landing() {
                   viewport={{ once: true }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  {/* Avatar */}
                   <div className="flex-shrink-0">
                     <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm">
                       <img
@@ -3229,7 +3228,6 @@ export default function Landing() {
                     </div>
                   </div>
 
-                  {/* Content */}
                   <div className="flex-1 overflow-hidden">
                     <h4
                       className="font-semibold text-lg mb-1 truncate"
@@ -3243,7 +3241,6 @@ export default function Landing() {
 
                       <p className="text-xs text-gray-500 mb-3">{dev.experience} experience</p>
 
-                      {/* Social Links */}
                       <div className="flex gap-3">
                         <a
                           href={`mailto:${dev.email}`}
@@ -3468,4 +3465,5 @@ const rewards = [
     icon: "🤝",
   },
 ];
+
 
