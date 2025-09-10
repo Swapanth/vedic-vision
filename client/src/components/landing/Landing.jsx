@@ -3151,7 +3151,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <div className="mb-8 justify-items-center">
+{/*       <div className="mb-8 justify-items-center">
             <h3 className="text-2xl font-bold text-center mb-6" style={{ color: themeColors.text }}>
               Meet the Developers
             </h3>
@@ -3276,7 +3276,7 @@ export default function Landing() {
 
               ))}
             </div>
-          </div>
+          </div> */}
 
       {/* FAQ Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -3468,3 +3468,4 @@ const rewards = [
     icon: "🤝",
   },
 ];
+
