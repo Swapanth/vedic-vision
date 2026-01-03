@@ -9,8 +9,10 @@ import fs from 'fs';
 import connectDB from './config/database.js';
 import apiRoutes from './routes/index.js';
 
-// Configure environment variables
-dotenv.config();
+// Configure environment variables (only in non-production/non-Vercel environments)
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+}
 
 // Get directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
