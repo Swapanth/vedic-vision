@@ -3107,57 +3107,56 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Partners Section */}
-          <div>
-            <h3
-              className="text-2xl font-bold mb-8"
-              style={{ color: themeColors.text }}
-            >
-              Organizers
-            </h3>
-            <div className="flex justify-start">
-              <div
-                className="border-1 rounded-lg "
-                style={{
-                  backgroundColor: 'white',
-                  padding: '-120px'
-                }}
-              >
-                <img
-                  src={track13}
-                  alt="CSD & CSIT"
-                  className="h-22  w-45 object-contain fit-content"
-                />
+                <div>
+                <h3
+                  className="text-2xl font-bold mb-8"
+                  style={{ color: themeColors.text }}
+                >
+                  Organizers
+                </h3>
+                <div className="flex justify-start">
+                  <div
+                  className="border-1 rounded-lg "
+                  style={{
+                    backgroundColor: 'white',
+                    padding: '-120px'
+                  }}
+                  >
+                  <img
+                    src={track13}
+                    alt="CSD & CSIT"
+                    className="h-22  w-45 object-contain fit-content"
+                  />
 
 
+                  </div>
+
+                  <div
+                  className="border-1 rounded-lg  ml-2"
+                  style={{
+                    backgroundColor: 'white',
+                  }}
+                  >
+                  <img
+                    src={track15}
+                    alt="Physical department"
+                    className="h-22  w-45 object-contain fit-content"
+                  />
+
+
+                  </div>
+                </div>
+                </div>
               </div>
+              </section>
 
-              <div
-                className="border-1 rounded-lg  ml-2"
-                style={{
-                  backgroundColor: 'white',
-                }}
-              >
-                <img
-                  src={track15}
-                  alt="Physical department"
-                  className="h-22  w-45 object-contain fit-content"
-                />
-
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-{/*       <div className="mb-8 justify-items-center">
-            <h3 className="text-2xl font-bold text-center mb-6" style={{ color: themeColors.text }}>
-              Meet the Developers
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center" >
-              {[
-                {
+            <div className="mb-8 justify-items-center">
+                <h3 className="text-2xl font-bold text-center mb-6" style={{ color: themeColors.text }}>
+                  Meet the Developers
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center" >
+                  {[
+                  {
                   name: "Swapanth Vakapalli",
                   role: "Full Stack Developer & UI/UX",
                   email: "swapanthvakapalli@gmail.com",
@@ -3185,14 +3184,14 @@ export default function Landing() {
                   experience: "1+ years"
                 },
                 {
-                  name: "Ramtej Telagarapu",
-                  role: "Full Stack Developer",
-                  email: "vignaramtej46@gmail.com",
-                  linkedin: "https://linkedin.com/in/vignaramtej",
-                  github: "https://github.com/ramtejvigna",
-                  avatar: img4,
-                  experience: "2+ years"
-                },
+                    name: "Pepeti Ganesh",
+                    role: "Full Stack Developer",
+                    email: "ganeshpepeti814@gmail.com",
+                    linkedin: "https://www.linkedin.com/in/ganesh-pepeti",
+                    github: "https://github.com/pepeti-ganesh",
+                    avatar: img4,
+                    experience: "2+ years"
+                  },
                  {
                   name: "Avinasha Ryali",
                   role: "Full Stack Developer",
@@ -3202,12 +3201,12 @@ export default function Landing() {
                   avatar: img5,
                   experience: "2+ years"
                 },
-                
-              ].map((dev, index) => (
-                <motion.div
-                  key={index}
-                  className="group relative flex items-center gap-4 rounded-xl border p-4 hover:shadow-md transition-all duration-300 justify-items-center"
-                  style={{
+
+                  ].map((dev, index) => (
+                  <motion.div
+                    key={index}
+                    className="group relative flex items-center gap-4 rounded-xl border p-4 hover:shadow-md transition-all duration-300 justify-items-center"
+                    style={{
                     backgroundColor: themeColors.cardBgSecondary,
                     borderColor: themeColors.border,
                     height: "100px", // keeps under 200px
@@ -3273,7 +3272,7 @@ export default function Landing() {
 
               ))}
             </div>
-          </div> */}
+          </div>
 
       {/* FAQ Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
